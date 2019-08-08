@@ -64,13 +64,13 @@ class DatabaseTest(unittest.TestCase):
     def test_Exceptions(self):
         # Make sure required exceptions exist, and are in the
         # defined heirarchy.
-        self.failUnless(
+        self.assertTrue(
                 issubclass(self.driver.InterfaceError, self.driver.Error)
                 )
-        self.failUnless(
+        self.assertTrue(
                 issubclass(self.driver.DatabaseError,self.driver.Error)
                 )
-        self.failUnless(
+        self.assertTrue(
                 issubclass(self.driver.NotSupportedError,self.driver.Error)
                 )
 
@@ -143,17 +143,17 @@ class DatabaseTest(unittest.TestCase):
             cur = con.cursor()
             cur.prepare("create table test_cubrid (name varchar(20))")
             cur.execute()
-            self.assertEqual(cur.rowcount, -1, 
+            self.assertEqual(cur.rowcount, -1,
                     'cursor.rowcount should be -1 after executing '
                     'no-result statements')
             cur.prepare("insert into test_cubrid value ('Blair')")
             cur.execute()
-            self.failUnless(cur.rowcount in (-1, 1),
+            self.assertTrue(cur.rowcount in (-1, 1),
                     'cursor.rowcount should == number or rows inserted, or '
                     'set to -1 after executing an insert statment')
             cur.prepare("select name from test_cubrid")
             cur.execute()
-            self.failUnless(cur.rowcount in (-1,1),
+            self.assertTrue(cur.rowcount in (-1,1),
                     'cursor.rowcount should == number of rows returned, or '
                     'set to -1 after executing a select statement')
             cur.close()
@@ -168,7 +168,7 @@ class DatabaseTest(unittest.TestCase):
                     'connection.set_isolation_level does not work')
         finally:
             con.close()
-        
+
     def test_autocommit(self):
         con = self._connect()
         try:
@@ -245,7 +245,7 @@ class DatabaseTest(unittest.TestCase):
             cur.prepare(t_affected_rows)
             cur.execute()
             self._prepare_data(cur)
-            self.failUnless(cur.affected_rows() in (-1, 6))
+            self.assertTrue(cur.affected_rows() in (-1, 6))
             self.assertEqual(cur.num_fields(), None,
                     'cursor.num_fields() should be None when not execute select statement')
             self.assertEqual(cur.num_rows(), None,
@@ -292,7 +292,7 @@ class DatabaseTest(unittest.TestCase):
             self.assertEqual(cur.row_tell(), 1,
                     'cursor.row_seek return incorrect cursor')
             cur.row_seek(4)
-            self.assertEqual(cur.row_tell(), 5, 
+            self.assertEqual(cur.row_tell(), 5,
                     'cursor.row_seek move forward error')
         finally:
             cur.close()
@@ -310,7 +310,7 @@ class DatabaseTest(unittest.TestCase):
             for i in range(len(samples_int)):
                 cur.bind_param(i+1, samples_int[i])
             cur.execute()
-            self.failUnless(cur.affected_rows() in (-1, 4))
+            self.assertTrue(cur.affected_rows() in (-1, 4))
         finally:
             cur.close()
             con.close()
@@ -325,7 +325,7 @@ class DatabaseTest(unittest.TestCase):
             cur.prepare("insert into test_cubrid values (?)")
             cur.bind_param(1, '3.14')
             cur.execute()
-            self.failUnless(cur.affected_rows() in (-1, 1))
+            self.assertTrue(cur.affected_rows() in (-1, 1))
         finally:
             cur.close()
             con.close()
@@ -422,7 +422,7 @@ class DatabaseTest(unittest.TestCase):
         try:
             cur.prepare(t_clob)
             cur.execute()
-            cur.prepare('insert into test_cubrid values (?)') 
+            cur.prepare('insert into test_cubrid values (?)')
             lob = con.lob()
             lob.write('hello world', 'C')
             cur.bind_lob(1, lob)
