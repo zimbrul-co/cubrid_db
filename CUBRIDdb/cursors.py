@@ -1,5 +1,6 @@
 import sys
 from CUBRIDdb import FIELD_TYPE
+from CUBRIDdb import InterfaceError
 from functools import reduce
 
 
@@ -15,7 +16,7 @@ class BaseCursor(object):
     A base for Cursor classes. Useful attributes:
 
     description::
-        A tuple of DB API 7-tuples describing the columns in 
+        A tuple of DB API 7-tuples describing the columns in
         the last executed query; see PEP-249 for details.
 
     arraysize::
@@ -41,7 +42,7 @@ class BaseCursor(object):
 
     def __check_state(self):
         if self._cs is None:
-            raise Exception("The cursor has been closed. No operation is allowed any more.")
+            raise InterfaceError("The cursor has been closed. No operation is allowed any more.")
 
     def close(self):
         """Close the cursor, and no further queries will be possible."""
