@@ -391,6 +391,23 @@ class DatabaseTest(unittest.TestCase):
             cur.close()
             con.close()
 
+    def test_bind_binary(self):
+        t_bind_bin = 'create table test_cubrid (id BIT VARYING(256))'
+        samples_bin = ['0B0100', '0B01010101010101', '0B111111111', '0B1111100000010101010110111111']
+        con = self._connect()
+        cur = con.cursor()
+        try:
+            cur.prepare(t_bind_bin);
+            cur.execute()
+            cur.prepare("insert into test_cubrid values (?),(?),(?),(?)")
+            for i in range(len(samples_bin)):
+                cur.bind_param(i+1, samples_bin[i])
+            cur.execute()
+            self.assertTrue(cur.affected_rows() in (-1, 4))
+        finally:
+            cur.close()
+            con.close()
+
     def test_lob_file(self):
         t_blob = 'create table test_cubrid (picture blob)'
         con = self._connect()

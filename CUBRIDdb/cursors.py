@@ -1,5 +1,13 @@
 import sys
 from CUBRIDdb import FIELD_TYPE
+from functools import reduce
+
+
+def bytes_to_binstr(b):
+    return reduce(
+        lambda x1, x2: x1 + x2[2:],
+        map(lambda x: format(x, '#010b'), b)
+    )
 
 
 class BaseCursor(object):
@@ -56,7 +64,9 @@ class BaseCursor(object):
                 else:
                     args[i] = '0'
             elif isinstance(args[i], tuple):
-                 args[i] = args[i]
+                args[i] = args[i]
+            elif isinstance(args[i], bytes):
+                args[i] = bytes_to_binstr(args[i])
             else:
                 # Python3.X dosen't support unicode keyword.
                 try:
@@ -64,8 +74,6 @@ class BaseCursor(object):
                 except NameError:
                     if isinstance(args[i], str):
                         pass
-                    elif isinstance(args[i], bytes):
-                        args[i] = args[i].decode(self.charset)
                     else:
                         args[i] = str(args[i])
                 else:
@@ -74,7 +82,9 @@ class BaseCursor(object):
                     else:
                         args[i] = str(args[i])
 
-            if type(args[i]) != tuple:
+            if isinstance(args[i], bytes):
+                self._cs.bind_param(i+1, args[i], FIELD_TYPE.VARBIT)
+            elif not isinstance(args[i], tuple):
                 self._cs.bind_param(i+1, args[i])
             else:
                 if set_type is None:

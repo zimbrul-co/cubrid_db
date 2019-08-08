@@ -18,6 +18,7 @@ from CUBRIDdb import FIELD_TYPE
 from time import localtime
 from datetime import date, datetime, time
 
+Binary = bytes
 Date = date
 Time = time
 Timestamp = datetime

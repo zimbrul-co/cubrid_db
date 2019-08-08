@@ -342,7 +342,9 @@ class DatabaseOperations(BaseDatabaseOperations):
     def get_db_converters(self, expression):
         converters = super().get_db_converters(expression)
         internal_type = expression.output_field.get_internal_type()
-        if internal_type == 'TextField':
+        if internal_type == 'BinaryField':
+            converters.append(self.convert_binaryfield_value)
+        elif internal_type == 'TextField':
             converters.append(self.convert_textfield_value)
         elif internal_type in ['BooleanField', 'NullBooleanField']:
             converters.append(self.convert_booleanfield_value)
@@ -352,6 +354,16 @@ class DatabaseOperations(BaseDatabaseOperations):
         elif internal_type == 'UUIDField':
             converters.append(self.convert_uuidfield_value)
         return converters
+
+    def convert_binaryfield_value(self, value, expression, connection):
+        if not value.startswith('0B'):
+            raise ValueError('Unexpected value: %s' % value)
+        value = value[2:]
+        def gen_bytes():
+            for i in range(0, len(value), 8):
+                yield int(value[i:i + 8], 2)
+        value = bytes(gen_bytes())
+        return value
 
     def convert_textfield_value(self, value, expression, connection):
         if value is not None:
@@ -410,9 +422,19 @@ class DatabaseWrapper(BaseDatabaseWrapper):
         'iendswith': "LIKE '%%' || UPPER({})",
     }
     if django.VERSION >= (1, 8):
+        class BitFieldFmt:
+            def __mod__(self, field_dict):
+                assert isinstance(field_dict, dict)
+                assert 'max_length' in field_dict
+
+                s = 'BIT VARYING'
+                if field_dict['max_length'] is not None:
+                    s += '(%i)' % (8 * field_dict['max_length'])
+                return s
+
         _data_types = {
             'AutoField': 'integer AUTO_INCREMENT',
-            'BinaryField': 'blob',
+            'BinaryField': BitFieldFmt(),
             'BooleanField': 'short',
             'CharField': 'varchar(%(max_length)s)',
             'CommaSeparatedIntegerField': 'varchar(%(max_length)s)',

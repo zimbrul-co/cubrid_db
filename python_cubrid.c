@@ -1674,14 +1674,19 @@ _cubrid_CursorObject_bind_param (_cubrid_CursorObject * self, PyObject * args)
     }
   if (type != 0)
     {
-      res =
-	cci_bind_param (self->handle, index, CCI_A_TYPE_STR, value, type, 0);
+      int a_type = CCI_A_TYPE_STR;
+      if (type == CCI_U_TYPE_BIT || type == CCI_U_TYPE_VARBIT)
+        {
+          a_type = CCI_A_TYPE_BIT;
+        }
+
+      res = cci_bind_param (self->handle, index, a_type, value, type, 0);
     }
   else
     {
       res =
-	cci_bind_param (self->handle, index, CCI_A_TYPE_STR, value,
-			CCI_U_TYPE_CHAR, 0);
+        cci_bind_param (self->handle, index, CCI_A_TYPE_STR, value,
+            CCI_U_TYPE_CHAR, 0);
     }
 
   if (res < 0)
@@ -2153,43 +2158,28 @@ _cubrid_CursorObject_dbval_to_pyvalue (_cubrid_CursorObject * self, int type,
     case CCI_U_TYPE_BIT:	//CCI_A_TYPE_BIT
       res = cci_get_data (self->handle, index, CCI_A_TYPE_STR, &buffer, &ind);
       if (res < 0)
-	{
-	  return handle_error (res, NULL);
-	}
+        {
+          return handle_error (res, NULL);
+        }
       if (ind < 0)
-	{
-	  Py_INCREF (Py_None);
-	  val = Py_None;
-	}
+        {
+          Py_INCREF (Py_None);
+          val = Py_None;
+        }
       else
-	{
-	  len = strlen (buffer);
-	  str_buffer = (char *) malloc (len + 1);
-	  if (str_buffer == NULL)
-	    {
-	      Py_INCREF (Py_None);
-	      return Py_None;
-	    }
-	  memset (str_buffer, 0, len + 1);
-	  memcpy (str_buffer, buffer, len);
-	  /*while(str_buffer[len-1] == '0' && len>1)
-	     {
-	     str_buffer[len-1]='\0';
-	     len--;
-	     } */
-	  if (self->charset != NULL && *(self->charset) != '\0')
-	    {
-	      val =
-		_cubrid_return_PyUnicode_FromString (str_buffer,
-						     strlen (str_buffer),
-						     self->charset, NULL);
-	    }
-	  else
-	    {
-	      val = _cubrid_return_PyString_FromString (str_buffer);
-	    }
-	  free (str_buffer);
-	}
+        {
+          len = strlen (buffer);
+          str_buffer = (char *) malloc (len + 1);
+          if (str_buffer == NULL)
+            {
+              Py_INCREF (Py_None);
+              return Py_None;
+            }
+          memset (str_buffer, 0, len + 1);
+          memcpy (str_buffer, buffer, len);
+          val = _cubrid_return_PyString_FromString (str_buffer);
+          free (str_buffer);
+        }
 
       break;
     case CCI_U_TYPE_INT:

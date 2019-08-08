@@ -21,6 +21,8 @@ InfoLine = namedtuple('InfoLine', 'col_name attr_type data_type prec scale is_nu
 
 class DatabaseIntrospection(BaseDatabaseIntrospection):
     data_types_reverse = {
+        FIELD_TYPE.BIT: 'BinaryField',
+        FIELD_TYPE.VARBIT: 'BinaryField',
         FIELD_TYPE.CHAR: 'CharField',
         FIELD_TYPE.VARCHAR: 'CharField',
         FIELD_TYPE.NCHAR: 'CharField',
@@ -39,8 +41,6 @@ class DatabaseIntrospection(BaseDatabaseIntrospection):
         FIELD_TYPE.SET: 'TextField',
         FIELD_TYPE.MULTISET: 'TextField',
         FIELD_TYPE.SEQUENCE: 'TextField',
-        FIELD_TYPE.BLOB: 'BinaryField',
-        FIELD_TYPE.CLOB: 'TextField',
     }
 
     def get_table_list(self, cursor):
