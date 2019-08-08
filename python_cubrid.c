@@ -2408,21 +2408,21 @@ _cubrid_row_to_tuple (_cubrid_CursorObject * self)
     {
       return handle_error (CUBRID_ER_INVALID_CURSOR, NULL);
     }
-  row = PyList_New (self->col_count);
+  row = PyTuple_New (self->col_count);
 
   for (i = 0; i < self->col_count; i++)
     {
       type = CCI_GET_RESULT_INFO_TYPE (self->col_info, i + 1);
 
       if (CCI_IS_COLLECTION_TYPE (type))
-	{
-	  val = _cubrid_CursorObject_dbset_to_pyvalue (self, i + 1);
-	}
+        {
+          val = _cubrid_CursorObject_dbset_to_pyvalue (self, i + 1);
+        }
       else
-	{
-	  val = _cubrid_CursorObject_dbval_to_pyvalue (self, type, i + 1);
-	}
-      PyList_SetItem (row, i, val);
+        {
+          val = _cubrid_CursorObject_dbval_to_pyvalue (self, type, i + 1);
+        }
+      PyTuple_SetItem (row, i, val);
     }
 
   return row;
