@@ -139,6 +139,9 @@ class DatabaseFeatures(BaseDatabaseFeatures):
     # to remove any ordering?
     requires_explicit_null_ordering_when_grouping = False
 
+    # Can't take defaults as parameter
+    requires_literal_defaults = True
+
     supports_date_lookup_using_string = False
 
     # Can a fixture contain forward references? i.e., are

@@ -1,4 +1,5 @@
-# New file added for Django 1.7
+import datetime
+
 import django
 from django.db.models.fields.related import ManyToManyField
 if django.VERSION >= (1, 8):
@@ -29,7 +30,19 @@ class DatabaseSchemaEditor(BaseDatabaseSchemaEditor):
     sql_delete_pk = "ALTER TABLE %(table)s DROP PRIMARY KEY"
 
     def quote_value(self, value):
-        return self.connection.escape_string(value)
+        if isinstance(value, (datetime.date, datetime.time, datetime.datetime)):
+            return "'%s'" % value
+        elif isinstance(value, str):
+            return "'%s'" % self.connection.connection.escape_string(value)
+        elif isinstance(value, (bytes, bytearray, memoryview)):
+            return "'%s'" % value.hex()
+        elif isinstance(value, bool):
+            return "1" if value else "0"
+        else:
+            return str(value)
+
+    def prepare_default(self, value):
+        return self.quote_value(value)
 
     def column_sql(self, model, field, include_default=False):
         """
