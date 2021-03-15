@@ -294,6 +294,12 @@ class DatabaseOperations(BaseDatabaseOperations):
         else:
             return []
 
+    def prep_for_like_query(self, x):
+        # TODO escape "_" character, if possible (seems not to be working properly)
+        return str(x).replace("\\", "\\\\").replace("%", "\%")
+
+    prep_for_iexact_query = prep_for_like_query
+
     def value_to_db_datetime(self, value):
         if value is None:
             return None
