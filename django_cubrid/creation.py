@@ -91,7 +91,8 @@ class DatabaseCreation(BaseDatabaseCreation):
         if keepdb:
             # Check if the test database already exists, in case keepdb is True
             try:
-                subprocess.check_call(check_command)
+                subprocess.run(check_command, check = True)
+                print("Database already exists")
                 return # nothing to do if it already exists
             except subprocess.CalledProcessError:
                 pass # go ahead and create it
@@ -106,13 +107,18 @@ class DatabaseCreation(BaseDatabaseCreation):
             pass
 
         try:
-            subprocess.check_call(create_command)
+            cp = subprocess.run(create_command, capture_output = True)
+            sys.stdout.write(cp.stdout.decode())
+            sys.stderr.write(cp.stderr.decode())
+            cp.check_returncode()
             print('Created')
-            subprocess.check_call(start_command)
+            subprocess.run(start_command, check = True)
             print('Started')
-            subprocess.check_call(check_command)
+            subprocess.run(check_command, check = True)
+            cursor = self.connection.cursor()
 
         except Exception as e:
+            autoclobber = True
             sys.stderr.write("Got an error creating the test database: %s\n" % e)
             if not autoclobber:
                 confirm = input("Type 'yes' if you would like to try deleting the test database '%s', or 'no' to cancel: " % test_database_name)
@@ -120,12 +126,17 @@ class DatabaseCreation(BaseDatabaseCreation):
                 try:
                     if verbosity >= 1:
                         print("Destroying old test database...")
-                        subprocess.check_call(stop_command)
-                        subprocess.check_call(delete_command)
+                        subprocess.run(stop_command)
+                        subprocess.run(delete_command)
 
                         print("Creating test database...")
-                        subprocess.check_call(create_command)
-                        subprocess.check_call(start_command)
+                        cp = subprocess.run(create_command, capture_output = True)
+                        sys.stdout.write(cp.stdout.decode())
+                        sys.stderr.write(cp.stderr.decode())
+                        cp.check_returncode()
+                        print('Created')
+
+                        subprocess.run(start_command)
                 except Exception as e:
                     sys.stderr.write("Got an error recreating the test database: %s\n" % e)
                     sys.exit(2)
@@ -155,9 +166,7 @@ class DatabaseCreation(BaseDatabaseCreation):
         # connected to it.
         cursor = self.connection.cursor()
         time.sleep(1) # To avoid "database is being accessed by other users" errors.
-        p = subprocess.Popen(["cubrid", "server", "stop", test_database_name])
-        ret = os.waitpid(p.pid, 0)[1]
-        p = subprocess.Popen(["cubrid", "deletedb", test_database_name])
-        ret = os.waitpid(p.pid, 0)[1]
+        subprocess.run(["cubrid", "server", "stop", test_database_name])
+        subprocess.run(["cubrid", "deletedb", test_database_name])
 
         self.connection.close()
