@@ -115,8 +115,7 @@ class BaseCursor(object):
         else:
             stmt = query
 
-        if sys.version_info >= (3, 0):
-            stmt = stmt.decode()
+        stmt = stmt.decode()
 
         self._cs.prepare(stmt)
 
