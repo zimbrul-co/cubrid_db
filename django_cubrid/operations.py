@@ -208,6 +208,8 @@ class DatabaseOperations(BaseDatabaseOperations):
                 converters.append(self.convert_datetimefield_value)
         elif internal_type == 'UUIDField':
             converters.append(self.convert_uuidfield_value)
+        elif internal_type in ['IPAddressField', 'GenericIPAddressField']:
+            converters.append(self.convert_ipaddress_value)
         return converters
 
     def convert_binaryfield_value(self, value, expression, connection):
@@ -240,3 +242,7 @@ class DatabaseOperations(BaseDatabaseOperations):
             value = uuid.UUID(value)
         return value
 
+    def convert_ipaddress_value(self, value, expression, connection):
+        if value is not None:
+            value = value.strip()
+        return value
