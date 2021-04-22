@@ -118,7 +118,7 @@ else:
 py_modules = [
     "CUBRIDdb.connections", "CUBRIDdb.cursors", "CUBRIDdb.FIELD_TYPE",
     "django_cubrid.base", "django_cubrid.client", "django_cubrid.compiler",
-    "django_cubrid.creation", "django_cubrid.introspection",
+    "django_cubrid.creation", "django_cubrid.introspection", "django_cubrid.operations",
     "django_cubrid.schema", "django_cubrid.validation",
 ]
 
