@@ -16,22 +16,20 @@ except ImportError as e:
 
 import django.db.utils
 
+from django.conf import settings
 from django.db.backends import *
+from django.db.backends.base.base import BaseDatabaseWrapper
+from django.db.backends.base.features import BaseDatabaseFeatures
 from django.db.backends.signals import connection_created
+from django.utils.functional import cached_property
+from django.utils.encoding import force_text
+
 from django_cubrid.client import DatabaseClient
 from django_cubrid.creation import DatabaseCreation
 from django_cubrid.introspection import DatabaseIntrospection
 from django_cubrid.operations import DatabaseOperations
+from django_cubrid.schema import DatabaseSchemaEditor
 from django_cubrid.validation import DatabaseValidation
-from django.utils.encoding import force_text
-from django.conf import settings
-if django.VERSION >= (1, 7) and django.VERSION < (1, 8):
-    from django_cubrid.schema import DatabaseSchemaEditor
-elif django.VERSION >= (1, 8):
-    from django_cubrid.schema import DatabaseSchemaEditor
-    from django.db.backends.base.base import BaseDatabaseWrapper
-    from django.db.backends.base.features import BaseDatabaseFeatures
-    from django.utils.functional import cached_property
 
 
 """
@@ -193,80 +191,65 @@ class DatabaseWrapper(BaseDatabaseWrapper):
         'endswith': "LIKE '%%' || {}",
         'iendswith': "LIKE '%%' || UPPER({})",
     }
-    if django.VERSION >= (1, 8):
-        class BitFieldFmt:
-            def __mod__(self, field_dict):
-                assert isinstance(field_dict, dict)
-                assert 'max_length' in field_dict
+    class BitFieldFmt:
+        def __mod__(self, field_dict):
+            assert isinstance(field_dict, dict)
+            assert 'max_length' in field_dict
 
-                s = 'BIT VARYING'
-                if field_dict['max_length'] is not None:
-                    s += '(%i)' % (8 * field_dict['max_length'])
-                return s
+            s = 'BIT VARYING'
+            if field_dict['max_length'] is not None:
+                s += '(%i)' % (8 * field_dict['max_length'])
+            return s
 
-        _data_types = {
-            'AutoField': 'integer AUTO_INCREMENT',
-            'BinaryField': BitFieldFmt(),
-            'BooleanField': 'short',
-            'CharField': 'varchar(%(max_length)s)',
-            'CommaSeparatedIntegerField': 'varchar(%(max_length)s)',
-            'DateField': 'date',
-            'DateTimeField': 'datetime',
-            'DecimalField': 'numeric(%(max_digits)s, %(decimal_places)s)',
-            'DurationField': 'bigint',
-            'FileField': 'varchar(%(max_length)s)',
-            'FilePathField': 'varchar(%(max_length)s)',
-            'FloatField': 'double precision',
-            'IntegerField': 'integer',
-            'BigIntegerField': 'bigint',
-            'IPAddressField': 'char(15)',
-            'GenericIPAddressField': 'char(39)',
-            'NullBooleanField': 'short',
-            'OneToOneField': 'integer',
-            'PositiveIntegerField': 'integer',
-            'PositiveSmallIntegerField': 'smallint',
-            'SlugField': 'varchar(%(max_length)s)',
-            'SmallIntegerField': 'smallint',
-            'TextField': 'string',
-            'TimeField': 'time',
-            'UUIDField': 'char(32)',
-        }
-        SchemaEditorClass = DatabaseSchemaEditor
-    if django.VERSION >= (1, 10):
-        _data_types.update({
-            'BigAutoField': 'bigint AUTO_INCREMENT',
-        })
+    _data_types = {
+        'AutoField': 'integer AUTO_INCREMENT',
+        'BigAutoField': 'bigint AUTO_INCREMENT',
+        'BinaryField': BitFieldFmt(),
+        'BooleanField': 'short',
+        'CharField': 'varchar(%(max_length)s)',
+        'CommaSeparatedIntegerField': 'varchar(%(max_length)s)',
+        'DateField': 'date',
+        'DateTimeField': 'datetime',
+        'DecimalField': 'numeric(%(max_digits)s, %(decimal_places)s)',
+        'DurationField': 'bigint',
+        'FileField': 'varchar(%(max_length)s)',
+        'FilePathField': 'varchar(%(max_length)s)',
+        'FloatField': 'double precision',
+        'IntegerField': 'integer',
+        'BigIntegerField': 'bigint',
+        'IPAddressField': 'char(15)',
+        'GenericIPAddressField': 'char(39)',
+        'NullBooleanField': 'short',
+        'OneToOneField': 'integer',
+        'PositiveIntegerField': 'integer',
+        'PositiveSmallIntegerField': 'smallint',
+        'SlugField': 'varchar(%(max_length)s)',
+        'SmallIntegerField': 'smallint',
+        'TextField': 'string',
+        'TimeField': 'time',
+        'UUIDField': 'char(32)',
+    }
 
-    if django.VERSION >= (1, 11):
-        client_class = DatabaseClient
-        creation_class = DatabaseCreation
-        features_class = DatabaseFeatures
-        introspection_class = DatabaseIntrospection
-        ops_class = DatabaseOperations
-        validation_class = DatabaseValidation
+    SchemaEditorClass = DatabaseSchemaEditor
+    client_class = DatabaseClient
+    creation_class = DatabaseCreation
+    features_class = DatabaseFeatures
+    introspection_class = DatabaseIntrospection
+    ops_class = DatabaseOperations
+    validation_class = DatabaseValidation
 
-    Database = Database
 
     def __init__(self, *args, **kwargs):
         super(DatabaseWrapper, self).__init__(*args, **kwargs)
 
         self.server_version = None
 
-        if django.VERSION < (1, 11):
-            self.features = DatabaseFeatures(self)
-            self.ops = DatabaseOperations(self)
-            self.client = DatabaseClient(self)
-            self.creation = DatabaseCreation(self)
-            self.introspection = DatabaseIntrospection(self)
-            self.validation = DatabaseValidation(self)
-
-    if django.VERSION >= (1, 8):
-        @cached_property
-        def data_types(self):
-            if self.features.supports_microsecond_precision:
-                return dict(self._data_types, DateTimeField='datetime', TimeField='time')
-            else:
-                return self._data_types
+    @cached_property
+    def data_types(self):
+        if self.features.supports_microsecond_precision:
+            return dict(self._data_types, DateTimeField='datetime', TimeField='time')
+        else:
+            return self._data_types
 
     def get_connection_params(self):
         # Backend-specific parameters
@@ -346,9 +329,3 @@ class DatabaseWrapper(BaseDatabaseWrapper):
     def _savepoint_commit(self, sid):
         # CUBRID does not support "RELEASE SAVEPOINT xxx"
         pass
-
-    if django.VERSION >= (1, 7) and django.VERSION < (1, 8):
-        def schema_editor(self, *args, **kwargs):
-            return DatabaseSchemaEditor(self, *args, **kwargs)
-
-

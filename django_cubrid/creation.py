@@ -4,54 +4,32 @@ import time
 import subprocess
 import django
 
-if django.VERSION >= (1, 8):
-    from django.db.backends.base.creation import BaseDatabaseCreation
-else:
-    from django.db.backends.creation import BaseDatabaseCreation
+from django.db.backends.base.creation import BaseDatabaseCreation
+
 # The prefix to put on the default database name when creating
 # the test database.
 TEST_DATABASE_PREFIX = 'test_'
 
 
 class DatabaseCreation(BaseDatabaseCreation):
-    if django.VERSION < (1, 6):
-        def sql_for_inline_foreign_key_references(self, field, known_models, style):
-            "Return the SQL snippet defining the foreign key reference for a field"
-            qn = self.connection.ops.quote_name
-            if field.rel.to in known_models:
-                output = [style.SQL_KEYWORD('FOREIGN KEY') + ' ' + \
-                    style.SQL_KEYWORD('REFERENCES') + ' ' + \
-                    style.SQL_TABLE(qn(field.rel.to._meta.db_table)) + ' (' + \
-                    style.SQL_FIELD(qn(field.rel.to._meta.get_field(field.rel.field_name).column)) + ')' +
-                    self.connection.ops.deferrable_sql()
-                ]
-                pending = False
-            else:
-                # We haven't yet created the table to which this field
-                # is related, so save it for later.
-                output = []
-                pending = True
+    def sql_for_inline_foreign_key_references(self, model, field, known_models, style):
+        qn = self.connection.ops.quote_name
+        rel_to = field.rel.to
+        if rel_to in known_models or rel_to == model:
+            output = [style.SQL_KEYWORD('FOREIGN KEY') + ' ' + \
+                style.SQL_KEYWORD('REFERENCES') + ' ' + \
+                style.SQL_TABLE(qn(field.rel.to._meta.db_table)) + ' (' + \
+                style.SQL_FIELD(qn(field.rel.to._meta.get_field(field.rel.field_name).column)) + ')' +
+                self.connection.ops.deferrable_sql()
+            ]
+            pending = False
+        else:
+            # We haven't yet created the table to which this field
+            # is related, so save it for later.
+            output = []
+            pending = True
 
-            return output, pending
-    else:
-        def sql_for_inline_foreign_key_references(self, model, field, known_models, style):
-            qn = self.connection.ops.quote_name
-            rel_to = field.rel.to
-            if rel_to in known_models or rel_to == model:
-                output = [style.SQL_KEYWORD('FOREIGN KEY') + ' ' + \
-                    style.SQL_KEYWORD('REFERENCES') + ' ' + \
-                    style.SQL_TABLE(qn(field.rel.to._meta.db_table)) + ' (' + \
-                    style.SQL_FIELD(qn(field.rel.to._meta.get_field(field.rel.field_name).column)) + ')' +
-                    self.connection.ops.deferrable_sql()
-                ]
-                pending = False
-            else:
-                # We haven't yet created the table to which this field
-                # is related, so save it for later.
-                output = []
-                pending = True
-
-            return output, pending
+        return output, pending
 
     def sql_indexes_for_model(self, model, style):
         """

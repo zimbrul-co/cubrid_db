@@ -1,11 +1,8 @@
 import datetime
 
 import django
+from django.db.backends.base.schema import BaseDatabaseSchemaEditor
 from django.db.models.fields.related import ManyToManyField
-if django.VERSION >= (1, 8):
-    from django.db.backends.base.schema import BaseDatabaseSchemaEditor
-else:
-    from django.db.backends.schema import BaseDatabaseSchemaEditor
 
 
 class DatabaseSchemaEditor(BaseDatabaseSchemaEditor):

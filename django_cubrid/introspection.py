@@ -4,16 +4,11 @@ import re
 from collections import namedtuple
 from CUBRIDdb import FIELD_TYPE
 
-if django.VERSION >= (1, 6) and django.VERSION <= (1, 8):
-    from django.db.backends import BaseDatabaseIntrospection
-    from django.db.backends import FieldInfo
-    from django.utils.encoding import force_text
-else:
-    from django.db.backends.base.introspection import BaseDatabaseIntrospection
-    from django.db.backends.base.introspection import FieldInfo
-    from django.db.backends.base.introspection import TableInfo
-    from django.db.models.indexes import Index
-    from django.utils.encoding import force_text
+from django.db.backends.base.introspection import BaseDatabaseIntrospection
+from django.db.backends.base.introspection import FieldInfo
+from django.db.backends.base.introspection import TableInfo
+from django.db.models.indexes import Index
+from django.utils.encoding import force_text
 
 
 InfoLine = namedtuple('InfoLine', 'col_name attr_type data_type prec scale is_nullable default_value def_order is_system_class class_type partitioned owner_name is_reuse_old_class')
@@ -45,13 +40,9 @@ class DatabaseIntrospection(BaseDatabaseIntrospection):
 
     def get_table_list(self, cursor):
         """Returns a list of table names in the current database."""
-        if django.VERSION >= (1, 8):
-            cursor.execute("SHOW FULL TABLES")
-            return [TableInfo(row[0], {'BASE TABLE': 't', 'VIEW': 'v'}.get(row[1]))
-                    for row in cursor.fetchall()]
-        else:
-            cursor.execute("SHOW TABLES")
-            return [row[0] for row in cursor.fetchall()]
+        cursor.execute("SHOW FULL TABLES")
+        return [TableInfo(row[0], {'BASE TABLE': 't', 'VIEW': 'v'}.get(row[1]))
+                for row in cursor.fetchall()]
 
     def table_name_converter(self, name):
         """Table name comparison is case insensitive under CUBRID"""
@@ -69,30 +60,20 @@ class DatabaseIntrospection(BaseDatabaseIntrospection):
         """Returns a description of the table, with the DB-API cursor.description interface."""
         cursor.execute("SELECT * FROM %s LIMIT 1" % self.connection.ops.quote_name(table_name))
 
-        if django.VERSION >= (1, 7):
-            fields = []
-            for line in cursor.description:
-                info = field_info[line[0]]
-                fields.append(FieldInfo(
-                    force_text(line[0]),        # name
-                    line[1],                    # type
-                    line[2],                    # display_size
-                    info.prec,                  # internal size - use precision value
-                    info.prec,                  # precision
-                    info.scale,                 # scale
-                    info.is_nullable == "YES",  # null_ok
-                    info.default_value,         # default
-                ))
-            return fields
-        elif django.VERSION >= (1, 6):
-            # In case of char type, django uses line[3](internal_size) as max_length
-            return [FieldInfo(*((force_text(line[0]),) + line[1:3]
-                    + (line[4],)  # use precision value as internal_size
-                    + line[4:7]))
-                    for line in cursor.description]
-        else:
-            return [line[:3] + (line[4],)
-                    + line[4:] for line in cursor.description]
+        fields = []
+        for line in cursor.description:
+            info = field_info[line[0]]
+            fields.append(FieldInfo(
+                force_text(line[0]),        # name
+                line[1],                    # type
+                line[2],                    # display_size
+                info.prec,                  # internal size - use precision value
+                info.prec,                  # precision
+                info.scale,                 # scale
+                info.is_nullable == "YES",  # null_ok
+                info.default_value,         # default
+            ))
+        return fields
 
     def get_relations(self, cursor, table_name):
         """
