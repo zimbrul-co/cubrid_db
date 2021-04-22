@@ -21,7 +21,6 @@ from django.db.backends import *
 from django.db.backends.base.base import BaseDatabaseWrapper
 from django.db.backends.base.features import BaseDatabaseFeatures
 from django.db.backends.signals import connection_created
-from django.utils.functional import cached_property
 from django.utils.encoding import force_text
 
 from django_cubrid.client import DatabaseClient
@@ -143,9 +142,6 @@ class DatabaseFeatures(BaseDatabaseFeatures):
     # at the end of each save operation?
     supports_forward_references = False
 
-    # CUBRID support millisecond precision not second.
-    supports_microsecond_precision = True
-
     supports_paramstyle_pyformat = False
 
     supports_regex_backreferencing = False
@@ -201,7 +197,7 @@ class DatabaseWrapper(BaseDatabaseWrapper):
                 s += '(%i)' % (8 * field_dict['max_length'])
             return s
 
-    _data_types = {
+    data_types = {
         'AutoField': 'integer AUTO_INCREMENT',
         'BigAutoField': 'bigint AUTO_INCREMENT',
         'BinaryField': BitFieldFmt(),
@@ -238,18 +234,13 @@ class DatabaseWrapper(BaseDatabaseWrapper):
     ops_class = DatabaseOperations
     validation_class = DatabaseValidation
 
+    Database = Database
+
 
     def __init__(self, *args, **kwargs):
         super(DatabaseWrapper, self).__init__(*args, **kwargs)
 
         self.server_version = None
-
-    @cached_property
-    def data_types(self):
-        if self.features.supports_microsecond_precision:
-            return dict(self._data_types, DateTimeField='datetime', TimeField='time')
-        else:
-            return self._data_types
 
     def get_connection_params(self):
         # Backend-specific parameters
