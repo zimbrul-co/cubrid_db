@@ -105,10 +105,6 @@ typedef int (*CCI_GET_LAST_INSERT_ID) (int con, void *buff,
 static CCI_GET_LAST_INSERT_ID cci_get_last_insert_id_fp = NULL;
 
 
-#if (PY_MAJOR_VERSION == 2 && PY_MINOR_VERSION <= 4)
-typedef int Py_ssize_t;
-#endif
-
 static PyObject *
 _cubrid_return_PyUnicode_FromString (const char *buf, Py_ssize_t size,
 				     const char *encoding, const char *errors)
@@ -119,21 +115,13 @@ _cubrid_return_PyUnicode_FromString (const char *buf, Py_ssize_t size,
 static PyObject *
 _cubrid_return_PyString_FromString (const char *buf)
 {
-#if PY_MAJOR_VERSION >= 3
   return PyUnicode_FromString (buf);
-#else
-  return PyString_FromString (buf);
-#endif
 }
 
 static PyObject *
 _cubrid_return_PyInt_FromLong (long n)
 {
-#if PY_MAJOR_VERSION >= 3
   return PyLong_FromLong (n);
-#else
-  return PyInt_FromLong (n);
-#endif
 }
 
 static PyObject *
@@ -366,11 +354,7 @@ _cubrid_escape_string (PyObject * self, PyObject * args, PyObject * kwargs)
       free (escape_string);
       return handle_error (res, &error);
     }
-#if PY_MAJOR_VERSION >= 3
   op = PyUnicode_FromStringAndSize (escape_string, res);
-#else
-  op = PyString_FromStringAndSize (escape_string, res);
-#endif
 
   free (escape_string);
 
@@ -1412,11 +1396,7 @@ _cubrid_ConnectionObject_escape_string (_cubrid_ConnectionObject * self,
       return handle_error (res, &error);
     }
 
-#if PY_MAJOR_VERSION >= 3
   op = PyUnicode_FromStringAndSize (escape_string, res);
-#else
-  op = PyString_FromStringAndSize (escape_string, res);
-#endif
 
   free (escape_string);
 
@@ -2214,11 +2194,7 @@ _cubrid_CursorObject_dbval_to_pyvalue (_cubrid_CursorObject * self, int type,
       else
 	{
 	  tmpval = _cubrid_return_PyString_FromString (buffer);
-#if PY_MAJOR_VERSION >= 3
 	  val = PyFloat_FromString (tmpval);
-#else
-	  val = PyFloat_FromString (tmpval, NULL);
-#endif
 	  Py_DECREF (tmpval);
 	}
       break;
@@ -3318,11 +3294,7 @@ _cubrid_LobObject_read (_cubrid_LobObject * self, PyObject * args)
 
   self->pos += len;
 
-#if PY_MAJOR_VERSION >= 3
   ret = PyUnicode_FromStringAndSize (buf, (int) len);
-#else
-  ret = PyString_FromStringAndSize (buf, (int) len);
-#endif
 
   PyMem_Free (buf);
   return ret;
@@ -3620,11 +3592,7 @@ Process Set,MULTISET and LIST/SEQUENCE type\n\
 The class is support by version 9.1.0.0003 and later";
 
 PyTypeObject _cubrid_SetObject_type = {
-#if PY_MAJOR_VERSION >= 3
   PyVarObject_HEAD_INIT (NULL, 0)
-#else
-  PyObject_HEAD_INIT (NULL) 0,	/* ob_size */
-#endif
   "_cubrid.set",		/* tp_name */
   sizeof (_cubrid_SetObject),	/* tp_basicsize */
   0,				/* tp_itemsize */
@@ -3704,11 +3672,7 @@ static char _cubrid_LobObject__doc__[] = "Lob class.\n\
 Process BLOB/CLOB type";
 
 PyTypeObject _cubrid_LobObject_type = {
-#if PY_MAJOR_VERSION >= 3
   PyVarObject_HEAD_INIT (NULL, 0)
-#else
-  PyObject_HEAD_INIT (NULL) 0,	/* ob_size */
-#endif
   "_cubrid.lob",		/* tp_name */
   sizeof (_cubrid_LobObject),	/* tp_basicsize */
   0,				/* tp_itemsize */
@@ -4007,11 +3971,7 @@ static struct PyMethodDef _cubrid_methods[] = {
 };
 
 PyTypeObject _cubrid_ConnectionObject_type = {
-#if PY_MAJOR_VERSION >= 3
   PyVarObject_HEAD_INIT (NULL, 0)
-#else
-  PyObject_HEAD_INIT (NULL) 0,	/* ob_size */
-#endif
   "_cubrid.connection",		/* tp_name */
   sizeof (_cubrid_ConnectionObject),	/* tp_basicsize */
   0,				/* tp_itemsize */
@@ -4053,11 +4013,7 @@ PyTypeObject _cubrid_ConnectionObject_type = {
 };
 
 PyTypeObject _cubrid_CursorObject_type = {
-#if PY_MAJOR_VERSION >= 3
   PyVarObject_HEAD_INIT (NULL, 0)
-#else
-  PyObject_HEAD_INIT (NULL) 0,	/* ob_size */
-#endif
   "_cubrid.cursor",		/* tp_name */
   sizeof (_cubrid_CursorObject),	/* tp_basicsize */
   0,				/* tp_itemsize */
@@ -4101,7 +4057,6 @@ PyTypeObject _cubrid_CursorObject_type = {
 #define _CUBRID_VERSION_	"10.0.0.0001"
 static char _cubrid_doc[] = "CUBRID API Module for Python";
 
-#if PY_MAJOR_VERSION >= 3
 static struct PyModuleDef cubriddef = {
   PyModuleDef_HEAD_INIT,
   "_cubrid",
@@ -4113,7 +4068,6 @@ static struct PyModuleDef cubriddef = {
   NULL,
   NULL
 };
-#endif
 
 /*
  *  pep-0249 Error inheritance layout
@@ -4291,23 +4245,12 @@ all_ins (PyObject * d)
   return 0;
 }
 
-#if PY_MAJOR_VERSION >= 3
 PyObject *
 PyInit__cubrid (void)
-#else
-void
-init_cubrid (void)
-#endif
 {
   PyObject *dict, *module, *mDecimal;
 
-#if PY_MAJOR_VERSION >= 3
   module = PyModule_Create (&cubriddef);
-#else
-  module =
-    Py_InitModule4 ("_cubrid", _cubrid_methods, _cubrid_doc,
-		    (PyObject *) NULL, PYTHON_API_VERSION);
-#endif
 
   if (!(dict = PyModule_GetDict (module)))
     {
@@ -4387,11 +4330,7 @@ init_cubrid (void)
   /* invoke PyDateTime_IMPORT macro to use functions from datetime.h */
   PyDateTime_IMPORT;
 
-#if PY_MAJOR_VERSION >= 3
   return module;
-#else
-  return;
-#endif
 
 Error:
   if (PyErr_Occurred ())
@@ -4399,9 +4338,5 @@ Error:
       PyErr_SetString (PyExc_ImportError, "_cubrid: init failure");
     }
 
-#if PY_MAJOR_VERSION >= 3
   return NULL;
-#else
-  return;
-#endif
 }
