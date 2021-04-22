@@ -987,19 +987,19 @@ _cubrid_ConnectionObject_batch_execute (_cubrid_ConnectionObject * self,
   PyObject *p_value;
   PyDictObject *p_result;
   PyTupleObject *p_batch_result;
-  
+
   if (!PyArg_ParseTuple (args, "O", &p_tube))
     {
       return handle_error (CUBRID_ER_INVALID_PARAM, NULL);
     }
-  if (!PyTuple_Check (p_tube))    
-    {      
-      return handle_error (CUBRID_ER_INVALID_PARAM, NULL);    
-    }  
+  if (!PyTuple_Check (p_tube))
+    {
+      return handle_error (CUBRID_ER_INVALID_PARAM, NULL);
+    }
   count = PyTuple_GET_SIZE (p_tube);
   if (count <= 0)
     {
-      return handle_error (CUBRID_ER_INVALID_PARAM, NULL);  
+      return handle_error (CUBRID_ER_INVALID_PARAM, NULL);
     }
   sql = (char **) _cubrid_get_data_buf (CCI_U_TYPE_CHAR, count + 1);
   if (NULL == sql)
@@ -1021,13 +1021,13 @@ _cubrid_ConnectionObject_batch_execute (_cubrid_ConnectionObject * self,
   p_batch_result = PyTuple_New(n_executed);
   for (i = 0; i < n_executed; ++i)
     {
-      p_result = PyDict_New();    
+      p_result = PyDict_New();
       err_code = PyDict_SetItemString(
         p_result, "err_no", _cubrid_return_PyInt_FromLong(result[i].err_no));
       if (result[i].err_no >= 0)
         {
           PyDict_SetItemString(
-            p_result, "err_msg", _cubrid_return_PyString_FromString("success"));        
+            p_result, "err_msg", _cubrid_return_PyString_FromString("success"));
         }
       else
         {
@@ -1037,12 +1037,12 @@ _cubrid_ConnectionObject_batch_execute (_cubrid_ConnectionObject * self,
 
       PyTuple_SetItem(p_batch_result, i, p_result);
     }
-  
-  err_code = cci_query_result_free (result, n_executed);    
-  if (err_code < 0)    
-    {     
-      return handle_error (err_code, NULL);  
-    } 
+
+  err_code = cci_query_result_free (result, n_executed);
+  if (err_code < 0)
+    {
+      return handle_error (err_code, NULL);
+    }
   return p_batch_result;
 }
 
@@ -2126,7 +2126,7 @@ _cubrid_CursorObject_execute (_cubrid_CursorObject * self, PyObject * args)
 }
 
 /* DB type to Python type mapping
-* 
+*
 * int, short 			-> Integer
 * float, double, numeric 	-> Float
 * numeric   			-> Decimal
@@ -2339,8 +2339,8 @@ _cubrid_CursorObject_dbval_to_pyvalue (_cubrid_CursorObject * self, int type,
   return val;
 }
 
-/* Collection(set, multiset, sequence) 	-> List, 
-* Collection' item  -> String 
+/* Collection(set, multiset, sequence) 	-> List,
+* Collection' item  -> String
 */
 
 static PyObject *
