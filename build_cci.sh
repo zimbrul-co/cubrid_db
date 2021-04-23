@@ -8,8 +8,7 @@ fi
 
 cd cci-src
 chmod +x configure
-chmod +x external/libregex38a/configure
-chmod +x external/libregex38a/install-sh
+touch configure.ac
 if [ "$1" = 'x86' ];then
   ./configure 
 else

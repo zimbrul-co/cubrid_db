@@ -5,6 +5,9 @@ import os
 import sys
 import platform
 
+if os.name == 'nt':
+    from distutils import msvc9compiler
+    msvc9compiler.VERSION = 14.0 #Visual studio 2015
 
 # Get the script directory.
 def get_script_dir():
@@ -125,7 +128,7 @@ py_modules = [
 # Install CUBRID-Python driver.
 setup(
     name="CUBRID-Python",
-    version="10.0.0.0001",
+    version="11.0.0.0001",
     description="Python interface to CUBRID",
     long_description=\
             "Python interface to CUBRID conforming to the python DB API 2.0 "
