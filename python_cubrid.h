@@ -1,3 +1,4 @@
+#define PY_SSIZE_T_CLEAN // allow 's#' format starting with Python 3.10
 #include "Python.h"
 #include "structmember.h"
 #include "datetime.h"
