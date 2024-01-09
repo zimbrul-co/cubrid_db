@@ -3,6 +3,7 @@
 #include "structmember.h"
 #include "datetime.h"
 #include "cas_cci.h"
+#include "broker_cas_error.h"
 
 #define PyString_FromString PyBytes_FromString
 #define PyString_AsString PyBytes_AsString
