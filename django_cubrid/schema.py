@@ -19,6 +19,10 @@ class DatabaseSchemaEditor(BaseDatabaseSchemaEditor):
         "ALTER TABLE %(table)s ADD CONSTRAINT %(name)s FOREIGN KEY "
         "(%(column)s) REFERENCES %(to_table)s (%(to_column)s)"
     )
+    sql_create_column_inline_fk = (
+        ', ADD CONSTRAINT %(name)s FOREIGN KEY (%(column)s) '
+        'REFERENCES %(to_table)s(%(to_column)s)'
+    )
     sql_delete_fk = "ALTER TABLE %(table)s DROP FOREIGN KEY %(name)s"
     sql_delete_index = "DROP INDEX %(name)s ON %(table)s"
     alter_string_set_null = 'MODIFY %(column)s %(type)s;'
