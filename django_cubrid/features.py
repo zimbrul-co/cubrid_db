@@ -34,9 +34,6 @@ class DatabaseFeatures(BaseDatabaseFeatures):
 
     can_rollback_ddl = True
 
-    # What kind of error does the backend throw when accessing closed cursor?
-    closed_cursor_error_class = django.db.utils.InterfaceError
-
     # insert into ... values(), (), ()
     has_bulk_insert = True
 
