@@ -40,3 +40,5 @@ BLOB        = 23
 CLOB        = 24
 
 STRING = VARCHAR
+
+JSON    = 34

@@ -26,6 +26,8 @@ class DatabaseFeatures(BaseDatabaseFeatures):
     # CUBRID 9.3 can't retrieve foreign key info from catalog tables.
     can_introspect_foreign_keys = False
 
+    can_introspect_json_field = True
+
     can_introspect_small_integer_field = True
 
     can_return_id_from_insert = False
@@ -37,6 +39,8 @@ class DatabaseFeatures(BaseDatabaseFeatures):
 
     # insert into ... values(), (), ()
     has_bulk_insert = True
+
+    has_native_json_field = True
 
     # This feature is supported after 9.3
     has_select_for_update = True
@@ -65,6 +69,8 @@ class DatabaseFeatures(BaseDatabaseFeatures):
     supports_forward_references = False
 
     supports_ignore_conflicts = False
+
+    supports_json_field_contains = True
 
     supports_paramstyle_pyformat = False
 

@@ -148,6 +148,7 @@ class DatabaseWrapper(BaseDatabaseWrapper):
         'BigIntegerField': 'bigint',
         'IPAddressField': 'char(15)',
         'GenericIPAddressField': 'char(39)',
+        'JSONField': 'json',
         'NullBooleanField': 'short',
         'OneToOneField': 'integer',
         'PositiveIntegerField': 'integer',
