@@ -44,8 +44,8 @@ class DatabaseIntrospection(BaseDatabaseIntrospection):
         return [TableInfo(row[0], {'BASE TABLE': 't', 'VIEW': 'v'}.get(row[1]))
                 for row in cursor.fetchall()]
 
-    def table_name_converter(self, name):
-        """Table name comparison is case insensitive under CUBRID"""
+    def identifier_converter(self, name):
+        """Identifiers are case insensitive under CUBRID"""
         return name.lower()
 
     def get_table_description(self, cursor, table_name):
