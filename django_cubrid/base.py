@@ -101,6 +101,8 @@ class DatabaseFeatures(BaseDatabaseFeatures):
     # Support for the DISTINCT ON clause
     can_distinct_on_fields = False
 
+    can_introspect_duration_field = False
+
     # CUBRID 9.3 can't retrieve foreign key info from catalog tables.
     can_introspect_foreign_keys = False
 
@@ -142,9 +144,15 @@ class DatabaseFeatures(BaseDatabaseFeatures):
     # at the end of each save operation?
     supports_forward_references = False
 
+    supports_ignore_conflicts = False
+
     supports_paramstyle_pyformat = False
 
+    supports_partial_indexes = False
+
     supports_regex_backreferencing = False
+
+    supports_table_check_constraints = False
 
     supports_timezones = False
 
