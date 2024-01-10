@@ -5,6 +5,7 @@ from django.utils.functional import cached_property
 
 
 class DatabaseFeatures(BaseDatabaseFeatures):
+    minimum_database_version = (10, 1)
 
     allows_group_by_pk = True
 

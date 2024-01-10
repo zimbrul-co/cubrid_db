@@ -76,15 +76,6 @@ class DatabaseCreation(BaseDatabaseCreation):
                 pass # go ahead and create it
 
         try:
-            server_version = self.connection.get_server_version().split(".")
-            # server_version = ["9", "x", "x", "x"]
-            if int (server_version[0]) <= 8: #8.x version
-                # locale argument in the createdb command must be removed.
-                create_command.pop(-1)
-        except:
-            pass
-
-        try:
             cp = subprocess.run(create_command, capture_output = True)
             sys.stdout.write(cp.stdout.decode())
             sys.stderr.write(cp.stderr.decode())

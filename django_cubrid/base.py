@@ -21,6 +21,7 @@ from django.db.backends import *
 from django.db.backends.base.base import BaseDatabaseWrapper
 from django.db.backends.base.features import BaseDatabaseFeatures
 from django.db.backends.signals import connection_created
+from django.utils.regex_helper import _lazy_re_compile
 
 from django_cubrid.client import DatabaseClient
 from django_cubrid.creation import DatabaseCreation
@@ -29,6 +30,11 @@ from django_cubrid.introspection import DatabaseIntrospection
 from django_cubrid.operations import DatabaseOperations
 from django_cubrid.schema import DatabaseSchemaEditor
 from django_cubrid.validation import DatabaseValidation
+
+
+# This should match the numerical portion of the version numbers (we can treat
+# versions like 5.0.24 and 5.0.24a as the same).
+db_version_re = _lazy_re_compile(r"(\d{1,2})\.(\d{1,2})\.(\d{1,2}).(\d{1,8})")
 
 
 """
@@ -173,7 +179,7 @@ class DatabaseWrapper(BaseDatabaseWrapper):
     def __init__(self, *args, **kwargs):
         super(DatabaseWrapper, self).__init__(*args, **kwargs)
 
-        self.server_version = None
+        self._db_version = None
 
     def get_connection_params(self):
         # Backend-specific parameters
@@ -240,15 +246,24 @@ class DatabaseWrapper(BaseDatabaseWrapper):
         else:
             return True
 
-    def get_server_version(self):
-        if not self.server_version:
-            if not self._valid_connection():
-                self.connection = self.get_new_connection(None)
-            m = self.connection.server_version()
-            if not m:
-                raise Exception('Unable to determine CUBRID version')
-            self.server_version = m
-        return self.server_version
+    def get_database_version(self):
+        if self._db_version:
+            return self._db_version
+
+        if not self._valid_connection():
+            self.connection = self.get_new_connection(None)
+        version_str = self.connection.server_version()
+        if not version_str:
+            raise Exception('Unable to determine CUBRID version string')
+
+        match = db_version_re.match(version_str)
+        if not match:
+            raise Exception(
+                f"Unable to determine CUBRID version from version string '{version_str}'"
+            )
+
+        self._db_version = tuple(int(x) for x in match.groups())
+        return self._db_version
 
     def _savepoint_commit(self, sid):
         # CUBRID does not support "RELEASE SAVEPOINT xxx"
