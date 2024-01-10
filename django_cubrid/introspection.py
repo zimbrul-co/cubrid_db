@@ -94,14 +94,6 @@ class DatabaseIntrospection(BaseDatabaseIntrospection):
 
         return [{'table': table_name, 'column': m.group(1)}]
 
-    def get_key_columns(self, cursor, table_name):
-        """
-        Returns a list of (column_name, referenced_table_name, referenced_column_name) for all
-        key columns in given table.
-        """
-
-        raise NotImplementedError
-
     def get_indexes(self, cursor, table_name):
         cursor.execute("""
             SELECT db_index_key.key_attr_name, db_index.is_primary_key, db_index.is_unique
