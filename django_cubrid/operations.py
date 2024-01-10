@@ -7,7 +7,7 @@ import warnings
 from django.conf import settings
 from django.db.backends.base.operations import BaseDatabaseOperations
 from django.utils import timezone
-from django.utils.encoding import force_text
+from django.utils.encoding import force_str
 
 
 class DatabaseOperations(BaseDatabaseOperations):
@@ -224,7 +224,7 @@ class DatabaseOperations(BaseDatabaseOperations):
 
     def convert_textfield_value(self, value, expression, connection):
         if value is not None:
-            value = force_text(value)
+            value = force_str(value)
         return value
 
     def convert_booleanfield_value(self, value, expression, connection):

@@ -8,7 +8,7 @@ from django.db.backends.base.introspection import BaseDatabaseIntrospection
 from django.db.backends.base.introspection import FieldInfo
 from django.db.backends.base.introspection import TableInfo
 from django.db.models.indexes import Index
-from django.utils.encoding import force_text
+from django.utils.encoding import force_str
 
 
 InfoLine = namedtuple('InfoLine', 'col_name attr_type data_type prec scale is_nullable default_value def_order is_system_class class_type partitioned owner_name is_reuse_old_class')
@@ -64,7 +64,7 @@ class DatabaseIntrospection(BaseDatabaseIntrospection):
         for line in cursor.description:
             info = field_info[line[0]]
             fields.append(FieldInfo(
-                force_text(line[0]),        # name
+                force_str(line[0]),         # name
                 line[1],                    # type
                 line[2],                    # display_size
                 info.prec,                  # internal size - use precision value

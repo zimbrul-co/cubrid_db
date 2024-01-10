@@ -21,7 +21,6 @@ from django.db.backends import *
 from django.db.backends.base.base import BaseDatabaseWrapper
 from django.db.backends.base.features import BaseDatabaseFeatures
 from django.db.backends.signals import connection_created
-from django.utils.encoding import force_text
 
 from django_cubrid.client import DatabaseClient
 from django_cubrid.creation import DatabaseCreation
