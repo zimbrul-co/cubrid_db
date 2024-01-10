@@ -13,76 +13,100 @@ from django.utils.encoding import force_str
 class DatabaseOperations(BaseDatabaseOperations):
     compiler_module = "django_cubrid.compiler"
 
-    def date_extract_sql(self, lookup_type, field_name):
-        if lookup_type == 'week_day':
+    def date_extract_sql(self, lookup_type, sql, params):
+        # https://www.cubrid.org/manual/en/10.1/sql/function/datetime_fn.html
+        if lookup_type == "week_day":
             # DAYOFWEEK() returns an integer, 1-7, Sunday=1.
-            # Note: WEEKDAY() returns 0-6, Monday=0.
-            return "DAYOFWEEK(%s)" % field_name
+            return f"DAYOFWEEK({sql})", params
+        elif lookup_type == "iso_week_day":
+            # WEEKDAY() returns an integer, 0-6, Monday=0.
+            return f"WEEKDAY({sql}) + 1", params
+        elif lookup_type == "week":
+            # Mode 3: Monday, 1-53, with 4 or more days this year.
+            return f"WEEK({sql}, 3)", params
+        elif lookup_type == "iso_year":
+            return f"YEAR({sql})", params
         else:
-            return "EXTRACT(%s FROM %s)" % (lookup_type.upper(), field_name)
+            # EXTRACT returns 1-53 based on ISO-8601 for the week number.
+            lookup_type = lookup_type.upper()
+            if not self._extract_format_re.fullmatch(lookup_type):
+                raise ValueError(f"Invalid loookup type: {lookup_type!r}")
+            return f"EXTRACT({lookup_type} FROM {sql})", params
 
-    def date_trunc_sql(self, lookup_type, field_name):
-        fields = [
-                'year', 'month', 'day', 'hour',
-                'minute', 'second', 'milisecond'
-            ]
-        # Use double percents to escape.
-        format = (
-                '%%Y-', '%%m', '-%%d', ' %%H:', '%%i', ':%%s', '.%%ms'
+    def date_trunc_sql(self, lookup_type, sql, params, tzname=None):
+        sql, params = self._convert_sql_to_tz(sql, params, tzname)
+        fields = {
+            "year": "%Y-01-01",
+            "month": "%Y-%m-01",
+        }
+        if lookup_type in fields:
+            format_str = fields[lookup_type]
+            return f"CAST(DATE_FORMAT({sql}, %s) AS DATE)", (*params, format_str)
+        elif lookup_type == "quarter":
+            return (
+                f"MAKEDATE(YEAR({sql}), 1) + "
+                f"INTERVAL QUARTER({sql}) QUARTER - INTERVAL 1 QUARTER",
+                (*params, *params),
             )
-        format_def = ('0000-', '01', '-01', ' 00:', '00', ':00', '.00')
-        try:
-            i = fields.index(lookup_type) + 1
-        except ValueError:
-            sql = field_name
+        elif lookup_type == "week":
+            return f"DATE_SUB({sql}, INTERVAL WEEKDAY({sql}) DAY)", (*params, *params)
         else:
-            format_str = ''.join(
-                [f for f in format[:i]] + [f for f in format_def[i:]])
-            sql = "CAST(DATE_FORMAT(%s, '%s') AS DATETIME)" % (
-                field_name, format_str)
-        return sql
+            return f"DATE({sql})", params
 
-    def datetime_extract_sql(self, lookup_type, field_name, tzname):
-        if settings.USE_TZ:
-                warnings.warn("CUBRID does not support timezone conversion",
-                              RuntimeWarning)
+    def _convert_sql_to_tz(self, sql, params, tzname):
+        if tzname and settings.USE_TZ:
+            warnings.warn("CUBRID does not support timezone conversion", RuntimeWarning)
+        return sql, params
 
-        if lookup_type == 'week_day':
-            # DAYOFWEEK() returns an integer, 1-7, Sunday=1.
-            # Note: WEEKDAY() returns 0-6, Monday=0.
-            return "DAYOFWEEK(%s)" % field_name
-        else:
-            return "EXTRACT(%s FROM %s)" % (lookup_type.upper(), field_name)
+    def datetime_cast_date_sql(self, sql, params, tzname):
+        sql, params = self._convert_sql_to_tz(sql, params, tzname)
+        return f"DATE({sql})", params
 
-    def datetime_trunc_sql(self, lookup_type, field_name, tzname):
-        if settings.USE_TZ:
-                warnings.warn("CUBRID does not support timezone conversion",
-                              RuntimeWarning)
+    def datetime_cast_time_sql(self, sql, params, tzname):
+        sql, params = self._convert_sql_to_tz(sql, params, tzname)
+        return f"TIME({sql})", params
 
+    def datetime_extract_sql(self, lookup_type, sql, params, tzname):
+        sql, params = self._convert_sql_to_tz(sql, params, tzname)
+        return self.date_extract_sql(lookup_type, sql, params)
+
+    def datetime_trunc_sql(self, lookup_type, sql, params, tzname):
+        sql, params = self._convert_sql_to_tz(sql, params, tzname)
         fields = ['year', 'month', 'day', 'hour', 'minute', 'second', 'milisecond']
-        # Use double percents to escape.
         format = ('%%Y-', '%%m', '-%%d', ' %%H:', '%%i', ':%%s', '.%%ms')
         format_def = ('0000-', '01', '-01', ' 00:', '00', ':00', '.00')
+        if lookup_type == "quarter":
+            return (
+                f"CAST(DATE_FORMAT(MAKEDATE(YEAR({sql}), 1) + "
+                f"INTERVAL QUARTER({sql}) QUARTER - "
+                f"INTERVAL 1 QUARTER, %s) AS DATETIME)"
+            ), (*params, *params, "%Y-%m-01 00:00:00.00")
+        if lookup_type == "week":
+            return (
+                f"CAST(DATE_FORMAT("
+                f"DATE_SUB({sql}, INTERVAL WEEKDAY({sql}) DAY), %s) AS DATETIME)"
+            ), (*params, *params, "%Y-%m-%d 00:00:00.00")
         try:
             i = fields.index(lookup_type) + 1
         except ValueError:
-            sql = field_name
+            pass
         else:
-            format_str = ''.join([f for f in format[:i]] + [f for f in format_def[i:]])
-            sql = "CAST(DATE_FORMAT(%s, '%s') AS DATETIME)" % (field_name, format_str)
-        return sql
+            format_str = "".join(format[:i] + format_def[i:])
+            return f"CAST(DATE_FORMAT({sql}, %s) AS DATETIME)", (*params, format_str)
+        return sql, params
 
-    def date_interval_sql(self, sql, connector, timedelta):
-        if connector.strip() == '+':
-            func = "ADDDATE"
+    def time_trunc_sql(self, lookup_type, sql, params, tzname=None):
+        sql, params = self._convert_sql_to_tz(sql, params, tzname)
+        fields = {
+            "hour": "%H:00:00",
+            "minute": "%H:%i:00",
+            "second": "%H:%i:%s",
+        }
+        if lookup_type in fields:
+            format_str = fields[lookup_type]
+            return f"CAST(DATE_FORMAT({sql}, %s) AS TIME)", (*params, format_str)
         else:
-            func = "SUBDATE"
-
-        fmt = "%s (%s, INTERVAL '%d 0:0:%d:%d' DAY_MILLISECOND)"
-
-        return fmt % (
-            func, sql, timedelta.days,
-            timedelta.seconds, timedelta.microseconds / 1000)
+            return f"TIME({sql})", params
 
     def drop_foreignkey_sql(self):
         return "DROP FOREIGN KEY"
