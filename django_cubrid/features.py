@@ -60,6 +60,8 @@ class DatabaseFeatures(BaseDatabaseFeatures):
 
     supports_date_lookup_using_string = False
 
+    supports_expression_indexes = False
+
     # Can a fixture contain forward references? i.e., are
     # FK constraints checked at the end of transaction, or
     # at the end of each save operation?
