@@ -7,7 +7,7 @@ from django.utils.functional import cached_property
 class DatabaseFeatures(BaseDatabaseFeatures):
     minimum_database_version = (10, 1)
 
-    allows_group_by_pk = True
+    allows_group_by_selected_pks = True
 
     # Can an object have a primary key of 0? MySQL says No.
     allows_primary_key_0 = True
