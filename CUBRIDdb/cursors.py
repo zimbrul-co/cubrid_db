@@ -1,5 +1,5 @@
 import sys
-from CUBRIDdb import FIELD_TYPE
+from CUBRIDdb import field_type
 from CUBRIDdb import InterfaceError
 from functools import reduce
 
@@ -89,12 +89,12 @@ class BaseCursor(object):
                         args[i] = str(args[i])
 
             if isinstance(args[i], bytes):
-                self._cs.bind_param(i+1, args[i], FIELD_TYPE.VARBIT)
+                self._cs.bind_param(i+1, args[i], field_type.VARBIT)
             elif not isinstance(args[i], tuple):
                 self._cs.bind_param(i+1, args[i])
             else:
                 if set_type is None:
-                    data_type = int(FIELD_TYPE.CHAR)
+                    data_type = int(field_type.CHAR)
                 else:
                     if type(set_type) != tuple:
                         set_type = [set_type,]

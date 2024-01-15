@@ -7,7 +7,7 @@ from datetime import time
 from datetime import date
 from datetime import datetime
 from xml.dom import minidom
-from CUBRIDdb import FIELD_TYPE
+from CUBRIDdb import field_type
 
 class FetchoneTypeTest(unittest.TestCase):
         def getConStr(self):
@@ -371,7 +371,7 @@ class FetchoneTypeTest(unittest.TestCase):
                 self.cur.execute("DROP TABLE IF EXISTS set_tbl_int")
 		sqlCreate = "CREATE TABLE set_tbl_int(col_1 set(int));"
                 set_val=(('1','23','48'),)
-                etype = FIELD_TYPE.INT
+                etype = field_type.INT
                 self.cur.execute(sqlCreate)
                 self.cur.execute("insert into set_tbl_int VALUES(?)", set_val,etype)
                 

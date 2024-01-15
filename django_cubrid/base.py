@@ -9,7 +9,7 @@ import django
 
 try:
     import CUBRIDdb as Database
-    from CUBRIDdb import FIELD_TYPE
+    from CUBRIDdb import field_type
 except ImportError as e:
     from django.core.exceptions import ImproperlyConfigured
     raise ImproperlyConfigured("Error loading CUBRIDdb module: %s" % e)

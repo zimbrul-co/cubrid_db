@@ -138,7 +138,7 @@ class SetTest(unittest.TestCase):
         self.con.set_autocommit(True)
 
         value=(('0','0'),)
-        etype = (CUBRIDdb.FIELD_TYPE.BIT)
+        etype = (CUBRIDdb.field_type.BIT)
         self.cur.execute("DROP TABLE IF EXISTS set_tbl")
         self.cur.execute("CREATE TABLE set_tbl (col_1 set(bit(16)) )")
         self.cur.execute("insert into set_tbl values (?)", value,etype)

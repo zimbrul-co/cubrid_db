@@ -143,7 +143,7 @@ with open('VERSION', 'r', encoding='utf-8') as version_file:
 py_modules = [
     "CUBRIDdb.connections",
     "CUBRIDdb.cursors",
-    "CUBRIDdb.FIELD_TYPE",
+    "CUBRIDdb.field_type",
     "django_cubrid.base",
     "django_cubrid.client",
     "django_cubrid.compiler",

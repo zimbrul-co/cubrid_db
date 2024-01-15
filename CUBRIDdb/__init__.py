@@ -13,7 +13,7 @@ apilevel = "2.0"
 paramstyle = 'qmark'
 
 from _cubrid import *
-from CUBRIDdb import FIELD_TYPE
+from CUBRIDdb import field_type
 
 from time import localtime
 from datetime import date, datetime, time
@@ -41,14 +41,14 @@ class DBAPISet(frozenset):
             return not self.difference(other)
         return other in self
 
-STRING = DBAPISet([FIELD_TYPE.CHAR, FIELD_TYPE.STRING, FIELD_TYPE.NCHAR, FIELD_TYPE.VARCHAR])
-BINARY = DBAPISet([FIELD_TYPE.BIT, FIELD_TYPE.VARBIT])
-NUMBER = DBAPISet([FIELD_TYPE.NUMERIC, FIELD_TYPE.INT, FIELD_TYPE.SMALLINT, FIELD_TYPE.BIGINT])
-DATETIME = DBAPISet([FIELD_TYPE.DATE, FIELD_TYPE.TIME, FIELD_TYPE.TIMESTAMP])
-FLOAT = DBAPISet([FIELD_TYPE.FLOAT, FIELD_TYPE.DOUBLE])
-SET = DBAPISet([FIELD_TYPE.SET, FIELD_TYPE.MULTISET, FIELD_TYPE.SEQUENCE])
-BLOB = DBAPISet([FIELD_TYPE.BLOB])
-CLOB = DBAPISet([FIELD_TYPE.CLOB])
+STRING = DBAPISet([field_type.CHAR, field_type.STRING, field_type.NCHAR, field_type.VARCHAR])
+BINARY = DBAPISet([field_type.BIT, field_type.VARBIT])
+NUMBER = DBAPISet([field_type.NUMERIC, field_type.INT, field_type.SMALLINT, field_type.BIGINT])
+DATETIME = DBAPISet([field_type.DATE, field_type.TIME, field_type.TIMESTAMP])
+FLOAT = DBAPISet([field_type.FLOAT, field_type.DOUBLE])
+SET = DBAPISet([field_type.SET, field_type.MULTISET, field_type.SEQUENCE])
+BLOB = DBAPISet([field_type.BLOB])
+CLOB = DBAPISet([field_type.CLOB])
 ROWID = DBAPISet()
 
 def Connect(*args, **kwargs):

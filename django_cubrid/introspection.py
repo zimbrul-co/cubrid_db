@@ -2,7 +2,7 @@ import django
 import re
 
 from collections import namedtuple
-from CUBRIDdb import FIELD_TYPE
+from CUBRIDdb import field_type
 
 from django.db.backends.base.introspection import BaseDatabaseIntrospection
 from django.db.backends.base.introspection import FieldInfo
@@ -16,26 +16,26 @@ InfoLine = namedtuple('InfoLine', 'col_name attr_type data_type prec scale is_nu
 
 class DatabaseIntrospection(BaseDatabaseIntrospection):
     data_types_reverse = {
-        FIELD_TYPE.BIT: 'BinaryField',
-        FIELD_TYPE.VARBIT: 'BinaryField',
-        FIELD_TYPE.CHAR: 'CharField',
-        FIELD_TYPE.VARCHAR: 'CharField',
-        FIELD_TYPE.NCHAR: 'CharField',
-        FIELD_TYPE.VARNCHAR: 'CharField',
-        FIELD_TYPE.NUMERIC: 'DecimalField',
-        FIELD_TYPE.INT: 'IntegerField',
-        FIELD_TYPE.SMALLINT: 'SmallIntegerField',
-        FIELD_TYPE.BIGINT: 'BigIntegerField',
-        FIELD_TYPE.FLOAT: 'FloatField',
-        FIELD_TYPE.DOUBLE: 'FloatField',
-        FIELD_TYPE.DATE: 'DateField',
-        FIELD_TYPE.TIME: 'TimeField',
-        FIELD_TYPE.TIMESTAMP: 'DateTimeField',
-        FIELD_TYPE.DATETIME: 'DateTimeField',
-        FIELD_TYPE.STRING: 'CharField',
-        FIELD_TYPE.SET: 'TextField',
-        FIELD_TYPE.MULTISET: 'TextField',
-        FIELD_TYPE.SEQUENCE: 'TextField',
+        field_type.BIT: 'BinaryField',
+        field_type.VARBIT: 'BinaryField',
+        field_type.CHAR: 'CharField',
+        field_type.VARCHAR: 'CharField',
+        field_type.NCHAR: 'CharField',
+        field_type.VARNCHAR: 'CharField',
+        field_type.NUMERIC: 'DecimalField',
+        field_type.INT: 'IntegerField',
+        field_type.SMALLINT: 'SmallIntegerField',
+        field_type.BIGINT: 'BigIntegerField',
+        field_type.FLOAT: 'FloatField',
+        field_type.DOUBLE: 'FloatField',
+        field_type.DATE: 'DateField',
+        field_type.TIME: 'TimeField',
+        field_type.TIMESTAMP: 'DateTimeField',
+        field_type.DATETIME: 'DateTimeField',
+        field_type.STRING: 'CharField',
+        field_type.SET: 'TextField',
+        field_type.MULTISET: 'TextField',
+        field_type.SEQUENCE: 'TextField',
     }
 
     def get_table_list(self, cursor):
