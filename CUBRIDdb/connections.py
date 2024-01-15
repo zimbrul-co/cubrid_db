@@ -5,11 +5,11 @@ want to make your own subclasses. In most cases, you will probably
 override Connection.default_cursor with a non-standard Cursor class.
 
 """
-from CUBRIDdb.cursors import *
+from CUBRIDdb.cursors import DictCursor, Cursor
 import _cubrid
 
 
-class Connection(object):
+class Connection:
     """CUBRID Database Connection Object"""
 
     def __init__(self, *args, **kwargs):
@@ -28,13 +28,10 @@ class Connection(object):
     def set_fetch_value_converter(self, func):
         self.fetch_value_converter = func
 
-    def cursor(self, dictCursor = None):
+    def cursor(self, dict_cursor = None):
         """Return a new Cursor Object using the connection."""
-        if dictCursor:
-            cursorClass = DictCursor
-        else:
-            cursorClass = Cursor
-        return cursorClass(self)
+        cursor_class = DictCursor if dict_cursor else Cursor
+        return cursor_class(self)
 
     def set_autocommit(self, value):
         """
@@ -52,20 +49,26 @@ class Connection(object):
         """
         return self.connection.autocommit
 
-    autocommit = property(get_autocommit, set_autocommit, doc = "autocommit value for current Cubrid session")
+    autocommit = property(get_autocommit, set_autocommit,
+                          doc = "autocommit value for current Cubrid session")
 
     def commit(self):
         """
         Commit any pending transaction to the database.
-        Note that if the database supports an auto-commit feature, this must be initially off. An interface method may be provided to turn it back on.
-        Database modules that do not support transactions should implement this method with void functionality.
+        Note that if the database supports an auto-commit feature,
+        this must be initially off. An interface method may be provided
+        to turn it back on.
+        Database modules that do not support transactions should implement
+        this method with void functionality.
         """
         self.connection.commit()
 
     def rollback(self):
         """
-        This method causes the database to roll back to the start of any pending transaction.
-        Closing a connection without committing the changes first will cause an implicit rollback to be performed.
+        This method causes the database to roll back to the start of any
+        pending transaction.
+        Closing a connection without committing the changes first will cause
+        an implicit rollback to be performed.
         """
         self.connection.rollback()
 
@@ -92,4 +95,3 @@ class Connection(object):
 
     def batch_execute(self, sql):
         return self.connection.batch_execute(sql)
-

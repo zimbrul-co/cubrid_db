@@ -1,2 +1,3 @@
 [MASTER]
+extension-pkg-allow-list=_cubrid
 ignore=tests,tests2,samples
