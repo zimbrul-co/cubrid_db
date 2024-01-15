@@ -149,8 +149,8 @@ setup(
             "specification.\n"
             "See http://www.python.org/topics/database/DatabaseAPI-2.0.html.",
     py_modules=py_modules,
-    author="Li Jinhu, Li Lin, Zhang hui",
-    author_email="beagem@nhn.com",
+    author="Casian Andrei",
+    author_email="casian@zco.ro",
     license="BSD",
     url="http://svn.cubrid.org/cubridapis/python/",
     ext_modules=ext_modules

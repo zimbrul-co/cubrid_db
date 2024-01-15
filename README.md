@@ -7,8 +7,6 @@ Overview
 CUBRIDdb driver: CUBRID Module for Python DB API 2.0
                  Python driver for CUBRID Database
 Django_cubrid backend: Django backend for CUBRID Database
-Author: Li Jinhu (beagem@nhn.com), Li Lin(aniterle@nhn.com), Zhang Hui
-Date: December, 2012
 ```
 
         Notes about CUBRIDdb driver
