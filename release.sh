@@ -62,7 +62,7 @@ fi
 mkdir -p $temp_dir
 cd $temp_dir
 
-git clone git@github.com:CUBRID/cubrid-python.git --recursive
+git clone --recursive git@github.com:zimbrul-co/cubrid-python.git
 
 if [ ! -z $arg ]; then
   echo "[CHECK] input commit id : $arg"

@@ -21,8 +21,7 @@ Abstract
 
 Project URL
 -----------
-  * Project Home: https://github.com/CUBRID/cubrid-python
-  * Latest CUBRID Python Driver: http://ftp.cubrid.org/CUBRID_Drivers/Python_Driver/
+  * Project Home: https://github.com/zimbrul-co/cubrid-python
 
 Dependencies for CUBRIDdb
 -------------------------
@@ -42,7 +41,7 @@ Install for CUBRIDdb
   To build and install from source, you should move into the top-level directory
   of the CUBRIDdb distribution and issue the following commands.
  ```
-  $ git clone --recursive git@github.com:CUBRID/cubrid-python.git
+  $ git clone --recursive git@github.com:zimbrul-co/cubrid-python.git
   $ cd cubrid-python
   $ python setup.py build
   $ sudo python setup.py install   (Windows: python setup.py install)
