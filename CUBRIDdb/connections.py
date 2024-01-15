@@ -20,13 +20,9 @@ class Connection:
         self.charset = kwargs2.pop('charset', 'utf8')
 
         self.connection = _cubrid.connect(*args, **kwargs2)
-        self.fetch_value_converter = None
 
     def __del__(self):
         pass
-
-    def set_fetch_value_converter(self, func):
-        self.fetch_value_converter = func
 
     def cursor(self, dict_cursor = None):
         """Return a new Cursor Object using the connection."""

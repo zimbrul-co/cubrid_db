@@ -160,14 +160,7 @@ class BaseCursor(object):
         Fetch the next row of a query result set, returning a single sequence, or None when no more data is available.
         """
         self.__check_state()
-
-        row = self._fetch_row()
-
-        if row and self.con.fetch_value_converter:
-            # user defined value converter
-            return self.con.fetch_value_converter(row, self._cs.description)
-
-        return row
+        return self._fetch_row()
 
     def _fetch_many(self, size):
         self.__check_state()
