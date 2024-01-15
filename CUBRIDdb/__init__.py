@@ -32,11 +32,6 @@ def TimeFromTicks(ticks):
 def TimestampFromTicks(ticks):
     return datetime(*localtime(ticks)[:6])
 
-try:
-    frozenset
-except NameError:
-    from sets import ImmutableSet as frozenset
-
 class DBAPISet(frozenset):
     """A special type of set for which A == x is true if A is a
     DBAPISet and x is a member of that set."""
