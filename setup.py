@@ -107,7 +107,7 @@ else:
     # Build CCI
     os.chdir(cci_dir)
     try:
-        result = subprocess.run(['sh', "build.sh"], check=True)
+        result = subprocess.run(['bash', "build.sh"], check=True)
         print("CCI build script executed successfully")
     except subprocess.CalledProcessError as e:
         raise RuntimeError(f"Error in CCI build script execution: {e}") from e
