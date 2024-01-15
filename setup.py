@@ -117,6 +117,11 @@ else:
         sys.exit(1)
 
 
+# Read the version file
+with open('VERSION', 'r') as version_file:
+    version = version_file.read().strip()
+
+
 # set py_modules
 py_modules = [
     "CUBRIDdb.connections",
@@ -133,10 +138,11 @@ py_modules = [
     "django_cubrid.validation",
 ]
 
+
 # Install CUBRID-Python driver.
 setup(
     name="CUBRID-Python",
-    version="11.2.0.0010",
+    version=version,
     description="Python interface to CUBRID",
     long_description=\
             "Python interface to CUBRID conforming to the python DB API 2.0 "
