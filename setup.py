@@ -85,8 +85,11 @@ if OS_TYPE == 'Windows':
         lib_dir = os.path.join(cci_dir, "win\\cas_cci\\x64\\Release")
         lib_dir_ex = os.path.join(cci_dir, "win\\external\\lib64")
 
+    cci_static_lib = os.path.join(lib_dir, 'cas_cci.lib')
+    print('CCI static lib path:', cci_static_lib)
+
     # Use the CCI static library
-    if os.path.isfile(os.path.join(lib_dir, 'cas_cci.lib')):
+    if os.path.isfile(cci_static_lib):
         ext_modules = [
             Extension(
                 name="_cubrid",
@@ -99,7 +102,7 @@ if OS_TYPE == 'Windows':
             )
         ]
     else:
-        raise FileNotFoundError("CCI static lib not found.")
+        raise FileNotFoundError(f"CCI static lib not found at {cci_static_lib}")
 
 else:
     from distutils.core import setup, Extension
@@ -116,10 +119,10 @@ else:
 
     inc_dir_base = os.path.join(cci_dir, "src/base")
     inc_dir_cci = os.path.join(cci_dir, "src/cci")
-    lib_dir = os.path.join(cci_dir, "build_x86_64_release/cci/.libs")
+    cci_static_lib = os.path.join(cci_dir, 'build_x86_64_release/cci/libcascci.a')
+    print('CCI static lib path:', cci_static_lib)
 
     # Use the CCI static library
-    cci_static_lib = os.path.join(lib_dir, 'libcascci.a')
     if os.path.isfile(cci_static_lib):  # use the CCI static library
         ext_modules = [
             Extension(
@@ -131,7 +134,7 @@ else:
             )
         ]
     else:
-        raise FileNotFoundError("CCI static lib not found.")
+        raise FileNotFoundError(f"CCI static lib not found at {cci_static_lib}")
 
 
 # Read the version file
