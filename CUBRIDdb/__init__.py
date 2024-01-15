@@ -6,8 +6,6 @@ This package is a wrapper around _cubrid.
 connect() -- connects to server
 
 """
-import _cubrid
-
 threadsafety = 2
 apilevel = "2.0"
 paramstyle = 'qmark'
@@ -51,20 +49,24 @@ BLOB = DBAPISet([field_type.BLOB])
 CLOB = DBAPISet([field_type.CLOB])
 ROWID = DBAPISet()
 
-def Connect(*args, **kwargs):
+def connect(*args, **kwargs):
     """Factory function for connections.Connection."""
     from CUBRIDdb.connections import Connection
     return Connection(*args, **kwargs)
 
-connect = connection = Connect
-
-Error = Error
-InterfaceError = InterfaceError
-DatabaseError = DatabaseError
-NotSupportedError = NotSupportedError
-
-__all__ = [ 'Connect', 'connection', 'connect', 'connections', 'DatabaseError',
-    'Error', 'InterfaceError', 'NotSupportedError', 'apilevel', 'Cursor',
-    'DictCursor', 'paramstyle', 'threadsafety', 'STRING', 'BINARY', 'NUMBER',
-    'DATE', 'TIME', 'TIMESTAMP', 'DATETIME', 'ROWID', 'SET', 'BLOB', 'CLOB']
+__all__ = [
+    'connect',
+    'apilevel',
+    'paramstyle',
+    'threadsafety',
+    'STRING',
+    'BINARY',
+    'NUMBER',
+    'DATETIME',
+    'FLOAT',
+    'SET',
+    'BLOB',
+    'CLOB',
+    'ROWID',
+]
 
