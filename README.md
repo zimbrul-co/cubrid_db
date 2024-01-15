@@ -29,11 +29,11 @@ Project URL
 Dependencies for CUBRIDdb
 -------------------------
 ```
-  * CUBRID: 8.4.0 or higher
+  * CUBRID: 10.1 or higher
   * OS    : Windows (x86 and x86_64)
             Linux (32bit and 64bit)
             Other Unix and Unix-like os
-  * Python: Python 3.0+
+  * Python: Python 3.9+
   * Compiler: to build from Source
             Visual Studio 2015 (Windows)
             GNU Developer Toolset 6 or higher
