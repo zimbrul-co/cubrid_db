@@ -120,7 +120,12 @@ else:
     inc_dir_base = os.path.join(cci_dir, "src/base")
     inc_dir_cci = os.path.join(cci_dir, "src/cci")
     cci_static_lib = os.path.join(cci_dir, 'build_x86_64_release/cci/libcascci.a')
+    openssl_lib = os.path.join(cci_dir, 'external/openssl/lib')
+    ssl_static_lib = os.path.join(openssl_lib, 'libssl.a')
+    crypto_static_lib = os.path.join(openssl_lib, 'libcrypto.a')
     print('CCI static lib path:', cci_static_lib)
+    print('SSL static lib path:', ssl_static_lib)
+    print('Crypto static lib path:', crypto_static_lib)
 
     # Use the CCI static library
     if os.path.isfile(cci_static_lib):  # use the CCI static library
@@ -130,7 +135,11 @@ else:
                 include_dirs=[inc_dir_base, inc_dir_cci],
                 sources=['python_cubrid.c'],
                 libraries=["pthread", "stdc++"],
-                extra_objects=[cci_static_lib]
+                extra_objects=[
+                    cci_static_lib,
+                    ssl_static_lib,
+                    crypto_static_lib,
+                ]
             )
         ]
     else:
