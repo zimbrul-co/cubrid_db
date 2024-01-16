@@ -12,14 +12,10 @@ TEST_DATABASE_PREFIX = 'test_'
 class DatabaseCreation(BaseDatabaseCreation):
     def _create_test_db(self, verbosity, autoclobber, keepdb=False):
         "Internal implementation - creates the test db tables."
-        suffix = self.sql_table_creation_suffix()
-
         if 'TEST_NAME' in self.connection.settings_dict:
             test_database_name = self.connection.settings_dict['TEST_NAME']
         else:
             test_database_name = TEST_DATABASE_PREFIX + self.connection.settings_dict['NAME']
-
-        qn = self.connection.ops.quote_name
 
         # Create the test database and start the cubrid server.
         check_command = ["cubrid", "checkdb", test_database_name]
@@ -46,7 +42,7 @@ class DatabaseCreation(BaseDatabaseCreation):
             subprocess.run(start_command, check = True)
             print('Started')
             subprocess.run(check_command, check = True)
-            cursor = self.connection.cursor()
+            self.connection.cursor()
 
         except Exception as e:
             self.log("Got an error creating the test database: %s\n" % e)
@@ -94,7 +90,6 @@ class DatabaseCreation(BaseDatabaseCreation):
         # ourselves. Connect to the previous database (not the test database)
         # to do so, because it's not allowed to delete a database while being
         # connected to it.
-        cursor = self.connection.cursor()
         time.sleep(1) # To avoid "database is being accessed by other users" errors.
         subprocess.run(["cubrid", "server", "stop", test_database_name])
         subprocess.run(["cubrid", "deletedb", test_database_name])

@@ -84,7 +84,7 @@ class DatabaseIntrospection(BaseDatabaseIntrospection):
 
     def get_sequences(self, cursor, table_name, table_fields=()):
         cursor.execute("SHOW CREATE TABLE %s" % table_name)
-        tname, stmt = cursor.fetchone()
+        _, stmt = cursor.fetchone()
 
         # Only one auto increment possible
         m = re.search(r'\[([\w]+)\][\w\s]*AUTO_INCREMENT', stmt)
@@ -139,7 +139,6 @@ class DatabaseIntrospection(BaseDatabaseIntrospection):
             name = sql[name_i0 + 1 : name_i1]
 
             sql = sql[name_i1 + 1:]
-            kind_i0 = 0
             kind_i1 = sql.index('(')
             kind = sql[:kind_i1].strip()
 
@@ -196,7 +195,7 @@ class DatabaseIntrospection(BaseDatabaseIntrospection):
 
         query = "SHOW CREATE TABLE %s" % table_name
         cursor.execute(query)
-        tname, stmt = cursor.fetchone()
+        _, stmt = cursor.fetchone()
 
         constraints = {}
         l = list(parse_create_table_stmt(stmt))
