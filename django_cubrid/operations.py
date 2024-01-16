@@ -237,6 +237,8 @@ class DatabaseOperations(BaseDatabaseOperations):
             converters.append(self.convert_ipaddress_value)
         return converters
 
+    # pylint: disable=unused-argument
+
     def convert_binaryfield_value(self, value, expression, connection):
         if not value.startswith('0B'):
             raise ValueError('Unexpected value: %s' % value)
@@ -271,3 +273,5 @@ class DatabaseOperations(BaseDatabaseOperations):
         if value is not None:
             value = value.strip()
         return value
+
+    # pylint: enable=unused-argument
