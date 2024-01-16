@@ -240,11 +240,9 @@ class DatabaseWrapper(BaseDatabaseWrapper):
 
     def is_usable(self):
         try:
-            self.connection.ping()
+            return bool(self.connection.ping())
         except Database.Error:
             return False
-        else:
-            return True
 
     def get_database_version(self):
         if self._db_version:

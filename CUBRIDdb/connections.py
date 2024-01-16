@@ -74,6 +74,12 @@ class Connection:
         """
         return self.connection.set()
 
+    def ping(self):
+        """
+        Checks whether or not the connection to the server is working.
+        """
+        return self.connection.ping()
+
     def close(self):
         """
         Close the connection now
