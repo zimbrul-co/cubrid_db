@@ -51,7 +51,6 @@ class DatabaseCreation(BaseDatabaseCreation):
             cursor = self.connection.cursor()
 
         except Exception as e:
-            autoclobber = True
             sys.stderr.write("Got an error creating the test database: %s\n" % e)
             if not autoclobber:
                 confirm = input("Type 'yes' if you would like to try deleting the test database '%s', or 'no' to cancel: " % test_database_name)
