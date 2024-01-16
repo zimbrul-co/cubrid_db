@@ -8,10 +8,13 @@ from django.conf import settings
 from django.db.backends.base.operations import BaseDatabaseOperations
 from django.utils import timezone
 from django.utils.encoding import force_str
+from django.utils.regex_helper import _lazy_re_compile
 
 
 class DatabaseOperations(BaseDatabaseOperations):
     compiler_module = "django_cubrid.compiler"
+
+    _extract_format_re = _lazy_re_compile(r"[A-Z_]+")
 
     def date_extract_sql(self, lookup_type, sql, params):
         # https://www.cubrid.org/manual/en/10.1/sql/function/datetime_fn.html
