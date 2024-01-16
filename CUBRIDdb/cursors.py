@@ -11,7 +11,7 @@ def bytes_to_binstr(b):
     )
 
 
-class BaseCursor(object):
+class BaseCursor:
     """
     A base for Cursor classes. Useful attributes:
 
@@ -151,16 +151,20 @@ class BaseCursor(object):
         for p in args:
             self.execute(query, *(p,))
 
-    def _fetch_row(self):
-        self.__check_state()
-        return self._cs.fetch_row(self._fetch_type)
+    @classmethod
+    def _get_fetch_type(cls):
+        """
+        Return the type of fetch to be passed to fetch_row.
+        To be implemented in the subclasses.
+        """
+        raise NotImplementedError
 
     def fetchone(self):
         """
         Fetch the next row of a query result set, returning a single sequence, or None when no more data is available.
         """
         self.__check_state()
-        return self._fetch_row()
+        return self._cs.fetch_row(self._get_fetch_type())
 
     def _fetch_many(self, size):
         self.__check_state()
@@ -245,25 +249,23 @@ class BaseCursor(object):
         return row
 
 
-class CursorTupleRowsMixIn(object):
-
-    _fetch_type = 0
-
-
-class CursorDictTupleMixIn(object):
-
-    _fetch_type = 1
-
-
-class Cursor(CursorTupleRowsMixIn, BaseCursor):
+class Cursor(BaseCursor):
     '''
     This is the standard Cursor class that returns rows as tuples
     and stores the result set in the client.
     '''
 
+    @classmethod
+    def _get_fetch_type(cls):
+        return 0 # Tuple rows
 
-class DictCursor(CursorDictTupleMixIn, BaseCursor):
+
+class DictCursor(BaseCursor):
     '''
     This is a Cursor class that returns rows as dictionaries and
     stores the result set in the client.
     '''
+
+    @classmethod
+    def _get_fetch_type(cls):
+        return 1 # Dict tuple rows
