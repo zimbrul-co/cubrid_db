@@ -665,16 +665,8 @@ class DBAPI20Test(unittest.TestCase):
             cur.execute('DROP TABLE IF EXISTS test_cubrid')
             cur.execute('CREATE TABLE test_cubrid (id NUMERIC AUTO_INCREMENT(2009122350, 1), text VARCHAR(50))')
             cur.execute("insert into test_cubrid (text) values (?)", ['Tom',])
-
-            try:
-                mytest = unicode
-            except NameError:
-                cur.execute("insert into test_cubrid (text) values (?)", [b'Jenny',])
-                cur.execute("insert into test_cubrid (text) values (?)", ['小王',])
-            else:
-                cur.execute("insert into test_cubrid (text) values (?)", [b'Jenny',])
-                cur.execute("insert into test_cubrid (text) values (?)", ['张三',])
-                cur.execute("insert into test_cubrid (text) values (?)", ['李四'.decode('utf8'), ])
+            cur.execute("insert into test_cubrid (text) values (?)", [b'Jenny',])
+            cur.execute("insert into test_cubrid (text) values (?)", ['小王',])
 
         except Exception:
             ret = 1

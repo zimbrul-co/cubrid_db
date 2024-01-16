@@ -73,20 +73,10 @@ class BaseCursor:
                 args[i] = args[i]
             elif isinstance(args[i], bytes):
                 args[i] = bytes_to_binstr(args[i])
+            elif isinstance(args[i], str):
+                pass
             else:
-                # Python3.X dosen't support unicode keyword.
-                try:
-                    mytest = unicode
-                except NameError:
-                    if isinstance(args[i], str):
-                        pass
-                    else:
-                        args[i] = str(args[i])
-                else:
-                    if isinstance(args[i], unicode):
-                        args[i] = args[i].encode(self.charset)
-                    else:
-                        args[i] = str(args[i])
+                args[i] = str(args[i])
 
             if isinstance(args[i], bytes):
                 self._cs.bind_param(i+1, args[i], field_type.VARBIT)

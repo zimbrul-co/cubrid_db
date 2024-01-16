@@ -186,7 +186,7 @@ class DatabaseOperations(BaseDatabaseOperations):
             else:
                 raise ValueError("CUBRID does not support timezone-aware datetime when USE_TZ is False.")
 
-        return unicode(value)
+        return str(value)
 
     def value_to_db_time(self, value):
         if value is None:
@@ -196,7 +196,7 @@ class DatabaseOperations(BaseDatabaseOperations):
         if value.tzinfo is not None:
             raise ValueError("CUBRID does not support timezone-aware times.")
 
-        return unicode(value)
+        return str(value)
 
     def year_lookup_bounds(self, value):
         # Again, no microseconds
