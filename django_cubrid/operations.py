@@ -1,5 +1,3 @@
-
-import django
 import uuid
 import sys
 import warnings

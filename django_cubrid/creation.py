@@ -1,8 +1,6 @@
 import sys
-import os
 import time
 import subprocess
-import django
 
 from django.db.backends.base.creation import BaseDatabaseCreation
 

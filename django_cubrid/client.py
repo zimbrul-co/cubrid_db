@@ -1,6 +1,5 @@
 import os
 import sys
-import django
 
 from django.db.backends.base.client import BaseDatabaseClient
 

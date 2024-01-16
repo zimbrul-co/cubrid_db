@@ -1,4 +1,3 @@
-import sys
 from CUBRIDdb import field_type
 from CUBRIDdb import InterfaceError
 from functools import reduce

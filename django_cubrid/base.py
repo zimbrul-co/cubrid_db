@@ -9,17 +9,14 @@ import django
 
 try:
     import CUBRIDdb as Database
-    from CUBRIDdb import field_type
 except ImportError as e:
     from django.core.exceptions import ImproperlyConfigured
     raise ImproperlyConfigured("Error loading CUBRIDdb module: %s" % e)
 
 import django.db.utils
 
-from django.conf import settings
 from django.db.backends import *
 from django.db.backends.base.base import BaseDatabaseWrapper
-from django.db.backends.base.features import BaseDatabaseFeatures
 from django.db.backends.signals import connection_created
 from django.utils.regex_helper import _lazy_re_compile
 

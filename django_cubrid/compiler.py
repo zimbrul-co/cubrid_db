@@ -1,5 +1,3 @@
-import django
-
 from django.db.models.sql import compiler
 
 
