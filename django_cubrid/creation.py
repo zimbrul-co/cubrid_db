@@ -12,42 +12,6 @@ TEST_DATABASE_PREFIX = 'test_'
 
 
 class DatabaseCreation(BaseDatabaseCreation):
-    def sql_for_inline_foreign_key_references(self, model, field, known_models, style):
-        qn = self.connection.ops.quote_name
-        rel_to = field.rel.to
-        if rel_to in known_models or rel_to == model:
-            output = [style.SQL_KEYWORD('FOREIGN KEY') + ' ' + \
-                style.SQL_KEYWORD('REFERENCES') + ' ' + \
-                style.SQL_TABLE(qn(field.rel.to._meta.db_table)) + ' (' + \
-                style.SQL_FIELD(qn(field.rel.to._meta.get_field(field.rel.field_name).column)) + ')' +
-                self.connection.ops.deferrable_sql()
-            ]
-            pending = False
-        else:
-            # We haven't yet created the table to which this field
-            # is related, so save it for later.
-            output = []
-            pending = True
-
-        return output, pending
-
-    def sql_indexes_for_model(self, model, style):
-        """
-        Returns the CREATE INDEX SQL statements for a single model.
-        The reference coloum can't be indexed in CUBRID.
-        """
-        if not model._meta.managed or model._meta.proxy:
-            return []
-        output = []
-        for f in model._meta.local_fields:
-            if not f.rel:
-                output.extend(self.sql_indexes_for_field(model, f, style))
-
-        for fs in model._meta.index_together:
-            fields = [model._meta.get_field_by_name(f)[0] for f in fs]
-            output.extend(self.sql_indexes_for_fields(model, fields, style))
-        return output
-
     def _create_test_db(self, verbosity, autoclobber, keepdb=False):
         "Internal implementation - creates the test db tables."
         suffix = self.sql_table_creation_suffix()
