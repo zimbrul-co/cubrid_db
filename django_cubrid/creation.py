@@ -41,8 +41,8 @@ class DatabaseCreation(BaseDatabaseCreation):
 
         try:
             cp = subprocess.run(create_command, capture_output = True)
-            sys.stdout.write(cp.stdout.decode())
-            sys.stderr.write(cp.stderr.decode())
+            self.log(cp.stdout.decode())
+            self.log(cp.stderr.decode())
             cp.check_returncode()
             print('Created')
             subprocess.run(start_command, check = True)
@@ -51,7 +51,7 @@ class DatabaseCreation(BaseDatabaseCreation):
             cursor = self.connection.cursor()
 
         except Exception as e:
-            sys.stderr.write("Got an error creating the test database: %s\n" % e)
+            self.log("Got an error creating the test database: %s\n" % e)
             if not autoclobber:
                 confirm = input("Type 'yes' if you would like to try deleting the test database '%s', or 'no' to cancel: " % test_database_name)
             if autoclobber or confirm == 'yes':
@@ -63,14 +63,14 @@ class DatabaseCreation(BaseDatabaseCreation):
 
                         print("Creating test database...")
                         cp = subprocess.run(create_command, capture_output = True)
-                        sys.stdout.write(cp.stdout.decode())
-                        sys.stderr.write(cp.stderr.decode())
+                        self.log(cp.stdout.decode())
+                        self.log(cp.stderr.decode())
                         cp.check_returncode()
                         print('Created')
 
                         subprocess.run(start_command)
                 except Exception as e:
-                    sys.stderr.write("Got an error recreating the test database: %s\n" % e)
+                    self.log("Got an error recreating the test database: %s\n" % e)
                     sys.exit(2)
             else:
                 print( "Tests cancelled.")
