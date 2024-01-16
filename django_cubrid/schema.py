@@ -123,7 +123,7 @@ class DatabaseSchemaEditor(BaseDatabaseSchemaEditor):
 
         # Add an index, if required
         if field.db_index and not field.unique:
-            self.deferred_sql.append(self._create_index_sql(model, [field]))
+            self.deferred_sql.append(self._create_index_sql(model, fields=[field]))
         # Add any FK constraints later
         if field.is_relation and self.connection.features.supports_foreign_keys and field.db_constraint:
             self.deferred_sql.append(self._create_fk_sql(model, field, "_fk_%(to_table)s_%(to_column)s"))
