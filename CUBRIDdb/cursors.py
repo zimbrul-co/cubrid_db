@@ -48,10 +48,10 @@ class BaseCursor:
             raise InterfaceError("The cursor has been closed. No operation is allowed any more.")
 
     def close(self):
+        """Close the cursor, and no further queries will be possible."""
         if self._cs is None:
             return
 
-        """Close the cursor, and no further queries will be possible."""
         self._cs.close()
         self._cs = None
 
