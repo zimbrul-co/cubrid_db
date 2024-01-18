@@ -65,8 +65,8 @@ class DatabaseCreation(BaseDatabaseCreation):
 
                         subprocess.run(start_command, check = True)
                         print('Started')
-                except subprocess.CalledProcessError as e:
-                    self.log(f"Error recreating the test database: {e}")
+                except subprocess.CalledProcessError as e2:
+                    self.log(f"Error recreating the test database: {e2}")
                     sys.exit(2)
             else:
                 print( "Tests cancelled.")
