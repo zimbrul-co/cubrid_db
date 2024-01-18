@@ -200,6 +200,7 @@ class BaseCursor:
     def nextset(self):
         """Advance to the next result set.
         Returns None if there are no more result sets."""
+        raise NotImplementedError("Cursor.nextset() not implemented")
 
     def callproc(self, procname, args=()):
         """
@@ -212,6 +213,7 @@ class BaseCursor:
         Returns the original args.
 
         """
+        raise NotImplementedError("Cursor.callproc() not implemented")
 
     def __iter__(self):
         """
@@ -242,6 +244,7 @@ class Cursor(BaseCursor):
     This is the standard Cursor class that returns rows as tuples
     and stores the result set in the client.
     '''
+    # pylint: disable=abstract-method
 
     @classmethod
     def _get_fetch_type(cls):
@@ -253,6 +256,7 @@ class DictCursor(BaseCursor):
     This is a Cursor class that returns rows as dictionaries and
     stores the result set in the client.
     '''
+    # pylint: disable=abstract-method
 
     @classmethod
     def _get_fetch_type(cls):
