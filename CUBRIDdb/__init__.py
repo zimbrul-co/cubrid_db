@@ -6,15 +6,18 @@ This package is a wrapper around _cubrid.
 connect() -- connects to server
 
 """
-threadsafety = 2
-apilevel = "2.0"
-paramstyle = 'qmark'
-
 from datetime import date, datetime, time
 from time import localtime
 
 from _cubrid import *
 from CUBRIDdb import field_type
+from CUBRIDdb.connections import Connection
+
+# pylint: disable=invalid-name
+
+threadsafety = 2
+apilevel = "2.0"
+paramstyle = 'qmark'
 
 
 Binary = bytes
@@ -52,7 +55,6 @@ ROWID = DBAPISet()
 
 def _connect(*args, **kwargs):
     """Factory function for connections.Connection."""
-    from CUBRIDdb.connections import Connection
     return Connection(*args, **kwargs)
 
 connect = _connect
@@ -72,4 +74,3 @@ __all__ = [
     'CLOB',
     'ROWID',
 ]
-
