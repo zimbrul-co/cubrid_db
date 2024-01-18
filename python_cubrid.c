@@ -3614,7 +3614,7 @@ The class is support by version 9.1.0.0003 and later";
 
 PyTypeObject _cubrid_SetObject_type = {
   PyVarObject_HEAD_INIT (NULL, 0)
-  "_cubrid.set",                /* tp_name */
+  "_cubrid.cubrid_set",                /* tp_name */
   sizeof (_cubrid_SetObject),        /* tp_basicsize */
   0,                                /* tp_itemsize */
   (destructor) _cubrid_SetObject_dealloc,        /* tp_dealloc */
@@ -4327,7 +4327,7 @@ PyInit__cubrid (void)
 
   Py_INCREF (&_cubrid_SetObject_type);
   if (PyModule_AddObject
-      (module, "set", (PyObject *) & _cubrid_SetObject_type) < 0)
+      (module, "cubrid_set", (PyObject *) & _cubrid_SetObject_type) < 0)
     {
       goto Error;
     }
