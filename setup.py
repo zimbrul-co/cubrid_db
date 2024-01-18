@@ -5,6 +5,8 @@ import platform
 import subprocess
 import sys
 
+from setuptools import setup, Extension
+
 
 def get_script_dir():
     """Return the directory of the script."""
@@ -45,10 +47,6 @@ print ('CCI directory:', cci_dir)
 
 
 if OS_TYPE == 'Windows':
-    from distutils.core import setup, Extension
-    from distutils import msvc9compiler
-
-    msvc9compiler.VERSION = 14.0 #Visual studio 2015
     VCOMTOOLS_ENV = 'VS140COMNTOOLS'
 
     # Check for Visual Studio common tools
@@ -105,8 +103,6 @@ if OS_TYPE == 'Windows':
         raise FileNotFoundError(f"CCI static lib not found at {cci_static_lib}")
 
 else:
-    from distutils.core import setup, Extension
-
     # Build CCI
     os.chdir(cci_dir)
     try:
