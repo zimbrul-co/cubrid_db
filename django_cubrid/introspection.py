@@ -215,5 +215,3 @@ class DatabaseIntrospection(BaseDatabaseIntrospection):
                 constraints[name] = attrs
 
         return constraints
-
-

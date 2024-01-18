@@ -45,4 +45,3 @@ class SQLUpdateCompiler(compiler.SQLUpdateCompiler, SQLCompiler):
 
 class SQLAggregateCompiler(compiler.SQLAggregateCompiler, SQLCompiler):
     pass
-
