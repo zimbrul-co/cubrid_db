@@ -59,7 +59,7 @@ class CursorWrapper(object):
             query = re.sub('%%', '%', query)
             return self.cursor.execute(query, args)
 
-        except Exception as e:
+        except Database.Error as e:
             raise_django_exception(e)
 
     def executemany(self, query, args):
@@ -68,7 +68,7 @@ class CursorWrapper(object):
             query = re.sub('%%', '%', query)
 
             return self.cursor.executemany(query, args)
-        except Exception as e:
+        except Database.Error as e:
             raise_django_exception(e)
 
     def __getattr__(self, attr):
@@ -249,11 +249,11 @@ class DatabaseWrapper(BaseDatabaseWrapper):
             self.connection = self.get_new_connection(None)
         version_str = self.connection.server_version()
         if not version_str:
-            raise Exception('Unable to determine CUBRID version string')
+            raise Database.InterfaceError('Unable to determine CUBRID version string')
 
         match = db_version_re.match(version_str)
         if not match:
-            raise Exception(
+            raise ValueError(
                 f"Unable to determine CUBRID version from version string '{version_str}'"
             )
 
