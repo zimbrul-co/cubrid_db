@@ -190,16 +190,13 @@ class BaseCursor:
 
     def setinputsizes(self, *args):
         """Does nothing, required by DB API."""
-        pass
 
     def setoutputsizes(self, *args):
         """Does nothing, required by DB API."""
-        pass
 
     def nextset(self):
         """Advance to the next result set.
         Returns None if there are no more result sets."""
-        pass
 
     def callproc(self, procname, args=()):
         """
@@ -212,7 +209,6 @@ class BaseCursor:
         Returns the original args.
 
         """
-        pass
 
     def __iter__(self):
         """
