@@ -1,23 +1,33 @@
-import os
-import sys
-
 from django.db.backends.base.client import BaseDatabaseClient
 
 
 class DatabaseClient(BaseDatabaseClient):
     executable_name = 'csql'
 
-    def runshell(self):
-        settings_dict = self.connection.settings_dict
-        args = [self.executable_name]
-        if settings_dict['USER']:
-            args += ["-u", settings_dict['USER']]
-        if settings_dict['PASSWORD']:
-            args += ["-p", settings_dict['PASSWORD']]
-        if settings_dict['NAME'] and settings_dict['HOST']:
-            args += [settings_dict['NAME'] + "@" + settings_dict['HOST']]
+    @classmethod
+    def settings_to_cmd_args_env(cls, settings_dict, parameters):
+        args = [cls.executable_name]
 
-        if os.name == 'nt':
-            sys.exit(os.system(" ".join(args)))
-        else:
-            os.execvp(self.executable_name, args)
+        database = settings_dict["OPTIONS"].get(
+            "database",
+            settings_dict["OPTIONS"].get("db", settings_dict["NAME"]),
+        )
+        user = settings_dict["OPTIONS"].get("user", settings_dict["USER"])
+        password = settings_dict["OPTIONS"].get(
+            "password",
+            settings_dict["OPTIONS"].get("passwd", settings_dict["PASSWORD"]),
+        )
+        host = settings_dict["OPTIONS"].get("host", settings_dict["HOST"])
+
+        if user:
+            args += ["-u", user]
+        if password:
+            args += ["-p", password]
+        if database:
+            if host:
+                args += [f'{database}@{host}']
+            else:
+                args += [database]
+
+        args.extend(parameters)
+        return args, None
