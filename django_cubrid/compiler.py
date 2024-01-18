@@ -2,10 +2,6 @@ from django.db.models.sql import compiler
 
 
 class SQLCompiler(compiler.SQLCompiler):
-    def resolve_columns (self, row, fields=()):
-        # This function is needed to pass "AdminViewBasicTest" test scenario
-        return row
-
     def as_sql(self, with_limits=True, with_col_aliases=False):
         """
         Creates the SQL for this query. Returns the SQL string and list of
