@@ -19,14 +19,14 @@ class SQLCompiler(compiler.SQLCompiler):
             if self.query.high_mark is not None:
                 row_count = self.query.high_mark - self.query.low_mark
                 if self.query.low_mark:
-                    sql = sql + ' LIMIT %d,%d' % (self.query.low_mark, row_count)
+                    sql = sql + f' LIMIT {self.query.low_mark},{row_count}'
                 else:
-                    sql = sql + ' LIMIT %d' % (row_count)
+                    sql = sql + f' LIMIT {row_count}'
             else:
                 val = self.connection.ops.no_limit_value()
                 if val:
                     if self.query.low_mark:
-                        sql = sql + ' LIMIT %d,%d' % (self.query.low_mark, val)
+                        sql = sql + f' LIMIT {self.query.low_mark},{val}'
 
         return sql, params
 

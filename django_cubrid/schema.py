@@ -31,11 +31,11 @@ class DatabaseSchemaEditor(BaseDatabaseSchemaEditor):
 
     def quote_value(self, value):
         if isinstance(value, (datetime.date, datetime.time, datetime.datetime)):
-            return "'%s'" % value
+            return f"'{value}'"
         if isinstance(value, str):
-            return "'%s'" % self.connection.connection.escape_string(value)
+            return f"'{self.connection.connection.escape_string(value)}'"
         if isinstance(value, (bytes, bytearray, memoryview)):
-            return "'%s'" % value.hex()
+            return f"'{value.hex()}'"
         if isinstance(value, bool):
             return "1" if value else "0"
         return str(value)
@@ -66,7 +66,7 @@ class DatabaseSchemaEditor(BaseDatabaseSchemaEditor):
                     # Some databases can't take defaults as a parameter (oracle)
                     # If this is the case, the individual schema backend should
                     # implement prepare_default
-                    sql += " DEFAULT %s" % self.prepare_default(default_value)
+                    sql += f" DEFAULT {self.prepare_default(default_value)}"
                 else:
                     sql += " DEFAULT %s"
                     params += [default_value]
@@ -88,7 +88,7 @@ class DatabaseSchemaEditor(BaseDatabaseSchemaEditor):
         # Optionally add the tablespace if it's an implicitly indexed column
         tablespace = field.db_tablespace or model._meta.db_tablespace
         if tablespace and self.connection.features.supports_tablespaces and field.unique:
-            sql += " %s" % self.connection.ops.tablespace_sql(tablespace, inline=True)
+            sql += " " + self.connection.ops.tablespace_sql(tablespace, inline=True)
         # Return the sql
         return sql, params
 
@@ -112,7 +112,7 @@ class DatabaseSchemaEditor(BaseDatabaseSchemaEditor):
         # Check constraints can go on the column SQL here
         db_params = field.db_parameters(connection=self.connection)
         if db_params['check']:
-            definition += " CHECK (%s)" % db_params['check']
+            definition += f" CHECK ({db_params['check']})"
         # Build the SQL and run it
         sql = self.sql_create_column % {
             "table": self.quote_name(model._meta.db_table),

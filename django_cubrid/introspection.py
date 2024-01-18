@@ -61,7 +61,7 @@ class DatabaseIntrospection(BaseDatabaseIntrospection):
             ORDER BY a.class_name, a.def_order;""", [table_name])
         field_info = {line[0]: InfoLine(*line) for line in cursor.fetchall()}
 
-        cursor.execute("SELECT * FROM %s LIMIT 1" % self.connection.ops.quote_name(table_name))
+        cursor.execute(f"SELECT * FROM {self.connection.ops.quote_name(table_name)} LIMIT 1")
 
         fields = []
         for line in cursor.description:
@@ -87,7 +87,7 @@ class DatabaseIntrospection(BaseDatabaseIntrospection):
         raise NotImplementedError
 
     def get_sequences(self, cursor, table_name, table_fields=()):
-        cursor.execute("SHOW CREATE TABLE %s" % table_name)
+        cursor.execute(f"SHOW CREATE TABLE {table_name}")
         _, stmt = cursor.fetchone()
 
         # Only one auto increment possible
@@ -197,7 +197,7 @@ class DatabaseIntrospection(BaseDatabaseIntrospection):
 
             return name, attrs
 
-        query = "SHOW CREATE TABLE %s" % table_name
+        query = f"SHOW CREATE TABLE {table_name}"
         cursor.execute(query)
         _, stmt = cursor.fetchone()
 

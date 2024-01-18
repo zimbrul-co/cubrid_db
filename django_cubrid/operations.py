@@ -119,7 +119,7 @@ class DatabaseOperations(BaseDatabaseOperations):
         if name.startswith("`") and name.endswith("`"):
             # Quoting once is enough.
             return name
-        return "`%s`" % name
+        return f"`{name}`"
 
     def regex_lookup(self, lookup_type):
         if lookup_type == "regex":
@@ -146,6 +146,7 @@ class DatabaseOperations(BaseDatabaseOperations):
         return result[0]
 
     def sql_flush(self, style, tables, *, reset_sequences=False, allow_cascade=False):
+        # pylint: disable=consider-using-f-string
         if not tables:
             return []
 
@@ -176,6 +177,7 @@ class DatabaseOperations(BaseDatabaseOperations):
         ]
 
     def sequence_reset_by_name_sql(self, style, sequences):
+        # pylint: disable=consider-using-f-string
         return [
             "%s %s %s %s = 1;"
             % (
@@ -198,7 +200,7 @@ class DatabaseOperations(BaseDatabaseOperations):
 
         # Use UPPER(x) for case-insensitive lookups.
         if lookup_type in ('iexact', 'icontains', 'istartswith', 'iendswith'):
-            lookup = 'UPPER(%s)' % lookup
+            lookup = f'UPPER({lookup})'
 
         return lookup
 
@@ -208,7 +210,7 @@ class DatabaseOperations(BaseDatabaseOperations):
     def bulk_insert_sql(self, fields, placeholder_rows):
         # pylint: disable=unused-argument
         placeholder_rows_sql = (", ".join(row) for row in placeholder_rows)
-        values_sql = ", ".join("({0})".format(sql) for sql in placeholder_rows_sql)
+        values_sql = ", ".join(f"({sql})" for sql in placeholder_rows_sql)
         return "VALUES " + values_sql
 
     def get_db_converters(self, expression):
@@ -233,7 +235,7 @@ class DatabaseOperations(BaseDatabaseOperations):
 
     def convert_binaryfield_value(self, value, expression, connection):
         if not value.startswith('0B'):
-            raise ValueError('Unexpected value: %s' % value)
+            raise ValueError(f'Unexpected value: {value}')
         value = value[2:]
         def gen_bytes():
             for i in range(0, len(value), 8):
