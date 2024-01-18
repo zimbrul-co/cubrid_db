@@ -109,14 +109,8 @@ class DatabaseOperations(BaseDatabaseOperations):
         else:
             return f"TIME({sql})", params
 
-    def drop_foreignkey_sql(self):
-        return "DROP FOREIGN KEY"
-
     def force_no_ordering(self):
         return [(None, ("NULL", [], False))]
-
-    def fulltext_search_sql(self, field_name):
-        return 'MATCH (%s) AGAINST (%%s IN BOOLEAN MODE)' % field_name
 
     def quote_name(self, name):
         if name.startswith("`") and name.endswith("`"):
@@ -143,9 +137,6 @@ class DatabaseOperations(BaseDatabaseOperations):
 
         return result[0]
 
-    def random_function_sql(self):
-        return 'RAND()'
-
     def sql_flush(self, style, tables, sequences, allow_cascade=False):
         # 'TRUNCATE x;', 'TRUNCATE y;', 'TRUNCATE z;'... style SQL statements
         # to clear all tables of all data
@@ -166,35 +157,6 @@ class DatabaseOperations(BaseDatabaseOperations):
             return sql
         else:
             return []
-
-    def prep_for_like_query(self, x):
-        # TODO escape "_" character, if possible (seems not to be working properly)
-        return str(x).replace("\\", "\\\\").replace("%", "\%")
-
-    prep_for_iexact_query = prep_for_like_query
-
-    def value_to_db_datetime(self, value):
-        if value is None:
-            return None
-
-        # Check if CUBRID supports timezones
-        if timezone.is_aware(value):
-            if settings.USE_TZ:
-                value = value.astimezone(timezone.utc).replace(tzinfo=None)
-            else:
-                raise ValueError("CUBRID does not support timezone-aware datetime when USE_TZ is False.")
-
-        return str(value)
-
-    def value_to_db_time(self, value):
-        if value is None:
-            return None
-
-        # Check if CUBRID supports timezones
-        if value.tzinfo is not None:
-            raise ValueError("CUBRID does not support timezone-aware times.")
-
-        return str(value)
 
     def year_lookup_bounds(self, value):
         # Again, no microseconds
