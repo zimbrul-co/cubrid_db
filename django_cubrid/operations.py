@@ -207,6 +207,7 @@ class DatabaseOperations(BaseDatabaseOperations):
         return 64
 
     def bulk_insert_sql(self, fields, placeholder_rows):
+        # pylint: disable=unused-argument
         placeholder_rows_sql = (", ".join(row) for row in placeholder_rows)
         values_sql = ", ".join("({0})".format(sql) for sql in placeholder_rows_sql)
         return "VALUES " + values_sql
