@@ -23,20 +23,20 @@ class DatabaseOperations(BaseDatabaseOperations):
         if lookup_type == "week_day":
             # DAYOFWEEK() returns an integer, 1-7, Sunday=1.
             return f"DAYOFWEEK({sql})", params
-        elif lookup_type == "iso_week_day":
+        if lookup_type == "iso_week_day":
             # WEEKDAY() returns an integer, 0-6, Monday=0.
             return f"WEEKDAY({sql}) + 1", params
-        elif lookup_type == "week":
+        if lookup_type == "week":
             # Mode 3: Monday, 1-53, with 4 or more days this year.
             return f"WEEK({sql}, 3)", params
-        elif lookup_type == "iso_year":
+        if lookup_type == "iso_year":
             return f"YEAR({sql})", params
-        else:
-            # EXTRACT returns 1-53 based on ISO-8601 for the week number.
-            lookup_type = lookup_type.upper()
-            if not self._extract_format_re.fullmatch(lookup_type):
-                raise ValueError(f"Invalid loookup type: {lookup_type!r}")
-            return f"EXTRACT({lookup_type} FROM {sql})", params
+
+        # EXTRACT returns 1-53 based on ISO-8601 for the week number.
+        lookup_type = lookup_type.upper()
+        if not self._extract_format_re.fullmatch(lookup_type):
+            raise ValueError(f"Invalid loookup type: {lookup_type!r}")
+        return f"EXTRACT({lookup_type} FROM {sql})", params
 
     def date_trunc_sql(self, lookup_type, sql, params, tzname=None):
         sql, params = self._convert_sql_to_tz(sql, params, tzname)
@@ -47,16 +47,15 @@ class DatabaseOperations(BaseDatabaseOperations):
         if lookup_type in fields:
             format_str = fields[lookup_type]
             return f"CAST(DATE_FORMAT({sql}, %s) AS DATE)", (*params, format_str)
-        elif lookup_type == "quarter":
+        if lookup_type == "quarter":
             return (
                 f"MAKEDATE(YEAR({sql}), 1) + "
                 f"INTERVAL QUARTER({sql}) QUARTER - INTERVAL 1 QUARTER",
                 (*params, *params),
             )
-        elif lookup_type == "week":
+        if lookup_type == "week":
             return f"DATE_SUB({sql}, INTERVAL WEEKDAY({sql}) DAY)", (*params, *params)
-        else:
-            return f"DATE({sql})", params
+        return f"DATE({sql})", params
 
     def _convert_sql_to_tz(self, sql, params, tzname):
         if tzname and settings.USE_TZ:
@@ -110,8 +109,8 @@ class DatabaseOperations(BaseDatabaseOperations):
         if lookup_type in fields:
             format_str = fields[lookup_type]
             return f"CAST(DATE_FORMAT({sql}, %s) AS TIME)", (*params, format_str)
-        else:
-            return f"TIME({sql})", params
+
+        return f"TIME({sql})", params
 
     def force_no_ordering(self):
         return [(None, ("NULL", [], False))]
@@ -163,18 +162,18 @@ class DatabaseOperations(BaseDatabaseOperations):
                 )
                 for table_name in tables
             ]
-        else:
-            # Otherwise issue a simple DELETE since it's faster than TRUNCATE
-            # and preserves sequences.
-            return [
-                "%s %s %s;"
-                % (
-                    style.SQL_KEYWORD("DELETE"),
-                    style.SQL_KEYWORD("FROM"),
-                    style.SQL_FIELD(self.quote_name(table_name)),
-                )
-                for table_name in tables
-            ]
+
+        # Otherwise issue a simple DELETE since it's faster than TRUNCATE
+        # and preserves sequences.
+        return [
+            "%s %s %s;"
+            % (
+                style.SQL_KEYWORD("DELETE"),
+                style.SQL_KEYWORD("FROM"),
+                style.SQL_FIELD(self.quote_name(table_name)),
+            )
+            for table_name in tables
+        ]
 
     def sequence_reset_by_name_sql(self, style, sequences):
         return [
