@@ -62,21 +62,9 @@ class DatabaseSchemaEditor(BaseDatabaseSchemaEditor):
         if include_default:
             default_value = self.effective_default(field)
             if default_value is not None:
-                if self.connection.features.requires_literal_defaults:
-                    # Some databases can't take defaults as a parameter (oracle)
-                    # If this is the case, the individual schema backend should
-                    # implement prepare_default
-                    sql += f" DEFAULT {self.prepare_default(default_value)}"
-                else:
-                    sql += " DEFAULT %s"
-                    params += [default_value]
+                sql += f" DEFAULT {self.prepare_default(default_value)}"
         if not field.get_internal_type() in ("BinaryField",):
-            # Oracle treats the empty string ('') as null, so coerce the null
-            # option whenever '' is a possible value.
-            if (field.empty_strings_allowed and not field.primary_key and
-                    self.connection.features.interprets_empty_strings_as_nulls):
-                null = True
-            if null and not self.connection.features.implied_column_null:
+            if null:
                 sql += " NULL"
             elif not null:
                 sql += " NOT NULL"
@@ -85,10 +73,6 @@ class DatabaseSchemaEditor(BaseDatabaseSchemaEditor):
                 sql += " PRIMARY KEY"
             elif field.unique:
                 sql += " UNIQUE"
-        # Optionally add the tablespace if it's an implicitly indexed column
-        tablespace = field.db_tablespace or model._meta.db_tablespace
-        if tablespace and self.connection.features.supports_tablespaces and field.unique:
-            sql += " " + self.connection.ops.tablespace_sql(tablespace, inline=True)
         # Return the sql
         return sql, params
 
@@ -125,8 +109,5 @@ class DatabaseSchemaEditor(BaseDatabaseSchemaEditor):
         if field.db_index and not field.unique:
             self.deferred_sql.append(self._create_index_sql(model, fields=[field]))
         # Add any FK constraints later
-        if field.is_relation and self.connection.features.supports_foreign_keys and field.db_constraint:
+        if field.is_relation and field.db_constraint:
             self.deferred_sql.append(self._create_fk_sql(model, field, "_fk_%(to_table)s_%(to_column)s"))
-        # Reset connection if required
-        if self.connection.features.connection_persists_old_columns:
-            self.connection.close()
