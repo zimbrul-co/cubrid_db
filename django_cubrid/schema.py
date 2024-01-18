@@ -101,7 +101,9 @@ class DatabaseSchemaEditor(BaseDatabaseSchemaEditor):
         # Special-case implicit M2M tables
         if ((isinstance(field, ManyToManyField) or field.get_internal_type() == 'ManyToManyField') and
                 field.remote_field.through._meta.auto_created):
-            return self.create_model(field.remote_field.through)
+            self.create_model(field.remote_field.through)
+            return
+
         # Get the column's definition
         definition, params = self.column_sql(model, field, include_default=True)
         # It might not actually have a column behind it
