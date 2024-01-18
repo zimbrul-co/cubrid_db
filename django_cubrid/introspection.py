@@ -48,6 +48,8 @@ class DatabaseIntrospection(BaseDatabaseIntrospection):
         return name.lower()
 
     def get_table_description(self, cursor, table_name):
+        """Returns a description of the table, with the DB-API cursor.description interface."""
+
         # Get accurate information with this query (taken from cubridmanager)
         cursor.execute("""
             SELECT a.attr_name, a.attr_type, a.data_type, a.prec, a.scale, a.is_nullable, a.default_value, a.def_order, c.is_system_class, c.class_type, c.partitioned, c.owner_name, c.is_reuse_oid_class
@@ -56,7 +58,6 @@ class DatabaseIntrospection(BaseDatabaseIntrospection):
             ORDER BY a.class_name, a.def_order;""", [table_name])
         field_info = {line[0]: InfoLine(*line) for line in cursor.fetchall()}
 
-        """Returns a description of the table, with the DB-API cursor.description interface."""
         cursor.execute("SELECT * FROM %s LIMIT 1" % self.connection.ops.quote_name(table_name))
 
         fields = []
