@@ -10,11 +10,12 @@ threadsafety = 2
 apilevel = "2.0"
 paramstyle = 'qmark'
 
+from datetime import date, datetime, time
+from time import localtime
+
 from _cubrid import *
 from CUBRIDdb import field_type
 
-from time import localtime
-from datetime import date, datetime, time
 
 Binary = bytes
 Date = date

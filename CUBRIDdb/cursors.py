@@ -1,6 +1,9 @@
-from CUBRIDdb import field_type
-from CUBRIDdb import InterfaceError
 from functools import reduce
+
+from CUBRIDdb import (
+    field_type,
+    InterfaceError,
+)
 
 
 def bytes_to_binstr(b):

@@ -1,13 +1,16 @@
 import re
 
 from collections import namedtuple
-from CUBRIDdb import field_type
 
-from django.db.backends.base.introspection import BaseDatabaseIntrospection
-from django.db.backends.base.introspection import FieldInfo
-from django.db.backends.base.introspection import TableInfo
+from django.db.backends.base.introspection import (
+    BaseDatabaseIntrospection,
+    FieldInfo,
+    TableInfo,
+)
 from django.db.models.indexes import Index
 from django.utils.encoding import force_str
+
+from CUBRIDdb import field_type
 
 
 InfoLine = namedtuple('InfoLine', 'col_name attr_type data_type prec scale is_nullable default_value def_order is_system_class class_type partitioned owner_name is_reuse_old_class')
