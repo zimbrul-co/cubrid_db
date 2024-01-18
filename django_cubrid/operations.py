@@ -146,26 +146,47 @@ class DatabaseOperations(BaseDatabaseOperations):
 
         return result[0]
 
-    def sql_flush(self, style, tables, sequences, allow_cascade=False):
-        # 'TRUNCATE x;', 'TRUNCATE y;', 'TRUNCATE z;'... style SQL statements
-        # to clear all tables of all data
-        # TODO: when there are FK constraints, the sqlflush command in django may be failed.
-        if tables:
-            sql = []
-            for table in tables:
-                sql.append('%s %s;' % (style.SQL_KEYWORD('TRUNCATE'), style.SQL_FIELD(self.quote_name(table))))
-
-            # 'ALTER TABLE table AUTO_INCREMENT = 1;'... style SQL statements
-            # to reset sequence indices
-            sql.extend(
-                ["%s %s %s %s %s;" % (style.SQL_KEYWORD('ALTER'),
-                 style.SQL_KEYWORD('TABLE'),
-                 style.SQL_TABLE(self.quote_name(sequence['table'])),
-                 style.SQL_KEYWORD('AUTO_INCREMENT'),
-                 style.SQL_FIELD('= 1'),) for sequence in sequences])
-            return sql
-        else:
+    def sql_flush(self, style, tables, *, reset_sequences=False, allow_cascade=False):
+        if not tables:
             return []
+
+        # TODO: If there are FK constraints, the sqlflush command in Django may fail.
+
+        if reset_sequences:
+            # It's faster to TRUNCATE tables that require a sequence reset
+            # since ALTER TABLE AUTO_INCREMENT is slower than TRUNCATE.
+            return [
+                "%s %s;"
+                % (
+                    style.SQL_KEYWORD("TRUNCATE"),
+                    style.SQL_FIELD(self.quote_name(table_name)),
+                )
+                for table_name in tables
+            ]
+        else:
+            # Otherwise issue a simple DELETE since it's faster than TRUNCATE
+            # and preserves sequences.
+            return [
+                "%s %s %s;"
+                % (
+                    style.SQL_KEYWORD("DELETE"),
+                    style.SQL_KEYWORD("FROM"),
+                    style.SQL_FIELD(self.quote_name(table_name)),
+                )
+                for table_name in tables
+            ]
+
+    def sequence_reset_by_name_sql(self, style, sequences):
+        return [
+            "%s %s %s %s = 1;"
+            % (
+                style.SQL_KEYWORD('ALTER'),
+                style.SQL_KEYWORD('TABLE'),
+                style.SQL_TABLE(self.quote_name(sequence_info['table'])),
+                style.SQL_KEYWORD('AUTO_INCREMENT'),
+            )
+            for sequence_info in sequences
+        ]
 
     def year_lookup_bounds(self, value):
         # Again, no microseconds
