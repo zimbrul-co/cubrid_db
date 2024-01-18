@@ -14,6 +14,10 @@ class DatabaseOperations(BaseDatabaseOperations):
 
     _extract_format_re = _lazy_re_compile(r"[A-Z_]+")
 
+    def format_for_duration_arithmetic(self, sql):
+        """Do nothing since formatting is handled in the custom function."""
+        return sql
+
     def date_extract_sql(self, lookup_type, sql, params):
         # https://www.cubrid.org/manual/en/10.1/sql/function/datetime_fn.html
         if lookup_type == "week_day":
