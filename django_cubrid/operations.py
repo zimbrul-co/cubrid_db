@@ -122,6 +122,11 @@ class DatabaseOperations(BaseDatabaseOperations):
             return name
         return "`%s`" % name
 
+    def regex_lookup(self, lookup_type):
+        if lookup_type == "regex":
+            return "%s REGEXP BINARY %s"
+        return "%s REGEXP %s"
+
     def no_limit_value(self):
         # 2**63 - 1
         return 9223372036854775807
