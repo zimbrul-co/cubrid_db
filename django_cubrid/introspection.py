@@ -13,7 +13,11 @@ from django.utils.encoding import force_str
 from CUBRIDdb import field_type
 
 
-InfoLine = namedtuple('InfoLine', 'col_name attr_type data_type prec scale is_nullable default_value def_order is_system_class class_type partitioned owner_name is_reuse_old_class')
+InfoLine = namedtuple('InfoLine', [
+    'col_name', 'attr_type', 'data_type', 'prec scale', 'is_nullable',
+    'default_value', 'def_order', 'is_system_class', 'class_type', 'partitioned',
+    'owner_name', 'is_reuse_old_class',
+])
 
 
 class DatabaseIntrospection(BaseDatabaseIntrospection):
@@ -55,7 +59,9 @@ class DatabaseIntrospection(BaseDatabaseIntrospection):
 
         # Get accurate information with this query (taken from cubridmanager)
         cursor.execute("""
-            SELECT a.attr_name, a.attr_type, a.data_type, a.prec, a.scale, a.is_nullable, a.default_value, a.def_order, c.is_system_class, c.class_type, c.partitioned, c.owner_name, c.is_reuse_oid_class
+            SELECT a.attr_name, a.attr_type, a.data_type, a.prec, a.scale, a.is_nullable,
+            a.default_value, a.def_order, c.is_system_class, c.class_type, c.partitioned,
+            c.owner_name, c.is_reuse_oid_class
             FROM db_attribute a, db_class c
             WHERE c.class_name=a.class_name AND c.class_name = ?
             ORDER BY a.class_name, a.def_order;""", [table_name])

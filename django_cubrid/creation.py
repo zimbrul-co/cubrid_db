@@ -16,7 +16,8 @@ class DatabaseCreation(BaseDatabaseCreation):
 
         # Create the test database and start the cubrid server.
         check_command = ["cubrid", "checkdb", test_database_name]
-        create_command = ["cubrid", "createdb" , "--db-volume-size=20M", "--log-volume-size=20M", test_database_name, "en_US.utf8"]
+        create_command = ["cubrid", "createdb" , "--db-volume-size=20M",
+                          "--log-volume-size=20M", test_database_name, "en_US.utf8"]
         start_command = ["cubrid", "server", "start", test_database_name]
         stop_command = ["cubrid", "server", "stop", test_database_name]
         delete_command = ["cubrid", "deletedb", test_database_name]
@@ -45,7 +46,8 @@ class DatabaseCreation(BaseDatabaseCreation):
         except subprocess.CalledProcessError as e:
             self.log(f"Error creating the test database: {e}")
             if not autoclobber:
-                confirm = input(f"Type 'yes' if you would like to try deleting the test database '{test_database_name}', or 'no' to cancel: ")
+                confirm = input(f"Type 'yes' if you would like to try deleting the test '\
+                                'database '{test_database_name}', or 'no' to cancel: ")
             if autoclobber or confirm == 'yes':
                 try:
                     if verbosity >= 1:

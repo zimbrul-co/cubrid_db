@@ -83,7 +83,8 @@ class DatabaseSchemaEditor(BaseDatabaseSchemaEditor):
         table instead (for M2M fields)
         """
         # Special-case implicit M2M tables
-        if ((isinstance(field, ManyToManyField) or field.get_internal_type() == 'ManyToManyField') and
+        if ((isinstance(field, ManyToManyField) or
+                field.get_internal_type() == 'ManyToManyField') and
                 field.remote_field.through._meta.auto_created):
             self.create_model(field.remote_field.through)
             return
@@ -110,4 +111,5 @@ class DatabaseSchemaEditor(BaseDatabaseSchemaEditor):
             self.deferred_sql.append(self._create_index_sql(model, fields=[field]))
         # Add any FK constraints later
         if field.is_relation and field.db_constraint:
-            self.deferred_sql.append(self._create_fk_sql(model, field, "_fk_%(to_table)s_%(to_column)s"))
+            self.deferred_sql.append(self._create_fk_sql(
+                model, field, "_fk_%(to_table)s_%(to_column)s"))

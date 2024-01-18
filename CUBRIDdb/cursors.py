@@ -153,7 +153,8 @@ class BaseCursor:
 
     def fetchone(self):
         """
-        Fetch the next row of a query result set, returning a single sequence, or None when no more data is available.
+        Fetch the next row of a query result set, returning a single sequence, or
+        None when no more data is available.
         """
         self.__check_state()
         return self._cs.fetch_row(self._get_fetch_type())
@@ -172,9 +173,15 @@ class BaseCursor:
 
     def fetchmany(self, size=None):
         """
-        Fetch the next set of rows of a query result, returning a sequence of sequences (e.g. a list of tuples). An empty sequence is returned when no more rows are available.
-        The number of rows to fetch per call is specified by the parameter. If it is not given, the cursor's arraysize determines the number of rows to be fetched.
-        The method should try to fetch as many rows as indicated by the size parameter. If this is not possible due to the specified number of rows not being available, fewer rows may be returned.
+        Fetch the next set of rows of a query result, returning a sequence of
+        sequences (e.g. a list of tuples). An empty sequence is returned when
+        no more rows are available.
+        The number of rows to fetch per call is specified by the parameter.
+        If it is not given, the cursor's arraysize determines the number of rows
+        to be fetched.
+        The method should try to fetch as many rows as indicated by the size
+        parameter. If this is not possible due to the specified number of rows
+        not being available, fewer rows may be returned.
         """
         self.__check_state()
         if size is None:
@@ -185,8 +192,10 @@ class BaseCursor:
 
     def fetchall(self):
         """
-        Fetch all (remaining) rows of a query result, returning them as a sequence of sequences (e.g. a list of tuples).
-        Note that the cursor's arraysize attribute can affect the performance of this operation.
+        Fetch all (remaining) rows of a query result, returning them as a
+        sequence of sequences (e.g. a list of tuples).
+        Note that the cursor's arraysize attribute can affect the performance
+        of this operation.
         """
         self.__check_state()
         return self._fetch_many(-1)
@@ -225,8 +234,10 @@ class BaseCursor:
 
     def next(self):
         """
-        Return the next row from the currently executing SQL statement using the same semantics as fetchone().
-        A StopIteration exception is raised when the result set is exhausted for Python versions 2.2 and later.
+        Return the next row from the currently executing SQL statement
+        using the same semantics as fetchone().
+        A StopIteration exception is raised when the result set is
+        exhausted for Python versions 2.2 and later.
         """
         self.__check_state()
         return self.__next__()
