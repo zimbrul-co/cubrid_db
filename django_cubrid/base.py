@@ -33,14 +33,14 @@ from django_cubrid.validation import DatabaseValidation
 db_version_re = _lazy_re_compile(r"(\d{1,2})\.(\d{1,2})\.(\d{1,2}).(\d{1,8})")
 
 
-"""
-Takes a CUBRID exception and raises the Django equivalent.
-"""
-def raise_django_exception(e):
+def get_django_error(e):
+    """
+    Takes a CUBRID exception and returns the Django equivalent.
+    """
     cubrid_exc_type = type(e)
     django_exc_type = getattr(django.db.utils,
         cubrid_exc_type.__name__, django.db.utils.Error)
-    raise django_exc_type(*tuple(e.args))
+    return django_exc_type(*tuple(e.args))
 
 
 class CursorWrapper(object):
@@ -59,7 +59,7 @@ class CursorWrapper(object):
             return self.cursor.execute(query, args)
 
         except Database.Error as e:
-            raise_django_exception(e)
+            raise get_django_error(e) from e
 
     def executemany(self, query, args):
         try:
@@ -68,7 +68,7 @@ class CursorWrapper(object):
 
             return self.cursor.executemany(query, args)
         except Database.Error as e:
-            raise_django_exception(e)
+            raise get_django_error(e) from e
 
     def __getattr__(self, attr):
         if attr in self.__dict__:
