@@ -15,7 +15,6 @@ except ImportError as import_error:
 
 import django.db.utils
 
-from django.db.backends import *
 from django.db.backends.base.base import BaseDatabaseWrapper
 from django.db.backends.signals import connection_created
 from django.utils.regex_helper import _lazy_re_compile
