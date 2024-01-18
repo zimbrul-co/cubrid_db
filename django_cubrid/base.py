@@ -9,9 +9,9 @@ import django
 
 try:
     import CUBRIDdb as Database
-except ImportError as e:
+except ImportError as import_error:
     from django.core.exceptions import ImproperlyConfigured
-    raise ImproperlyConfigured("Error loading CUBRIDdb module: %s" % e)
+    raise ImproperlyConfigured(f"Error loading CUBRIDdb module: {import_error}") from import_error
 
 import django.db.utils
 
