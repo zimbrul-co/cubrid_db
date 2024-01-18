@@ -34,7 +34,7 @@ class DatabaseCreation(BaseDatabaseCreation):
                 pass # go ahead and create it
 
         try:
-            cp = subprocess.run(create_command, capture_output = True)
+            cp = subprocess.run(create_command, capture_output = True, check = False)
             self.log(cp.stdout.decode())
             self.log(cp.stderr.decode())
             cp.check_returncode()
@@ -43,28 +43,30 @@ class DatabaseCreation(BaseDatabaseCreation):
             print('Started')
             subprocess.run(check_command, check = True)
             self.connection.cursor()
+            print('Checked')
 
-        except Exception as e:
-            self.log("Got an error creating the test database: %s\n" % e)
+        except subprocess.CalledProcessError as e:
+            self.log(f"Error creating the test database: {e}")
             if not autoclobber:
                 confirm = input("Type 'yes' if you would like to try deleting the test database '%s', or 'no' to cancel: " % test_database_name)
             if autoclobber or confirm == 'yes':
                 try:
                     if verbosity >= 1:
                         print("Destroying old test database...")
-                        subprocess.run(stop_command)
-                        subprocess.run(delete_command)
+                        subprocess.run(stop_command, check = True)
+                        subprocess.run(delete_command, check = True)
 
                         print("Creating test database...")
-                        cp = subprocess.run(create_command, capture_output = True)
+                        cp = subprocess.run(create_command, capture_output = True, check = False)
                         self.log(cp.stdout.decode())
                         self.log(cp.stderr.decode())
                         cp.check_returncode()
                         print('Created')
 
-                        subprocess.run(start_command)
-                except Exception as e:
-                    self.log("Got an error recreating the test database: %s\n" % e)
+                        subprocess.run(start_command, check = True)
+                        print('Started')
+                except subprocess.CalledProcessError as e:
+                    self.log(f"Error recreating the test database: {e}")
                     sys.exit(2)
             else:
                 print( "Tests cancelled.")
@@ -91,7 +93,10 @@ class DatabaseCreation(BaseDatabaseCreation):
         # to do so, because it's not allowed to delete a database while being
         # connected to it.
         time.sleep(1) # To avoid "database is being accessed by other users" errors.
-        subprocess.run(["cubrid", "server", "stop", test_database_name])
-        subprocess.run(["cubrid", "deletedb", test_database_name])
-
-        self.connection.close()
+        try:
+            subprocess.run(["cubrid", "server", "stop", test_database_name], check = True)
+            subprocess.run(["cubrid", "deletedb", test_database_name], check = True)
+        except subprocess.CalledProcessError as e:
+            self.log(f"Error destroying the test database: {e}")
+        finally:
+            self.connection.close()
