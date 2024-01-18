@@ -11,11 +11,8 @@ TEST_DATABASE_PREFIX = 'test_'
 
 class DatabaseCreation(BaseDatabaseCreation):
     def _create_test_db(self, verbosity, autoclobber, keepdb=False):
-        "Internal implementation - creates the test db tables."
-        if 'TEST_NAME' in self.connection.settings_dict:
-            test_database_name = self.connection.settings_dict['TEST_NAME']
-        else:
-            test_database_name = TEST_DATABASE_PREFIX + self.connection.settings_dict['NAME']
+        """Internal implementation - creates the test db tables."""
+        test_database_name = self._get_test_db_name()
 
         # Create the test database and start the cubrid server.
         check_command = ["cubrid", "checkdb", test_database_name]
@@ -25,13 +22,13 @@ class DatabaseCreation(BaseDatabaseCreation):
         delete_command = ["cubrid", "deletedb", test_database_name]
 
         if keepdb:
-            # Check if the test database already exists, in case keepdb is True
+            # Check if the test database already exists
             try:
                 subprocess.run(check_command, check = True)
                 print("Database already exists")
-                return # nothing to do if it already exists
+                return test_database_name
             except subprocess.CalledProcessError:
-                pass # go ahead and create it
+                pass
 
         try:
             cp = subprocess.run(create_command, capture_output = True, check = False)
