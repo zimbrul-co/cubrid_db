@@ -173,7 +173,7 @@ class DatabaseWrapper(BaseDatabaseWrapper):
 
 
     def __init__(self, *args, **kwargs):
-        super(DatabaseWrapper, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
         self._db_version = None
 

@@ -10,8 +10,10 @@ class SQLCompiler(compiler.SQLCompiler):
         If 'with_limits' is False, any limit/offset information is not included
         in the query.
         """
-        sql, params = super(SQLCompiler, self).as_sql(with_limits=False,
-                               with_col_aliases=with_col_aliases)
+        sql, params = super().as_sql(
+            with_limits=False,
+            with_col_aliases=with_col_aliases,
+        )
 
         if with_limits:
             if self.query.high_mark is not None:
