@@ -120,6 +120,8 @@ class DatabaseIntrospection(BaseDatabaseIntrospection):
         return indexes
 
     def get_constraints(self, cursor, table_name):
+        # pylint: disable=too-many-statements
+
         def parse_create_table_stmt(stmt):
             i = 0
             while i < len(stmt):
@@ -154,11 +156,9 @@ class DatabaseIntrospection(BaseDatabaseIntrospection):
 
             sql = sql[kind_i1 + 1:]
             columns_i1 = sql.index(')')
-            columns_sql = sql[:columns_i1].strip()
-            columns = parse_columns_sql(columns_sql)
 
             attrs = {
-                'columns': columns,
+                'columns': parse_columns_sql(sql[:columns_i1].strip()),
                 'primary_key': kind == "PRIMARY KEY",
                 'unique': kind == "UNIQUE KEY",
                 'foreign_key': None,
