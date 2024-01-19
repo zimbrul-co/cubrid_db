@@ -1,3 +1,25 @@
+"""
+This module defines the `DatabaseIntrospection` class for the Django-CUBRID backend,
+extending Django's `BaseDatabaseIntrospection`. It provides functionality for
+introspecting the schema of a CUBRID database from a Django application.
+
+The `DatabaseIntrospection` class includes a mapping of CUBRID database field types
+to Django field types, enabling accurate interpretation and representation of database
+schemas within Django models. The module facilitates the extraction of database
+metadata such as tables, columns, indexes, and other relevant information, which is
+crucial for Django's ORM to interact effectively with a CUBRID database.
+
+This module is an integral part of the Django-CUBRID backend, ensuring compatibility
+and seamless integration of CUBRID databases within Django projects.
+
+Classes:
+    DatabaseIntrospection: Extends Django's BaseDatabaseIntrospection to provide
+    introspection capabilities specific to CUBRID databases.
+
+Dependencies:
+    - Django's base introspection classes and methods
+    - CUBRIDdb for CUBRID database field type definitions
+"""
 import re
 
 from collections import namedtuple
@@ -21,6 +43,39 @@ InfoLine = namedtuple('InfoLine', [
 
 
 class DatabaseIntrospection(BaseDatabaseIntrospection):
+    """
+    The DatabaseIntrospection class in the Django-CUBRID backend extends Django's
+    BaseDatabaseIntrospection, providing specialized introspection functionalities
+    for CUBRID databases.
+
+    This class implements the necessary methods and properties to retrieve metadata
+    about the structure of a CUBRID database. It facilitates the mapping of CUBRID
+    database field types to Django field types, enabling the Django ORM to accurately
+    represent the database schema in models.
+
+    Attributes:
+        data_types_reverse (dict): A dictionary mapping CUBRID field types to Django
+        field types. This mapping is essential for translating CUBRID schema information
+        into a format understandable by Django's ORM.
+
+    Methods:
+        get_table_list(cursor): Retrieves a list of table names in the database.
+        get_table_description(cursor, table_name): Provides a description of the
+        specified table.
+        get_relations(cursor, table_name): Retrieves information about the relationships
+        between tables.
+        get_key_columns(cursor, table_name): Returns a list of foreign key columns for
+        the specified table.
+        get_indexes(cursor, table_name): Gathers information about indexes on the
+        specified table.
+        get_constraints(cursor, table_name): Provides details on constraints for the
+        given table.
+
+    This class plays a crucial role in enabling Django applications to interact
+    with CUBRID databases, ensuring that database operations and model definitions
+    are correctly aligned with the underlying database schema.
+    """
+
     data_types_reverse = {
         field_type.BIT: 'BinaryField',
         field_type.VARBIT: 'BinaryField',
@@ -93,6 +148,32 @@ class DatabaseIntrospection(BaseDatabaseIntrospection):
         raise NotImplementedError
 
     def get_sequences(self, cursor, table_name, table_fields=()):
+        """
+        Retrieves information about the sequences (auto-increment fields) in a specified table
+        in a CUBRID database.
+
+        This method executes a SQL command to obtain the 'CREATE TABLE' statement for the
+        specified table. It then searches this statement for fields that are set to auto-increment.
+        In CUBRID, only one field per table can be set to auto-increment. The method identifies
+        this field (if it exists) and returns its name.
+
+        Parameters:
+            cursor (Cursor): The database cursor used to execute the query.
+            table_name (str): The name of the table for which to retrieve sequence information.
+            table_fields (tuple): Optional. The fields of the table. This parameter is not
+            currently used in the method but can be provided for future extensions or
+            compatibility with the method signature in Django's base class.
+
+        Returns:
+            list of dict: A list containing a dictionary for each auto-increment field
+            in the specified table. Each dictionary has two keys: 'table' indicating the
+            name of the table, and 'column' indicating the name of the auto-increment column.
+            If there are no auto-increment fields, the method returns an empty list.
+
+        Note:
+            The method assumes that there is at most one auto-increment field in a table,
+            which is a typical scenario in CUBRID database design.
+        """
         cursor.execute(f"SHOW CREATE TABLE {table_name}")
         _, stmt = cursor.fetchone()
 
@@ -104,6 +185,40 @@ class DatabaseIntrospection(BaseDatabaseIntrospection):
         return [{'table': table_name, 'column': m.group(1)}]
 
     def get_indexes(self, cursor, table_name):
+        """
+        Retrieves a dictionary of indexes defined in a specified table in a CUBRID database.
+
+        This method executes a SQL query to fetch index information from the database. It
+        joins the 'db_index_key' and 'db_index' tables to obtain details about each index,
+        focusing on those where 'key_order' is 0 and 'key_count' is 1, which indicates
+        single-column indexes.
+
+        The method filters indexes based on the provided table name and returns a dictionary
+        where each key is the name of a column that is indexed, and the value is a dictionary
+        specifying whether this index is a primary key and whether it is unique.
+
+        Parameters:
+            cursor (Cursor): The database cursor used to execute the query.
+            table_name (str): The name of the table for which to retrieve index information.
+
+        Returns:
+            dict: A dictionary where each key is a column name and the value is another
+            dictionary with two keys: 'primary_key' (boolean indicating if the index is
+            a primary key) and 'unique' (boolean indicating if the index is unique).
+
+        Example:
+            If a table has an index on column 'id' as a primary key and unique, and another
+            index on column 'name' which is not a primary key but is unique, the method
+            will return:
+            {
+                'id': {'primary_key': True, 'unique': True},
+                'name': {'primary_key': False, 'unique': True}
+            }
+
+        Note:
+            This method only considers single-column indexes and assumes that 'key_order' of 0
+            and 'key_count' of 1 are indicators of such indexes in the CUBRID database schema.
+        """
         cursor.execute("""
             SELECT db_index_key.key_attr_name, db_index.is_primary_key, db_index.is_unique
             FROM db_index_key, db_index
@@ -120,6 +235,48 @@ class DatabaseIntrospection(BaseDatabaseIntrospection):
         return indexes
 
     def get_constraints(self, cursor, table_name):
+        """
+        Retrieves a dictionary of constraints for a specified table in a CUBRID database.
+
+        This method fetches the 'CREATE TABLE' statement for the given table and parses it
+        to extract information about various types of constraints, including primary keys,
+        unique constraints, foreign keys, and indexes. It employs several helper functions
+        to parse different parts of the SQL statement and extract relevant details.
+
+        The method returns a dictionary where each key is the name of a constraint, and the
+        value is another dictionary describing the type of constraint (primary key, unique,
+        foreign key, check, index) along with other attributes like column names and, in the
+        case of foreign keys, reference table and column.
+
+        Parameters:
+            cursor (Cursor): The database cursor used to execute the query.
+            table_name (str): The name of the table for which to retrieve constraint information.
+
+        Returns:
+            dict: A dictionary where each key is a constraint name and the value is a
+            dictionary describing the constraint. The description includes the columns
+            involved in the constraint, and boolean flags indicating the type of the
+            constraint (e.g., 'primary_key', 'unique', 'foreign_key', 'check', 'index').
+            For foreign keys, additional details like the reference table and column are
+            also included.
+
+        Example:
+            If a table has a primary key constraint on the 'id' column, a unique constraint
+            on the 'email' column, and a foreign key constraint referencing the 'department_id'
+            column of the 'department' table, the method will return something like:
+            {
+                'constraint_name1': {'columns': ['id'], 'primary_key': True, 'unique': False, ...},
+                'constraint_name2': {
+                    'columns': ['email'], 'primary_key': False, 'unique': True, ...},
+                'constraint_name3': {
+                    'columns': ['department_id'], 'foreign_key': ('department', 'id'), ...}
+            }
+
+        Note:
+            This method assumes a specific format for the 'CREATE TABLE' statement in CUBRID
+            databases and may not correctly interpret constraints if the format differs from
+            the expected standard.
+        """
         # pylint: disable=too-many-statements
 
         def parse_create_table_stmt(stmt):

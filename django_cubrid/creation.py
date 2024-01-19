@@ -1,3 +1,34 @@
+"""
+Database Creation Module for CUBRID Backend in Django
+
+This module is part of the Django backend for CUBRID databases and is responsible for
+handling the creation, modification, and deletion of database schemas. It includes
+classes and methods that facilitate the management of database tables, indexes, and
+other schema elements in alignment with the Django ORM models.
+
+Key Components:
+- DatabaseCreation: A class that is tailored to manage database creation and schema
+  operations for the CUBRID database. It includes methods for creating tables,
+  setting up indexes, and handling other database-specific schema tasks.
+- Supporting functions: These functions provide additional utilities for managing
+  database schemas, such as applying migrations or custom SQL scripts.
+
+This module is typically used internally by Django during the process of migrating
+database schemas, reflecting model changes in the database structure. It ensures
+that the Django models are accurately and efficiently represented in the CUBRID
+database schema.
+
+Usage:
+This module is not usually directly used by Django developers. Instead, it is
+utilized by Django's migration and management commands.
+
+Note:
+- Understanding of Django's ORM and migration system, as well as familiarity with
+  CUBRID's database schema capabilities, is essential for customizing or extending
+  the functionalities of this module.
+- This module is specific to the Django backend for CUBRID and may contain
+  CUBRID-specific implementations and considerations.
+"""
 import sys
 import time
 import subprocess
@@ -6,8 +37,43 @@ from django.db.backends.base.creation import BaseDatabaseCreation
 
 
 class DatabaseCreation(BaseDatabaseCreation):
+    """
+    Database creation class for CUBRID database in Django.
+
+    This class extends Django's BaseDatabaseCreation and is responsible for managing
+    the creation and destruction of the test database in a CUBRID environment. It
+    provides CUBRID-specific implementations for setting up and tearing down the test
+    database, ensuring compatibility with CUBRID's database management commands.
+
+    Methods:
+    _create_test_db: Creates the test database using CUBRID commands.
+    _destroy_test_db: Destroys the test database, cleaning up any resources.
+    """
+
     def _create_test_db(self, verbosity, autoclobber, keepdb=False):
-        """Internal implementation - creates the test db tables."""
+        """
+        Creates the test database for CUBRID.
+
+        This internal method sets up the test database by executing CUBRID commands
+        to create, start, and check the database. It handles the case where a test
+        database may already exist and provides an option to recreate it if necessary.
+
+        Parameters:
+        verbosity (int): The verbosity level.
+        autoclobber (bool): Whether to automatically overwrite the existing test database
+                            without confirmation.
+        keepdb (bool): If True, keeps the existing database if it already exists. Defaults
+                    to False.
+
+        Returns:
+        str: The name of the test database that was created or found.
+
+        If 'keepdb' is True and the test database already exists, this method checks the
+        database and returns its name. If the database does not exist or 'keepdb' is False,
+        it proceeds to create and start a new test database. If an error occurs during
+        database creation and 'autoclobber' is False, it prompts the user to confirm
+        deletion and recreation of the test database.
+        """
         test_database_name = self._get_test_db_name()
 
         # Create the test database and start the cubrid server.
@@ -70,11 +136,21 @@ class DatabaseCreation(BaseDatabaseCreation):
         return test_database_name
 
     def _destroy_test_db(self, test_database_name, verbosity):
-        "Internal implementation - remove the test db tables."
-        # Remove the test database to clean up after
-        # ourselves. Connect to the previous database (not the test database)
-        # to do so, because it's not allowed to delete a database while being
-        # connected to it.
+        """
+        Removes the test database for CUBRID.
+
+        This internal method is responsible for destroying the test database created
+        during testing. It stops the CUBRID server and deletes the test database using
+        CUBRID commands.
+
+        Parameters:
+        test_database_name (str): The name of the test database to be destroyed.
+        verbosity (int): The verbosity level.
+
+        The method attempts to stop the server and delete the test database. If an error
+        occurs during this process, it logs the error. Finally, it closes the database
+        connection.
+        """
         time.sleep(1) # To avoid "database is being accessed by other users" errors.
         try:
             subprocess.run(["cubrid", "server", "stop", test_database_name], check = True)

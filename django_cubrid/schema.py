@@ -1,3 +1,12 @@
+"""
+This module provides Django backend support for CUBRID database operations,
+particularly focusing on schema editing functionalities. It defines the
+`DatabaseSchemaEditor` class, an extension of Django's `BaseDatabaseSchemaEditor`,
+tailored to generate CUBRID-specific SQL statements for schema modifications.
+These modifications include operations like table deletion, column modification,
+and alteration of column constraints. The custom implementation ensures compatibility
+and efficient interaction between Django models and the CUBRID database schema.
+"""
 import datetime
 
 from django.db.backends.base.schema import BaseDatabaseSchemaEditor
@@ -5,6 +14,16 @@ from django.db.models.fields.related import ManyToManyField
 
 
 class DatabaseSchemaEditor(BaseDatabaseSchemaEditor):
+    """
+    A Django database schema editor for CUBRID databases.
+
+    This class extends Django's `BaseDatabaseSchemaEditor` to provide
+    specialized schema editing capabilities for CUBRID databases. It overrides
+    and specifies SQL statement templates for various schema operations such as
+    deleting tables, dropping columns, and modifying column types and constraints.
+    The customization is necessary to accommodate the SQL syntax and features
+    specific to CUBRID, ensuring seamless schema manipulations within Django's ORM.
+    """
 
     sql_delete_table = "DROP TABLE %(table)s"
     sql_delete_column = "ALTER TABLE %(table)s DROP COLUMN %(column)s"
@@ -30,6 +49,31 @@ class DatabaseSchemaEditor(BaseDatabaseSchemaEditor):
     sql_delete_pk = "ALTER TABLE %(table)s DROP PRIMARY KEY"
 
     def quote_value(self, value):
+        """
+        Quotes a value for use in a SQL statement, adapting it to the CUBRID database format.
+
+        This method takes a Python data type and converts it into a string representation
+        suitable for inclusion in a SQL query, ensuring proper formatting and escaping
+        as needed for the CUBRID database. It handles various data types like dates, times,
+        strings, bytes, booleans, and other basic types.
+
+        Parameters:
+            value: The value to be quoted. Can be an instance of `datetime.date`,
+                `datetime.time`, `datetime.datetime`, `str`, `bytes`, `bytearray`,
+                `memoryview`, `bool`, or other basic data types.
+
+        Returns:
+            str: A string representation of the input value formatted as a literal
+                suitable for SQL queries. Dates and times are returned in single quotes,
+                strings are escaped and quoted, bytes are converted to hexadecimal format,
+                booleans are represented as '1' or '0', and other types are converted
+                to their string representation.
+
+        Note:
+            For string values, this method uses the `escape_string` method of the
+            CUBRID database connection to handle escaping, ensuring that the value
+            is safe to include in SQL queries.
+        """
         if isinstance(value, (datetime.date, datetime.time, datetime.datetime)):
             return f"'{value}'"
         if isinstance(value, str):

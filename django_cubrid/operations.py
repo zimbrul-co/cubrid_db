@@ -1,3 +1,25 @@
+"""
+This module, operations.py, is part of a Django backend customized for CUBRID database
+integration. It defines the `DatabaseOperations` class, which extends or modifies
+Django's base database operations to ensure compatibility and optimized performance
+with the CUBRID database system.
+
+Key Features and Functionalities:
+- `DatabaseOperations`: A class that inherits from Django's `BaseDatabaseOperations`.
+  This class overrides and adds methods specific to the CUBRID database, handling various
+  database operations such as data formatting, query construction, and schema management.
+- CUBRID-specific Implementations: Includes custom methods and properties tailored for
+  the CUBRID database, ensuring that Django's ORM can efficiently interact with CUBRID.
+- Compatibility Layer: Acts as a compatibility layer between Django's ORM system and the
+  CUBRID database, translating Django's standard operations into CUBRID-compatible queries
+  and commands.
+- Utility Functions: Provides utility functions for date and time formatting, string
+  encoding, and regular expression operations, which are crucial for database operations
+  in Django.
+
+This module is a critical component of the Django-CUBRID backend, enabling seamless integration
+and operation of Django applications with the CUBRID database.
+"""
 import uuid
 import sys
 import warnings
@@ -10,6 +32,25 @@ from django.utils.regex_helper import _lazy_re_compile
 
 
 class DatabaseOperations(BaseDatabaseOperations):
+    """
+    The DatabaseOperations class extends Django's BaseDatabaseOperations, providing
+    support for the CUBRID database within the Django-CUBRID backend. This class
+    facilitates interaction between Django applications and CUBRID databases.
+
+    Attributes:
+        compiler_module (str): Module for SQL compilation in CUBRID context.
+
+    Key Functionalities:
+    - Custom Database Operations: Adapts BaseDatabaseOperations methods for CUBRID.
+    - SQL Query Formatting: Adjusts SQL syntax for CUBRID compatibility.
+    - Data Type Handling: Manages data types as per CUBRID standards.
+    - Schema Management: Tailors schema operations for CUBRID databases.
+    - Performance Optimizations: Enhances efficiency for CUBRID interactions.
+
+    Note:
+    This class is part of the Django-CUBRID backend. It's optimized for CUBRID
+    databases and works best with other components of this backend.
+    """
     # pylint: disable=too-many-public-methods
 
     compiler_module = "django_cubrid.compiler"
@@ -192,12 +233,37 @@ class DatabaseOperations(BaseDatabaseOperations):
         ]
 
     def year_lookup_bounds(self, value):
-        # Again, no microseconds
+        """
+        Returns the start and end timestamps for a given year.
+
+        This method is used to generate the bounds for filtering database records
+        based on a year. It creates timestamps for the start and end of the year,
+        excluding microseconds.
+
+        Args:
+            value (str): The year as a string.
+
+        Returns:
+            list: A list containing two strings, the start and end timestamps of the year.
+        """
         first = '%s-01-01 00:00:00.00'
         second = '%s-12-31 23:59:59.99'
         return [first % value, second % value]
 
     def lookup_cast(self, lookup_type, internal_type=None):
+        """
+        Returns the SQL lookup cast for a given lookup type.
+
+        This method adjusts the SQL query based on the lookup type. For case-insensitive
+        lookups, it wraps the lookup in an UPPER function.
+
+        Args:
+            lookup_type (str): The type of lookup to perform.
+            internal_type (str, optional): The internal type of the field. Defaults to None.
+
+        Returns:
+            str: The SQL lookup cast.
+        """
         lookup = '%s'
 
         # Use UPPER(x) for case-insensitive lookups.
@@ -207,15 +273,50 @@ class DatabaseOperations(BaseDatabaseOperations):
         return lookup
 
     def max_name_length(self):
+        """
+        Returns the maximum length of database object names.
+
+        This method specifies the maximum allowed length for names of database objects
+        (like tables, columns, etc.) in the CUBRID database.
+
+        Returns:
+            int: The maximum name length.
+        """
         return 64
 
     def bulk_insert_sql(self, fields, placeholder_rows):
+        """
+        Generates SQL for bulk insert operations.
+
+        This method creates an SQL string for performing bulk insert operations. It formats
+        the provided data into a suitable SQL 'VALUES' clause.
+
+        Args:
+            fields (list): The list of fields for the insert.
+            placeholder_rows (list): A list of placeholder rows for the values to be inserted.
+
+        Returns:
+            str: The SQL string for the bulk insert operation.
+        """
         # pylint: disable=unused-argument
         placeholder_rows_sql = (", ".join(row) for row in placeholder_rows)
         values_sql = ", ".join(f"({sql})" for sql in placeholder_rows_sql)
         return "VALUES " + values_sql
 
     def get_db_converters(self, expression):
+        """
+        Returns a list of database value converters for a given field type.
+
+        Based on the type of the field in a database expression, this method appends
+        appropriate converter functions to the list of converters. These converters
+        are used to adapt Python values from database-specific formats.
+
+        Args:
+            expression (Expression): The database field expression.
+
+        Returns:
+            list: A list of converter functions.
+        """
         converters = super().get_db_converters(expression)
         internal_type = expression.output_field.get_internal_type()
         if internal_type == 'BinaryField':
@@ -233,9 +334,24 @@ class DatabaseOperations(BaseDatabaseOperations):
             converters.append(self.convert_ipaddress_value)
         return converters
 
+    # The following methods (convert_binaryfield_value, convert_textfield_value,
+    # convert_booleanfield_value, convert_datetimefield_value, convert_uuidfield_value,
+    # and convert_ipaddress_value) are converters used in get_db_converters. They
+    # take a value, an expression, and a connection as arguments, and return a converted value.
+
     # pylint: disable=unused-argument
 
     def convert_binaryfield_value(self, value, expression, connection):
+        """
+        Converts a binary field value from a database-specific format to a Python bytes object.
+
+        Args:
+            value (str): The binary value as a string.
+            expression, connection: Unused, but required for interface consistency.
+
+        Returns:
+            bytes: The converted binary value.
+        """
         if not value.startswith('0B'):
             raise ValueError(f'Unexpected value: {value}')
         value = value[2:]
@@ -246,26 +362,76 @@ class DatabaseOperations(BaseDatabaseOperations):
         return value
 
     def convert_textfield_value(self, value, expression, connection):
+        """
+        Converts a text field value to a Python string.
+
+        Args:
+            value (str): The text value.
+            expression, connection: Unused, but required for interface consistency.
+
+        Returns:
+            str: The converted text value.
+        """
         if value is not None:
             value = force_str(value)
         return value
 
     def convert_booleanfield_value(self, value, expression, connection):
+        """
+        Converts a boolean field value to a Python boolean.
+
+        Args:
+            value (int): The boolean value (0 or 1).
+            expression, connection: Unused, but required for interface consistency.
+
+        Returns:
+            bool: The converted boolean value.
+        """
         if value in (0, 1):
             value = bool(value)
         return value
 
     def convert_datetimefield_value(self, value, expression, connection):
+        """
+        Converts a datetime field value to a timezone-aware Python datetime object.
+
+        Args:
+            value (datetime): The datetime value.
+            expression, connection: Unused, but required for interface consistency.
+
+        Returns:
+            datetime: The timezone-aware datetime object.
+        """
         if value is not None:
             value = timezone.make_aware(value, self.connection.timezone)
         return value
 
     def convert_uuidfield_value(self, value, expression, connection):
+        """
+        Converts a UUID field value to a Python UUID object.
+
+        Args:
+            value (str): The UUID value as a string.
+            expression, connection: Unused, but required for interface consistency.
+
+        Returns:
+            UUID: The converted UUID value.
+        """
         if value is not None:
             value = uuid.UUID(value)
         return value
 
     def convert_ipaddress_value(self, value, expression, connection):
+        """
+        Converts an IP address field value to a Python string.
+
+        Args:
+            value (str): The IP address value.
+            expression, connection: Unused, but required for interface consistency.
+
+        Returns:
+            str: The converted IP address value.
+        """
         if value is not None:
             value = value.strip()
         return value

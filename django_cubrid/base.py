@@ -1,7 +1,37 @@
 """
-Cubrid database backend for Django.
+Module: base.py
 
-Requires CUBRIDdb: http://www.cubrid.org/wiki_apis
+This module forms the core of the Django backend for the CUBRID database. It includes
+the implementation of the BaseDatabaseWrapper class, essential for integrating the
+CUBRID database with Django's ORM layer. This backend enables Django applications to
+interact seamlessly with CUBRID databases, leveraging Django's built-in features such
+as model definition, query generation, and transaction management.
+
+The module handles the import and configuration of the CUBRIDdb database adapter,
+ensuring that it is properly set up to interact with Django. It also manages the
+creation and maintenance of database connections, providing a bridge between Django's
+abstractions and the specific requirements of the CUBRID database system.
+
+Key Components:
+- BaseDatabaseWrapper: A subclass of Django's base wrapper class, tailored to meet the
+  specific connection and query execution requirements of the CUBRID database.
+- Exception Handling: Integration of CUBRID-specific exceptions into Django's error
+  management system, allowing for smooth error handling within Django applications.
+- Signal Dispatching: Implementation of connection signals for notifying different
+  components of the Django framework when database connections are created.
+
+Requirements:
+- Django: This module is designed to be used with Django and relies on Django's internal
+  mechanisms and structures.
+- CUBRIDdb: The CUBRIDdb Python adapter is required for database interactions and must
+  be installed and configured in the environment where Django is running.
+
+This module is a crucial part of the Django-CUBRID backend, enabling Django applications
+to utilize CUBRID as their database backend in a way that is consistent with Django's
+architecture and design philosophy.
+
+For detailed documentation on configuring and using this backend, refer to the official
+Django documentation and the documentation specific to the Django-CUBRID backend.
 """
 
 import re
@@ -45,14 +75,42 @@ def get_django_error(e):
 
 class CursorWrapper:
     """
-    A thin wrapper around CUBRID's normal curosr class.
-
+    A thin wrapper around CUBRID's normal cursor class.
     """
 
     def __init__(self, cursor):
         self.cursor = cursor
 
     def execute(self, query, args=None):
+        """
+        Execute an SQL query with optional arguments.
+
+        This method adapts and executes an SQL query on the underlying database cursor.
+        It modifies the query by substituting Python-style placeholders ('%s') with
+        database-specific placeholders (e.g., '?'), allowing for parameterized queries
+        that can prevent SQL injection vulnerabilities. It then executes the adapted
+        query using the provided arguments.
+
+        Parameters:
+        query (str): The SQL query to be executed. The query should use '%s' placeholders
+                    for any parameters to be passed in.
+        args (tuple, list, or dict, optional): The arguments to be used with the query.
+                                            These arguments are substituted into the
+                                            query in place of the placeholders.
+
+        Returns:
+        The return value of this method depends on the behavior of the `execute` method
+        of the underlying database cursor. Typically, it could be the number of rows
+        affected by the query, or a result set in case of a SELECT query.
+
+        Raises:
+        get_django_error(e): A Django-specific database error, translated from the
+                            native database exceptions. This ensures that the database
+                            errors are consistent with Django's exception handling.
+
+        Example:
+        cursor.execute("SELECT * FROM my_table WHERE column = %s", (value,))
+        """
         try:
             query = re.sub('([^%])%s', '\\1?', query)
             query = re.sub('%%', '%', query)
@@ -62,6 +120,36 @@ class CursorWrapper:
             raise get_django_error(e) from e
 
     def executemany(self, query, args):
+        """
+        Execute a database query against all parameter sequences or mappings provided in 'args'.
+
+        This method is similar to 'execute()', but instead of executing a single query with
+        a single set of parameters, it executes the query multiple times, once for each set
+        of parameters in 'args'. This is typically used for batch operations, such as
+        inserting multiple rows into a table. The method adapts the query by replacing
+        Python-style placeholders ('%s') with database-specific placeholders (e.g., '?').
+
+        Parameters:
+        query (str): The SQL query to be executed. The query should use '%s' placeholders
+                    for any parameters to be passed in.
+        args (list of tuples/lists/dicts): A list of parameter sequences or mappings. Each
+                                        item in the list corresponds to one set of
+                                        parameters to be used with the query.
+
+        Returns:
+        The return value of this method depends on the behavior of the `executemany` method
+        of the underlying database cursor. It is typically the number of rows affected
+        by each execution of the query.
+
+        Raises:
+        get_django_error(e): A Django-specific database error, translated from the native
+                            database exceptions. This ensures that database errors are
+                            consistent with Django's exception handling framework.
+
+        Example:
+        cursor.executemany("INSERT INTO my_table (column1, column2) VALUES (%s, %s)",
+                        [(value1_1, value1_2), (value2_1, value2_2), ...])
+        """
         try:
             query = re.sub('([^%])%s', '\\1?', query)
             query = re.sub('%%', '%', query)
@@ -87,6 +175,37 @@ class CursorWrapper:
 
 
 class DatabaseWrapper(BaseDatabaseWrapper):
+    """
+    A Django database backend wrapper for CUBRID.
+
+    This class is a subclass of Django's BaseDatabaseWrapper and provides
+    CUBRID-specific implementations for database interaction. It serves as the
+    primary interface between Django's ORM layer and the CUBRID database.
+    The wrapper handles the creation and management of database connections and
+    translates Django's query syntax into queries that are compatible with CUBRID.
+
+    Attributes:
+    vendor (str): A string identifier for the CUBRID database backend.
+    operators (dict): A mapping of Django query operators to CUBRID SQL syntax.
+                      This mapping ensures that Django's ORM can construct
+                      queries compatible with CUBRID's SQL dialect.
+
+    The class includes methods for opening and closing database connections,
+    managing transactions, and executing queries. It also contains logic for
+    schema management, such as creating and altering database tables.
+
+    Note:
+    - This wrapper adapts Django's SQL syntax to be compatible with CUBRID,
+      and there may be some differences in behavior compared to other database
+      backends.
+    - It is important to keep this backend up to date with changes in both
+      Django's database API and CUBRID's features.
+
+    Usage of this class is typically handled internally by Django's ORM;
+    however, it can be used directly for advanced database operations that
+    require specific customizations or optimizations.
+    """
+
     vendor = 'cubrid'
     # Operators taken from PosgreSQL implementation.
     # Check for differences between this syntax and CUBRID's.
