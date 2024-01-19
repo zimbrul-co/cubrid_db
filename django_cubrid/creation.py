@@ -4,10 +4,6 @@ import subprocess
 
 from django.db.backends.base.creation import BaseDatabaseCreation
 
-# The prefix to put on the default database name when creating
-# the test database.
-TEST_DATABASE_PREFIX = 'test_'
-
 
 class DatabaseCreation(BaseDatabaseCreation):
     def _create_test_db(self, verbosity, autoclobber, keepdb=False):
