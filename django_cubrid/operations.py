@@ -10,6 +10,8 @@ from django.utils.regex_helper import _lazy_re_compile
 
 
 class DatabaseOperations(BaseDatabaseOperations):
+    # pylint: disable=too-many-public-methods
+
     compiler_module = "django_cubrid.compiler"
 
     _extract_format_re = _lazy_re_compile(r"[A-Z_]+")
