@@ -43,7 +43,7 @@ def get_django_error(e):
     return django_exc_type(*tuple(e.args))
 
 
-class CursorWrapper(object):
+class CursorWrapper:
     """
     A thin wrapper around CUBRID's normal curosr class.
 
