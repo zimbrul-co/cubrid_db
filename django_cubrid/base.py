@@ -121,20 +121,11 @@ class DatabaseWrapper(BaseDatabaseWrapper):
         'endswith': "LIKE '%%' || {}",
         'iendswith': "LIKE '%%' || UPPER({})",
     }
-    class BitFieldFmt:
-        def __mod__(self, field_dict):
-            assert isinstance(field_dict, dict)
-            assert 'max_length' in field_dict
-
-            s = 'BIT VARYING'
-            if field_dict['max_length'] is not None:
-                s += f"({8 * field_dict['max_length']:i})"
-            return s
 
     data_types = {
         'AutoField': 'integer AUTO_INCREMENT',
         'BigAutoField': 'bigint AUTO_INCREMENT',
-        'BinaryField': BitFieldFmt(),
+        'BinaryField': 'varbit(%(max_length)s)',
         'BooleanField': 'short',
         'CharField': 'varchar(%(max_length)s)',
         'CommaSeparatedIntegerField': 'varchar(%(max_length)s)',
