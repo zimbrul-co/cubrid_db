@@ -2,10 +2,9 @@ from datetime import date, time, datetime
 from decimal import Decimal
 from functools import reduce
 
-from CUBRIDdb import (
-    field_type,
-    InterfaceError,
-)
+from _cubrid import InterfaceError
+
+from CUBRIDdb import field_type
 
 
 def bytes_to_binstr(b):

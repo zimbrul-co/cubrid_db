@@ -10,6 +10,7 @@ from datetime import date, datetime, time
 from time import localtime
 
 from _cubrid import *
+
 from CUBRIDdb import field_type
 from CUBRIDdb.connections import Connection
 

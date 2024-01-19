@@ -5,8 +5,9 @@ want to make your own subclasses. In most cases, you will probably
 override Connection.default_cursor with a non-standard Cursor class.
 
 """
+from _cubrid import connect as cubrid_connect
+
 from CUBRIDdb.cursors import DictCursor, Cursor
-import _cubrid
 
 
 class Connection:
@@ -19,7 +20,7 @@ class Connection:
         kwargs2 = kwargs.copy()
         self.charset = kwargs2.pop('charset', 'utf8')
 
-        self.connection = _cubrid.connect(*args, **kwargs2)
+        self.connection = cubrid_connect(*args, **kwargs2)
 
     def __del__(self):
         pass
