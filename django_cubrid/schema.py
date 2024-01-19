@@ -126,6 +126,8 @@ class DatabaseSchemaEditor(BaseDatabaseSchemaEditor):
         Usually involves adding a column, but may involve adding a
         table instead (for M2M fields)
         """
+        # pylint: disable=protected-access
+
         # Special-case implicit M2M tables
         if ((isinstance(field, ManyToManyField) or
                 field.get_internal_type() == 'ManyToManyField') and
