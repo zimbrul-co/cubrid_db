@@ -266,7 +266,7 @@ class BaseCursor:
         exhausted for Python versions 2.2 and later.
         """
         self.__check_state()
-        return self.__next__()
+        return next(self)
 
     def __next__(self):
         self.__check_state()
