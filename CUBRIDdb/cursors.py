@@ -1,3 +1,5 @@
+from datetime import date, time, datetime
+from decimal import Decimal
 from functools import reduce
 
 from CUBRIDdb import (
@@ -11,6 +13,34 @@ def bytes_to_binstr(b):
         lambda x1, x2: x1 + x2[2:],
         map(lambda x: format(x, '#010b'), b)
     )
+
+
+def get_set_element_type(iterable):
+    chosen_type = None
+    for obj in iterable:
+        if isinstance(obj, int):
+            t = field_type.INT
+        elif isinstance(obj, float):
+            t = field_type.FLOAT
+        elif isinstance(obj, Decimal):
+            t = field_type.MONETARY
+        elif isinstance(obj, date):
+            t = field_type.DATE
+        elif isinstance(obj, time):
+            t = field_type.TIME
+        elif isinstance(obj, datetime):
+            t = field_type.DATETIME
+        elif isinstance(obj, bytes):
+            t = field_type.VARBIT
+        elif isinstance(obj, str):
+            t = field_type.VARCHAR
+
+        if chosen_type is None:
+            chosen_type = t
+        elif t is not chosen_type:
+            raise TypeError(f"Iterable contains elements of different types: {t} != {chosen_type}")
+
+    return chosen_type
 
 
 class BaseCursor:
@@ -58,45 +88,41 @@ class BaseCursor:
         self._cs.close()
         self._cs = None
 
-    def _bind_params(self, args,set_type=None):
+    def _bind_params(self, args):
         self.__check_state()
-        if type(args) not in (tuple, list):
+
+        def is_iterable(obj):
+            try:
+                iter(obj)
+                return True
+            except TypeError:
+                return False
+
+        if not is_iterable(args):
             args = [args,]
-        args = list(args)
-        for i in range(len(args)):
-            if args[i] is None:
-                pass
-            elif isinstance(args[i], bool):
-                if args[i] == True:
-                    args[i] = '1'
-                else:
-                    args[i] = '0'
-            elif isinstance(args[i], tuple):
-                args[i] = args[i]
-            elif isinstance(args[i], bytes):
-                args[i] = bytes_to_binstr(args[i])
-            elif isinstance(args[i], str):
-                pass
-            else:
-                args[i] = str(args[i])
 
-            if isinstance(args[i], bytes):
-                self._cs.bind_param(i+1, args[i], field_type.VARBIT)
-            elif not isinstance(args[i], tuple):
-                self._cs.bind_param(i+1, args[i])
-            else:
-                if set_type is None:
-                    data_type = int(field_type.CHAR)
-                else:
-                    if type(set_type) != tuple:
-                        set_type = [set_type,]
-                    data_type = set_type[i]
+        for i, arg in enumerate(args):
+            if arg is None:
+                continue
 
+            if isinstance(arg, bool):
+                arg = '1' if arg else '0'
+                self._cs.bind_param(i + 1, arg)
+            elif is_iterable(arg):
+                element_type = get_set_element_type(arg)
                 s = self.con.connection.set()
-                s.imports(args[i], data_type)
-                self._cs.bind_set(i+1, s)
+                s.imports(tuple(arg), element_type)
+                self._cs.bind_set(i + 1, s)
+            elif isinstance(arg, bytes):
+                arg = bytes_to_binstr(arg)
+                self._cs.bind_param(i + 1, arg, field_type.VARBIT)
+            elif isinstance(arg, str):
+                self._cs.bind_param(i + 1, arg)
+            else:
+                arg = str(arg)
+                self._cs.bind_param(i + 1, arg)
 
-    def execute(self, query, args=None, set_type=None):
+    def execute(self, query, args=None):
         """
         Execute a query.
 
@@ -117,7 +143,7 @@ class BaseCursor:
         self._cs.prepare(stmt)
 
         if args is not None:
-            self._bind_params(args, set_type)
+            self._bind_params(args)
 
         r = self._cs.execute()
         self.rowcount = self._cs.rowcount
