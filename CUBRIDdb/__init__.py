@@ -27,17 +27,31 @@ Time = time
 Timestamp = datetime
 
 def DateFromTicks(ticks):
+    """
+    This function constructs an object holding a date value from the given
+    ticks value (number of seconds since the epoch).
+    """
     return date(*localtime(ticks)[:3])
 
 def TimeFromTicks(ticks):
+    """
+    This function constructs an object holding a time value from the given
+    ticks value (number of seconds since the epoch).
+    """
     return time(*localtime(ticks)[3:6])
 
 def TimestampFromTicks(ticks):
+    """
+    This function constructs an object holding a time stamp value from the
+    given ticks value (number of seconds since the epoch).
+    """
     return datetime(*localtime(ticks)[:6])
 
 class DBAPISet(frozenset):
-    """A special type of set for which A == x is true if A is a
-    DBAPISet and x is a member of that set."""
+    """
+    A special type of set for which A == x is true if A is a
+    DBAPISet and x is a member of that set.
+    """
 
     def __eq__(self, other):
         if isinstance(other, DBAPISet):

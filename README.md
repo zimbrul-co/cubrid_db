@@ -1,15 +1,10 @@
-        CUBRID-Python driver for CUBRID
+CUBRID-Python driver for CUBRID
 ------------------------------------------------------------------------------------------
 
 Overview
 ========
-```
 CUBRIDdb driver: CUBRID Module for Python DB API 2.0
                  Python driver for CUBRID Database
-Django_cubrid backend: Django backend for CUBRID Database
-```
-
-        Notes about CUBRIDdb driver
 
 Abstract
 ========
@@ -28,12 +23,13 @@ Dependencies for CUBRIDdb
 ```
   * CUBRID: 10.1 or higher
   * OS    : Windows (x86 and x86_64)
-            Linux (32bit and 64bit)
+            Linux (64bit)
             Other Unix and Unix-like os
   * Python: Python 3.9+
   * Compiler: to build from Source
             Visual Studio 2015 (Windows)
             GNU Developer Toolset 6 or higher
+  * Bash: to build from Source (Linux)
 ```
 
 Install for CUBRIDdb
@@ -54,10 +50,7 @@ Samples
 -------
   * See directory "samples".
 
-
-        Notes about Django_cubrid backend
-
 Notes
 -----
- * Django_cubrid is the Django backend for CUBRID Database.
- * Please refer to README_django_cubrid for more information.
+ * django_cubrid is the Django backend for CUBRID Database.
+ * Please refer to the django_cubrid README.md for more information.

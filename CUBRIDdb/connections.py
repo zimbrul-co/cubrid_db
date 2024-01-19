@@ -1,9 +1,7 @@
 """
 This module implements connections for CUBRIDdb. Presently there is
 only one class: Connection. Others are unlikely. However, you might
-want to make your own subclasses. In most cases, you will probably
-override Connection.default_cursor with a non-standard Cursor class.
-
+want to make your own subclasses.
 """
 from _cubrid import connect as cubrid_connect
 
@@ -14,8 +12,7 @@ class Connection:
     """CUBRID Database Connection Object"""
 
     def __init__(self, *args, **kwargs):
-
-        'Create a connecton to the database.'
+        """Create a connecton to the database."""
         self.charset = ''
         kwargs2 = kwargs.copy()
         self.charset = kwargs2.pop('charset', 'utf8')
@@ -94,7 +91,13 @@ class Connection:
         return self.connection.escape_string(buf)
 
     def server_version(self):
+        """
+        Returns a string that represents the CUBRID server version.
+        """
         return self.connection.server_version()
 
     def batch_execute(self, sql):
+        """
+        Executes more than one sql statement at the same time.
+        """
         return self.connection.batch_execute(sql)
