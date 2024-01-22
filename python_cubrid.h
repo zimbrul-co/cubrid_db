@@ -1,3 +1,6 @@
+#ifndef PYTHON_CUBRID_H_INCLUDED
+#define PYTHON_CUBRID_H_INCLUDED
+
 #define PY_SSIZE_T_CLEAN // allow 's#' format starting with Python 3.10
 #include "Python.h"
 #include "structmember.h"
@@ -122,3 +125,5 @@ extern int ut_str_to_time (char *str, T_CCI_DATE * value);
 extern int ut_str_to_mtime (char *str, T_CCI_DATE * value);
 extern int ut_str_to_timestamp (char *str, T_CCI_DATE * value);
 extern int ut_str_to_datetime (char *str, T_CCI_DATE * value);
+
+#endif // PYTHON_CUBRID_H_INCLUDED
