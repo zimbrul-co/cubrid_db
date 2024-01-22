@@ -36,18 +36,19 @@ Django documentation and the documentation specific to the Django-CUBRID backend
 
 import re
 import django
+import django.db.utils
+
+from django.core.exceptions import ImproperlyConfigured
+from django.db.backends.base.base import BaseDatabaseWrapper
+from django.db.backends.signals import connection_created
+from django.utils.regex_helper import _lazy_re_compile
+
+import _cubrid
 
 try:
     import cubrid_db as Database
 except ImportError as import_error:
-    from django.core.exceptions import ImproperlyConfigured
     raise ImproperlyConfigured(f"Error loading cubrid_db module: {import_error}") from import_error
-
-import django.db.utils
-
-from django.db.backends.base.base import BaseDatabaseWrapper
-from django.db.backends.signals import connection_created
-from django.utils.regex_helper import _lazy_re_compile
 
 from django_cubrid.client import DatabaseClient
 from django_cubrid.creation import DatabaseCreation
@@ -116,7 +117,7 @@ class CursorWrapper:
             query = re.sub('%%', '%', query)
             return self.cursor.execute(query, args)
 
-        except Database.Error as e:
+        except _cubrid.Error as e:
             raise get_django_error(e) from e
 
     def executemany(self, query, args):
@@ -155,7 +156,7 @@ class CursorWrapper:
             query = re.sub('%%', '%', query)
 
             return self.cursor.executemany(query, args)
-        except Database.Error as e:
+        except _cubrid.Error as e:
             raise get_django_error(e) from e
 
     def __getattr__(self, attr):
@@ -347,7 +348,7 @@ class DatabaseWrapper(BaseDatabaseWrapper):
     def is_usable(self):
         try:
             return bool(self.connection.ping())
-        except Database.Error:
+        except _cubrid.Error:
             return False
 
     def get_database_version(self):
@@ -358,7 +359,7 @@ class DatabaseWrapper(BaseDatabaseWrapper):
             self.connection = self.get_new_connection(None)
         version_str = self.connection.server_version()
         if not version_str:
-            raise Database.InterfaceError('Unable to determine CUBRID version string')
+            raise _cubrid.InterfaceError('Unable to determine CUBRID version string')
 
         match = db_version_re.match(version_str)
         if not match:

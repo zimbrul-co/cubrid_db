@@ -9,8 +9,6 @@ connect() -- connects to server
 from datetime import date, datetime, time
 from time import localtime
 
-from _cubrid import *
-
 from cubrid_db import field_type
 from cubrid_db.connections import Connection
 
