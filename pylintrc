@@ -1,3 +1,4 @@
 [MASTER]
 extension-pkg-allow-list=_cubrid
 ignore=old_tests,old_tests2,old_samples
+load-plugins=pylint_pytest
