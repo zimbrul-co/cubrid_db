@@ -1,11 +1,11 @@
 """
-This module implements connections for CUBRIDdb. Presently there is
+This module implements connections for cubrid_db. Presently there is
 only one class: Connection. Others are unlikely. However, you might
 want to make your own subclasses.
 """
 from _cubrid import connect as cubrid_connect
 
-from CUBRIDdb.cursors import DictCursor, Cursor
+from cubrid_db.cursors import DictCursor, Cursor
 
 
 class Connection:

@@ -18,7 +18,7 @@ Classes:
 
 Dependencies:
     - Django's base introspection classes and methods
-    - CUBRIDdb for CUBRID database field type definitions
+    - cubrid_db for CUBRID database field type definitions
 """
 import re
 
@@ -32,7 +32,7 @@ from django.db.backends.base.introspection import (
 from django.db.models.indexes import Index
 from django.utils.encoding import force_str
 
-from CUBRIDdb import field_type
+from cubrid_db import field_type
 
 
 InfoLine = namedtuple('InfoLine', [

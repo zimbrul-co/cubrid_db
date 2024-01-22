@@ -3,12 +3,12 @@ CUBRID-Python driver for CUBRID
 
 Overview
 ========
-CUBRIDdb driver: CUBRID Module for Python DB API 2.0
+cubrid_db driver: CUBRID Module for Python DB API 2.0
                  Python driver for CUBRID Database
 
 Abstract
 ========
-  CUBRIDdb is a Python extension package that implements Python Database API 2.0.
+  cubrid_db is a Python extension package that implements Python Database API 2.0.
   In additional to the minimal feature set of the standard Python DB API,
   CUBRID Python API also exposes nearly the entire native client API of the
   database engine in _cubrid.
@@ -18,7 +18,7 @@ Project URL
 -----------
   * Project Home: https://github.com/zimbrul-co/cubrid-python
 
-Dependencies for CUBRIDdb
+Dependencies for cubrid_db
 -------------------------
 ```
   * CUBRID: 10.1 or higher
@@ -32,10 +32,10 @@ Dependencies for CUBRIDdb
   * Bash: to build from Source (Linux)
 ```
 
-Install for CUBRIDdb
+Install for cubrid_db
 --------------------
   To build and install from source, you should move into the top-level directory
-  of the CUBRIDdb distribution and issue the following commands.
+  of the cubrid_db distribution and issue the following commands.
  ```
   $ git clone --recursive git@github.com:zimbrul-co/cubrid-python.git
   $ cd cubrid-python

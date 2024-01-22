@@ -7,7 +7,7 @@ CUBRID database with Django's ORM layer. This backend enables Django application
 interact seamlessly with CUBRID databases, leveraging Django's built-in features such
 as model definition, query generation, and transaction management.
 
-The module handles the import and configuration of the CUBRIDdb database adapter,
+The module handles the import and configuration of the cubrid_db database adapter,
 ensuring that it is properly set up to interact with Django. It also manages the
 creation and maintenance of database connections, providing a bridge between Django's
 abstractions and the specific requirements of the CUBRID database system.
@@ -23,7 +23,7 @@ Key Components:
 Requirements:
 - Django: This module is designed to be used with Django and relies on Django's internal
   mechanisms and structures.
-- CUBRIDdb: The CUBRIDdb Python adapter is required for database interactions and must
+- cubrid_db: The cubrid_db Python adapter is required for database interactions and must
   be installed and configured in the environment where Django is running.
 
 This module is a crucial part of the Django-CUBRID backend, enabling Django applications
@@ -38,10 +38,10 @@ import re
 import django
 
 try:
-    import CUBRIDdb as Database
+    import cubrid_db as Database
 except ImportError as import_error:
     from django.core.exceptions import ImproperlyConfigured
-    raise ImproperlyConfigured(f"Error loading CUBRIDdb module: {import_error}") from import_error
+    raise ImproperlyConfigured(f"Error loading cubrid_db module: {import_error}") from import_error
 
 import django.db.utils
 

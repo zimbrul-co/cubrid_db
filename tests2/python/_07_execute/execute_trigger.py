@@ -1,5 +1,5 @@
 import unittest
-import CUBRIDdb
+import cubrid_db
 import locale   
 import time     
 from xml.dom import minidom
@@ -19,7 +19,7 @@ class ExecuteTriggerTest(unittest.TestCase):
 
 	def setUp(self):
                 conStr = self.getConStr()                
-                self.conn = CUBRIDdb.connect(conStr, "dba","")
+                self.conn = cubrid_db.connect(conStr, "dba","")
 		self.cursor= self.conn.cursor()
                 self.cursor.execute("drop class if exists hi")
                 self.cursor.execute("drop class if exists tt1")

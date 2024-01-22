@@ -1,5 +1,5 @@
 import unittest
-import CUBRIDdb
+import cubrid_db
 import time
 import locale
 from xml.dom import minidom
@@ -18,7 +18,7 @@ class FetchmanyTest(unittest.TestCase):
 
         def setUp(self):
                 conStr = self.getConStr()                
-                self.con = CUBRIDdb.connect(conStr, "dba","")
+                self.con = cubrid_db.connect(conStr, "dba","")
                 self.cur = self.con.cursor()
 
                 sqlDrop = "drop table if exists tdb"

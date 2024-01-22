@@ -1,5 +1,5 @@
 import unittest
-import CUBRIDdb
+import cubrid_db
 import locale   
 import time     
 from xml.dom import minidom
@@ -18,7 +18,7 @@ class ExecuteIndexTest(unittest.TestCase):
  
 	def setUp(self):
                 conStr = self.getConStr()                
-                self.conn = CUBRIDdb.connect(conStr, "dba","")
+                self.conn = cubrid_db.connect(conStr, "dba","")
 		self.cursor= self.conn.cursor()
                 nsql2='drop class if exists t'
                 self.cursor.execute(nsql2)

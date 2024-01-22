@@ -1,5 +1,5 @@
 import unittest
-import CUBRIDdb
+import cubrid_db
 import time
 import locale
 from xml.dom import minidom
@@ -18,8 +18,8 @@ class FetchoneTest(unittest.TestCase):
 
         def setUp(self):
 		conStr = self.getConStr()                
-		self.con = CUBRIDdb.connect(conStr, "dba","")
-#		self.con = CUBRIDdb.connect("CUBRID:localhost:33012:demodb", "dba","")
+		self.con = cubrid_db.connect(conStr, "dba","")
+#		self.con = cubrid_db.connect("CUBRID:localhost:33012:demodb", "dba","")
                 self.cur = self.con.cursor()
 
                 sqlDrop = "drop table if exists tdb"
@@ -78,7 +78,7 @@ class FetchoneTest(unittest.TestCase):
 
         def test_ValidConn(self):
                 try:
-			self.con1 = CUBRIDdb.connect("CUBRID:localhost:33111:demodb", "dba","")
+			self.con1 = cubrid_db.connect("CUBRID:localhost:33111:demodb", "dba","")
 			self.con1.close
 		except Exception,e:
 			pass

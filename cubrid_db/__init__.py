@@ -1,5 +1,5 @@
 """
-CUBRIDdb - A DB API v2.0 compatible interface to CUBRID.
+cubrid_db - A DB API v2.0 compatible interface to CUBRID.
 
 This package is a wrapper around _cubrid.
 
@@ -11,8 +11,8 @@ from time import localtime
 
 from _cubrid import *
 
-from CUBRIDdb import field_type
-from CUBRIDdb.connections import Connection
+from cubrid_db import field_type
+from cubrid_db.connections import Connection
 
 # pylint: disable=invalid-name
 

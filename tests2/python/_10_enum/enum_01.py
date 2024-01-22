@@ -1,5 +1,5 @@
 import unittest
-import CUBRIDdb
+import cubrid_db
 import locale   
 import time 
 import sys    
@@ -19,7 +19,7 @@ class Enum01Test(unittest.TestCase):
 
 	def setUp(self):
                 conStr = self.getConStr()                
-                self.conn = CUBRIDdb.connect(conStr, 'dba','')
+                self.conn = cubrid_db.connect(conStr, 'dba','')
 		self.cursor= self.conn.cursor()
                 nsql='drop table if exists enum01'
                 self.cursor.execute(nsql)

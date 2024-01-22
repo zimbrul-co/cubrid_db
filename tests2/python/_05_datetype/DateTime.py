@@ -1,5 +1,5 @@
 import unittest
-import CUBRIDdb
+import cubrid_db
 import datetime
 import locale
 from xml.dom import minidom
@@ -18,7 +18,7 @@ class CubridDataTimeTest(unittest.TestCase):
 
         def setUp(self):
                 conStr = self.getConStr()                
-                self.con = CUBRIDdb.connect(conStr, "dba","")
+                self.con = cubrid_db.connect(conStr, "dba","")
                 self.cur = self.con.cursor()
                 sqlDrop = "drop table if exists t_datetime"
                 self.cur.execute(sqlDrop)
@@ -36,7 +36,7 @@ class CubridDataTimeTest(unittest.TestCase):
 		dataTuple=((1,1,1),(9999,12,31),(2012,2,2))
 		dataCheck=[datetime.date(1,1,1),datetime.date(9999,12,31),datetime.date(2012,2,2)]
 		for i in range(len(dataTuple)):		
-			data = CUBRIDdb.Date(dataTuple[i][0],dataTuple[i][1],dataTuple[i][2])
+			data = cubrid_db.Date(dataTuple[i][0],dataTuple[i][1],dataTuple[i][2])
 			print "cubrid date: ",data
 	                self.assertEquals(dataCheck[i], data)
 #		self.cur.execute("insert into t_datetime(c_date) values ('1-1-1')")
@@ -46,7 +46,7 @@ class CubridDataTimeTest(unittest.TestCase):
                 dataTuple=((1,1,0),(0,1,1),(1,0,1),(10000,12,31),(1,1,32),(1,13,1),(2012,02,30))
                 for i in range(len(dataTuple)):
                         try:
-				data = CUBRIDdb.Date(dataTuple[i][0],dataTuple[i][1],dataTuple[i][2])
+				data = cubrid_db.Date(dataTuple[i][0],dataTuple[i][1],dataTuple[i][2])
                         except Exception,e:
 				print str(e)
 			else:
@@ -57,7 +57,7 @@ class CubridDataTimeTest(unittest.TestCase):
                 dataTuple=((1),(1,1),("1","1","1"))
                 for i in range(len(dataTuple)):
                         try:
-                                data = CUBRIDdb.Date(dataTuple[i][0],dataTuple[i][1],dataTuple[i][2])
+                                data = cubrid_db.Date(dataTuple[i][0],dataTuple[i][1],dataTuple[i][2])
                         except Exception,e:
                                 print str(e)
                         else:
@@ -68,7 +68,7 @@ class CubridDataTimeTest(unittest.TestCase):
                 dataTuple=((0,0,0),(12,12,12),(23,59,59))
                 dataCheck=[datetime.time(0,0,0),datetime.time(12,12,12),datetime.time(23,59,59)]
                 for i in range(len(dataTuple)):
-                        data = CUBRIDdb.Time(dataTuple[i][0],dataTuple[i][1],dataTuple[i][2])
+                        data = cubrid_db.Time(dataTuple[i][0],dataTuple[i][1],dataTuple[i][2])
                         print "cubrid time: ",data
                         self.assertEquals(dataCheck[i], data)
 
@@ -77,7 +77,7 @@ class CubridDataTimeTest(unittest.TestCase):
                 dataTuple=((0,0,-1),(0,0,60),(0,-1,0),(0,60,0),(-1,0,0),(24,59,59))
                 for i in range(len(dataTuple)):
                         try:
-                                data = CUBRIDdb.Time(dataTuple[i][0],dataTuple[i][1],dataTuple[i][2])
+                                data = cubrid_db.Time(dataTuple[i][0],dataTuple[i][1],dataTuple[i][2])
                         except Exception,e:
                                 print str(e)
                         else:
@@ -88,7 +88,7 @@ class CubridDataTimeTest(unittest.TestCase):
                 dataTuple=((0),(0,0),("0","0","0"))
                 for i in range(len(dataTuple)):
                         try:
-                                data = CUBRIDdb.Time(dataTuple[i][0],dataTuple[i][1],dataTuple[i][2])
+                                data = cubrid_db.Time(dataTuple[i][0],dataTuple[i][1],dataTuple[i][2])
                         except Exception,e:
                                 print str(e)
                         else:
@@ -99,7 +99,7 @@ class CubridDataTimeTest(unittest.TestCase):
                 dataTuple=((1,1,1,0,0,0),(9999,12,31,23,59,59),(2012,2,2,1,1,1))
                 dataCheck=[datetime.datetime(1,1,1,0,0,0),datetime.datetime(9999,12,31,23,59,59),datetime.datetime(2012,2,2,1,1,1)]
                 for i in range(len(dataTuple)):
-                        data = CUBRIDdb.Timestamp(dataTuple[i][0],dataTuple[i][1],dataTuple[i][2],dataTuple[i][3],dataTuple[i][4],dataTuple[i][5])
+                        data = cubrid_db.Timestamp(dataTuple[i][0],dataTuple[i][1],dataTuple[i][2],dataTuple[i][3],dataTuple[i][4],dataTuple[i][5])
                         print "cubrid timestamp: ",data
                         self.assertEquals(dataCheck[i], data)
 
@@ -108,7 +108,7 @@ class CubridDataTimeTest(unittest.TestCase):
                 dataTuple=((1,1,1,0,0,-1),(1,1,1,0,0,60),(1,1,1,0,-1,0),(1,1,1,0,60,0),(1,1,1,-1,0,0),(1,1,1,24,59,59),(2012,2,30,1,1,1),(2012,2,3,24,29,59))
                 for i in range(len(dataTuple)):
                         try:
-                                data = CUBRIDdb.Timestamp(dataTuple[i][0],dataTuple[i][1],dataTuple[i][2],dataTuple[i][3],dataTuple[i][4],dataTuple[i][5])
+                                data = cubrid_db.Timestamp(dataTuple[i][0],dataTuple[i][1],dataTuple[i][2],dataTuple[i][3],dataTuple[i][4],dataTuple[i][5])
                         except Exception,e:
                                 print str(e)
                         else:
@@ -119,7 +119,7 @@ class CubridDataTimeTest(unittest.TestCase):
                 dataTuple=((1,1,1),(1,1,1,0,0),("1","1","1","0","0","0"))
                 for i in range(len(dataTuple)):
                         try:
-                                data = CUBRIDdb.Timestamp(dataTuple[i][0],dataTuple[i][1],dataTuple[i][2],dataTuple[i][3],dataTuple[i][4],dataTuple[i][5])
+                                data = cubrid_db.Timestamp(dataTuple[i][0],dataTuple[i][1],dataTuple[i][2],dataTuple[i][3],dataTuple[i][4],dataTuple[i][5])
                         except Exception,e:
                                 print str(e)
                         else:
@@ -130,7 +130,7 @@ class CubridDataTimeTest(unittest.TestCase):
                 dataTuple=(-86401,0.00,5054400.00,)
                 dataCheck=[datetime.date(1969,12,31),datetime.date(1970,1,1),datetime.date(1970,2,28)]
                 for i in range(len(dataTuple)):
-                        data = CUBRIDdb.DateFromTicks(dataTuple[i])
+                        data = cubrid_db.DateFromTicks(dataTuple[i])
                         print "cubrid date: ",data
                         self.assertEquals(dataCheck[i], data)
 
@@ -139,7 +139,7 @@ class CubridDataTimeTest(unittest.TestCase):
                 dataTuple=("-1")
                 for i in range(len(dataTuple)):
                         try:
-                                data = CUBRIDdb.DateFromTicks(dataTuple[i])
+                                data = cubrid_db.DateFromTicks(dataTuple[i])
                         except Exception,e:
                                 print str(e)
                         else:
@@ -151,7 +151,7 @@ class CubridDataTimeTest(unittest.TestCase):
                 dataCheck=[datetime.time(9,0,0),datetime.time(0,59,59),datetime.time(1,0,0)]
                 print '-----------------------------------------------------------------------------'
                 for i in range(len(dataTuple)):
-                        data = CUBRIDdb.TimeFromTicks(dataTuple[i])
+                        data = cubrid_db.TimeFromTicks(dataTuple[i])
                         print "cubrid time: ",i, data
                         self.assertEquals(dataCheck[i], data)
 
@@ -160,7 +160,7 @@ class CubridDataTimeTest(unittest.TestCase):
                 dataTuple=("-1")
                 for i in range(len(dataTuple)):
                         try:
-                                data = CUBRIDdb.TimeFromTicks(dataTuple[i])
+                                data = cubrid_db.TimeFromTicks(dataTuple[i])
                         except Exception,e:
                                 print str(e)
                         else:
@@ -171,7 +171,7 @@ class CubridDataTimeTest(unittest.TestCase):
                 dataTuple=(-1.00,0.00,140399.00,54000.00,)
                 dataCheck=[datetime.datetime(1970,1,1,8,59,59),datetime.datetime(1970,1,1,9,0,0),datetime.datetime(1970,1,2,23,59,59),datetime.datetime(1970,1,2,0,0,0)]
                 for i in range(len(dataTuple)):
-                        data = CUBRIDdb.TimestampFromTicks(dataTuple[i])
+                        data = cubrid_db.TimestampFromTicks(dataTuple[i])
                         print "cubrid time: ",data
                         self.assertEquals(dataCheck[i], data)
 
@@ -180,7 +180,7 @@ class CubridDataTimeTest(unittest.TestCase):
                 dataTuple=("-1")
                 for i in range(len(dataTuple)):
                         try:
-                                data = CUBRIDdb.TimestampFromTicks(dataTuple[i])
+                                data = cubrid_db.TimestampFromTicks(dataTuple[i])
                         except Exception,e:
                                 print str(e)
                         else:

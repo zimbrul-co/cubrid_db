@@ -1,5 +1,5 @@
 import unittest
-import CUBRIDdb
+import cubrid_db
 import datetime
 import locale
 from xml.dom import minidom
@@ -18,7 +18,7 @@ class RollbackTest(unittest.TestCase):
 
         def setUp(self):
                 conStr = self.getConStr()                
-                self.con = CUBRIDdb.connect(conStr, "dba","")
+                self.con = cubrid_db.connect(conStr, "dba","")
                 self.cur = self.con.cursor()
                 self.con.set_autocommit(False)
                 self.assertEqual(self.con.get_autocommit(), False, "autocommit is off")

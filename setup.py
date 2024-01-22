@@ -1,4 +1,4 @@
-"""Setup script for the CUBRIDdb Python package."""
+"""Setup script for the cubrid_db Python package."""
 
 import os
 import platform
@@ -149,9 +149,9 @@ with open('VERSION', 'r', encoding='utf-8') as version_file:
 
 # set py_modules
 py_modules = [
-    "CUBRIDdb.connections",
-    "CUBRIDdb.cursors",
-    "CUBRIDdb.field_type",
+    "cubrid_db.connections",
+    "cubrid_db.cursors",
+    "cubrid_db.field_type",
     "django_cubrid.base",
     "django_cubrid.client",
     "django_cubrid.compiler",

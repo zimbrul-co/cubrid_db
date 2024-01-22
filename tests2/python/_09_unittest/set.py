@@ -1,5 +1,5 @@
 import unittest
-import CUBRIDdb
+import cubrid_db
 import _cubrid
 import time
 import locale
@@ -19,7 +19,7 @@ class SetTest(unittest.TestCase):
 
     def setUp(self):
         conStr = self.getConStr()
-        self.con = CUBRIDdb.connect(conStr, "dba","")
+        self.con = cubrid_db.connect(conStr, "dba","")
         self.cur = self.con.cursor()
 
     def tearDown(self):
@@ -29,12 +29,12 @@ class SetTest(unittest.TestCase):
     def test_escape_string(self):
         '''test escape string'''
         try:
-            print CUBRIDdb.escape_string('',1,1)
+            print cubrid_db.escape_string('',1,1)
         except Exception,e:
             errorValue=str(e)
             print("errorValue: ",errorValue)
-        self.assertEqual(CUBRIDdb.escape_string("cubrid \ Laptop",1),"cubrid \ Laptop")
-        self.assertEqual(CUBRIDdb.escape_string("cubrid \ Laptop",0),"cubrid \\\\ Laptop")
+        self.assertEqual(cubrid_db.escape_string("cubrid \ Laptop",1),"cubrid \ Laptop")
+        self.assertEqual(cubrid_db.escape_string("cubrid \ Laptop",0),"cubrid \\\\ Laptop")
 
         try:
             print self.con.escape_string('',1,1)
@@ -138,7 +138,7 @@ class SetTest(unittest.TestCase):
         self.con.set_autocommit(True)
 
         value=(('0','0'),)
-        etype = (CUBRIDdb.field_type.BIT)
+        etype = (cubrid_db.field_type.BIT)
         self.cur.execute("DROP TABLE IF EXISTS set_tbl")
         self.cur.execute("CREATE TABLE set_tbl (col_1 set(bit(16)) )")
         self.cur.execute("insert into set_tbl values (?)", value,etype)

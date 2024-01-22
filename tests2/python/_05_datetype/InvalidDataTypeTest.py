@@ -1,5 +1,5 @@
 import unittest
-import CUBRIDdb
+import cubrid_db
 import locale
 import time
 import datetime 
@@ -23,7 +23,7 @@ class InvalidDataTypeTest(unittest.TestCase):
 
 	def setUp(self):
                 conStr = self.getConStr()                
-                self.con = CUBRIDdb.connect(conStr, "dba","")
+                self.con = cubrid_db.connect(conStr, "dba","")
 		self.cur = self.con.cursor()
 
 		sqlDrop = "drop table if exists numeric_db"

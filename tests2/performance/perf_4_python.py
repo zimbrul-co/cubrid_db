@@ -1,6 +1,6 @@
 import threading
 import time
-import CUBRIDdb
+import cubrid_db
 from time import sleep,ctime
 from xml.dom import minidom
 
@@ -13,7 +13,7 @@ class MyThread(threading.Thread):
 
 	def run(self):
                 conStr = getConStr()
-                self.conn = CUBRIDdb.connect(conStr, "dba","")
+                self.conn = cubrid_db.connect(conStr, "dba","")
                 self.cur= self.conn.cursor()
 		##start db operation using multiple threads
 	        start_time=time.time()
@@ -106,7 +106,7 @@ def getConStr():
 
 def test_one_thread():
 	conStr = getConStr()
-	conn = CUBRIDdb.connect(conStr, "dba","")
+	conn = cubrid_db.connect(conStr, "dba","")
 	cur= conn.cursor()
 	cur.execute('drop table if exists tdb')
 	cur.execute('create table tdb(a int, b varchar(20), c timestamp, e int)')	
@@ -129,7 +129,7 @@ def test_one_thread():
 
 def test_ten_thread():
         conStr = getConStr()
-        conn = CUBRIDdb.connect(conStr, "dba","")
+        conn = cubrid_db.connect(conStr, "dba","")
         cur= conn.cursor()
         cur.execute('drop table if exists tdb')
         cur.execute('create table tdb(a int, b varchar(20), c timestamp, e int)')

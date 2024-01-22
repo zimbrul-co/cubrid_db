@@ -1,9 +1,9 @@
 # -*- encoding:utf-8 -*- 
-# sample_CUBRIDdb.py
+# sample_cubrid_db.py
 
-import CUBRIDdb 
+import cubrid_db 
 
-con = CUBRIDdb.connect('CUBRID:localhost:33000:demodb:::', 'public')
+con = cubrid_db.connect('CUBRID:localhost:33000:demodb:::', 'public')
 
 cur = con.cursor()
 

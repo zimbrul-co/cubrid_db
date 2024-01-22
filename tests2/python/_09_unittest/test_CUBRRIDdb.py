@@ -1,9 +1,9 @@
 import unittest
-import CUBRIDdb
+import cubrid_db
 import time
 from xml.dom import minidom
 class DBAPI20Test(unittest.TestCase):
-    driver = CUBRIDdb
+    driver = cubrid_db
     xmlt = minidom.parse('configuration/python_config.xml')
     ips = xmlt.childNodes[0].getElementsByTagName('ip')
     ip = ips[0].childNodes[0].toxml()

@@ -1,7 +1,7 @@
 # -*- encoding:utf-8 -*-
 
 import unittest
-import CUBRIDdb
+import cubrid_db
 import time
 import sys
 import decimal
@@ -9,7 +9,7 @@ import datetime
 from xml.dom import minidom
 
 class DBAPI20Test(unittest.TestCase):
-    driver = CUBRIDdb
+    driver = cubrid_db
 
     xmlt = minidom.parse('python_config.xml')
     ips = xmlt.childNodes[0].getElementsByTagName('ip')
@@ -108,7 +108,7 @@ class DBAPI20Test(unittest.TestCase):
         try:
             cur = con.cursor()
             cur.execute("insert into %sbooze values error_sql ('Hello') " % (self.table_prefix))
-        except CUBRIDdb.DatabaseError:
+        except cubrid_db.DatabaseError:
             error = 1
         con.close()
         self.assertEqual(error, 1, "catch one except.")
@@ -119,7 +119,7 @@ class DBAPI20Test(unittest.TestCase):
             cur = con.cursor()
             cur.fetchone()
             cur.execute("insert into %sbooze values ('Hello', 'hello2') " % (self.table_prefix))
-        except CUBRIDdb.Error:
+        except cubrid_db.Error:
             error = 1
         con.close()
         self.assertEqual(error, 1, "catch one except. OK.")
@@ -685,7 +685,7 @@ def suite():
 if __name__ == '__main__':
     #unittest.main(defaultTest = 'suite')
     #unittest.main()
-    log_file = 'test_CUBRIDdb.result'
+    log_file = 'test_cubrid_db.result'
     f = open(log_file, "w")
     suite = unittest.TestLoader().loadTestsFromTestCase(DBAPI20Test)
     unittest.TextTestRunner(verbosity=2, stream=f).run(suite)

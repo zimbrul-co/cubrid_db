@@ -1,5 +1,5 @@
 import unittest
-import CUBRIDdb
+import cubrid_db
 import datetime
 import locale
 import sys
@@ -19,7 +19,7 @@ class IssueTest(unittest.TestCase):
 
         def setUp(self):
                 conStr = self.getConStr()                
-                self.con = CUBRIDdb.connect(conStr, "dba","")
+                self.con = cubrid_db.connect(conStr, "dba","")
                 self.cur = self.con.cursor()
                 self.cur.execute("DROP TABLE IF EXISTS issue")
                 self.cur.execute("CREATE TABLE issue(nameid int primary key ,age int,name VARCHAR(40))")
@@ -32,14 +32,14 @@ class IssueTest(unittest.TestCase):
         def test_connect(self):
                 print "\nconnect url is empty"
                 try:
-                    self.con = CUBRIDdb.connect("")
+                    self.con = cubrid_db.connect("")
                 except Exception,e:
                     errorValue=str(e)
                     print errorValue
                     self.assertEquals(errorValue,"(-20030, 'ERROR: CCI, -20030, Invalid url string')")
 
                 try:
-                    self.con = CUBRIDdb.connect()
+                    self.con = cubrid_db.connect()
                 except Exception,e:
                     errorValue=str(e)
                     print errorValue

@@ -1,4 +1,4 @@
-import CUBRIDdb
+import cubrid_db
 import unittest
 import os
 import sys
@@ -20,7 +20,7 @@ class CUBRIDPythonDBITest(unittest.TestCase):
                 dbnames = xmlt.childNodes[0].getElementsByTagName('dbname')
                 dbname = dbnames[0].childNodes[0].toxml()
                 conStr = "CUBRID:"+ip+":"+port+":"+dbname+":::"
-		self.con=CUBRIDdb.connect(conStr,'dba','')
+		self.con=cubrid_db.connect(conStr,'dba','')
 	        self.c=self.con.cursor()
 		self.c.execute("select * from db_class limit 5;")
 		row=self.c.fetchone()
@@ -37,8 +37,8 @@ class CUBRIDPythonDBITest(unittest.TestCase):
                 dbnames = xmlt.childNodes[0].getElementsByTagName('dbname')
                 dbname = dbnames[0].childNodes[0].toxml()
                 conStr = "CUBRID:"+ip+":"+port+":"+dbname+":::"
-                self.con=CUBRIDdb.connect(conStr)
-		#self.con=CUBRIDdb.connect("CUBRID:localhost:33188:pydb:::")
+                self.con=cubrid_db.connect(conStr)
+		#self.con=cubrid_db.connect("CUBRID:localhost:33188:pydb:::")
 	        self.c=self.con.cursor()
 		self.c.execute("select * from db_class limit 5;")
 		row=self.c.fetchone()
@@ -48,7 +48,7 @@ class CUBRIDPythonDBITest(unittest.TestCase):
 	def test_connection_with_wrong_parameter(self):
 		print("\n03. Connection with wrong parameter")
 		try:
-			self.con = CUBRIDdb.connect("CUBRID:10.34.64:300a12:pydb:::")
+			self.con = cubrid_db.connect("CUBRID:10.34.64:300a12:pydb:::")
 		except Exception,e:
                         print("connect error: ", e)
                         #self.con.close()
@@ -66,7 +66,7 @@ class CUBRIDPythonDBITest(unittest.TestCase):
                 #conStr = "CUBRID:"+remoteip+":"+port+":"+dbname+":dba::?autocommit=false"
                 conStr = "CUBRID:"+remoteip+":"+port+":"+dbname+":dba::"
                 print(conStr)
-      		self.con=CUBRIDdb.connect(conStr,"dba","")
+      		self.con=cubrid_db.connect(conStr,"dba","")
 		self.c=self.con.cursor()
 		self.c.execute("select * from db_class;")
 		row=self.c.fetchone()
@@ -88,8 +88,8 @@ class CUBRIDPythonDBITest(unittest.TestCase):
                 #conStr = "CUBRID:"+ip+":"+port+":"+dbname+":dba::?althosts="+remoteip+"&autocommit=false"
                 conStr = "CUBRID:"+ip+":"+port+":"+dbname+":dba::?altHosts="+remoteip+":30188"
                 print(conStr)
-                self.con=CUBRIDdb.connect(conStr,"dba","")
-		#self.con=CUBRIDdb.connect("CUBRID:10.34.64.35:30012:pydb:dba::?althosts=10.34.64.59:33011&autocommit=false")
+                self.con=cubrid_db.connect(conStr,"dba","")
+		#self.con=cubrid_db.connect("CUBRID:10.34.64.35:30012:pydb:dba::?althosts=10.34.64.59:33011&autocommit=false")
 		self.c=self.con.cursor()
 		self.c.execute("select * from db_class;")
 		row=self.c.fetchone()

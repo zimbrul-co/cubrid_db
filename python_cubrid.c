@@ -581,7 +581,7 @@ static char _cubrid_ConnectionObject_set__doc__[] =
     c = con.cursor()\n\
     s = con.set()\n\
     value = ('1','2')\n\
-    s.imports(value ,CUBRIDdb.CCI_U_TYPE_INT)\n\
+    s.imports(value ,cubrid_db.CCI_U_TYPE_INT)\n\
     c.prepare('''INSERT INTO set_tbl_int VALUES(?);''')\n\
     c.bind_set(1,s)\n\
     c.execute()\n\
@@ -1764,7 +1764,7 @@ data:tuple object \n\
     c = con.cursor()\n\
     s = con.set()\n\
     value = ('1','2')\n\
-    s.imports(value ,CUBRIDdb.CCI_U_TYPE_INT)\n\
+    s.imports(value ,cubrid_db.CCI_U_TYPE_INT)\n\
     c.prepare('''INSERT INTO set_tbl_int VALUES(?);''')\n\
     c.bind_set(1,s)\n\
     c.execute()\n\
@@ -3579,9 +3579,9 @@ data:tuple object\n\
 type:Element type of set,default type:string.\n\
 \n\
     Example::\n\
-from CUBRIDdb import FIELD_TYPE\n\
+from cubrid_db import FIELD_TYPE\n\
 def one_para():\n\
-    con = CUBRIDdb.connect('CUBRID:localhost:33000:demodb:::', 'public')\n\
+    con = cubrid_db.connect('CUBRID:localhost:33000:demodb:::', 'public')\n\
     c = con.cursor()\n\
     set_val=(('1','23','48'),)\n\
     etype = FIELD_TYPE.INT\n\
@@ -3590,7 +3590,7 @@ def one_para():\n\
     c.close()\n\
     con.close() \n\
 def two_para():\n\
-    con = CUBRIDdb.connect('CUBRID:localhost:33000:demodb:::', 'public')\n\
+    con = cubrid_db.connect('CUBRID:localhost:33000:demodb:::', 'public')\n\
     c = con.cursor()\n\
     set_val=(('abc','def'),('1','23','48'))\n\
     etype = (FIELD_TYPE.CHAR,FIELD_TYPE.INT)\n\

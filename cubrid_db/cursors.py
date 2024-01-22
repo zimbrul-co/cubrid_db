@@ -40,7 +40,7 @@ from functools import reduce
 
 from _cubrid import InterfaceError
 
-from CUBRIDdb import field_type
+from cubrid_db import field_type
 
 
 def bytes_to_binstr(b):
