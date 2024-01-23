@@ -24,7 +24,6 @@
 #define CUBRID_LOB_BUF_SIZE 4096
 #define CUBRID_ER_MSG_LEN 1024
 
-static PyObject *_cubrid_warning;
 static PyObject *_cubrid_error;
 static PyObject *_cubrid_interface_error;
 static PyObject *_cubrid_database_error;
@@ -4110,9 +4109,6 @@ static struct PyModuleDef cubriddef = {
 void
 init_exceptions (PyObject * dict)
 {
-  _cubrid_warning = PyErr_NewException ("_cubrid.Warning", PyExc_Warning, NULL);
-  PyDict_SetItemString (dict, "Warning", _cubrid_warning);
-
   _cubrid_error = PyErr_NewException ("_cubrid.Error", PyExc_Exception, NULL);
   PyDict_SetItemString (dict, "Error", _cubrid_error);
 
