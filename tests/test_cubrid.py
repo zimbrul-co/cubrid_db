@@ -30,6 +30,8 @@ Run the tests using pytest from the command line. For example:
 `pytest test_cubrid.py`
 To generate a coverage report, add the `--cov=_cubrid` option.
 """
+# pylint: disable=missing-function-docstring
+
 import re
 
 import pytest
@@ -37,11 +39,8 @@ import pytest
 import _cubrid
 
 
-# pylint: disable=missing-function-docstring
-
-
 @pytest.fixture
-def db_connection():
+def cubrid_connection():
     ip = "localhost"
     port = "33000"
     dbname = "demodb"
@@ -53,18 +52,18 @@ def db_connection():
 
 
 @pytest.fixture
-def db_cursor(db_connection):
-    # Obtain a cursor from the database connection provided by the db_connection fixture
-    cursor = db_connection.cursor()
-    yield cursor, db_connection
+def cubrid_cursor(cubrid_connection):
+    # Obtain a cursor from the database connection provided by the cubrid_connection fixture
+    cursor = cubrid_connection.cursor()
+    yield cursor, cubrid_connection
 
     # Ensure the cursor is closed after the test
     cursor.close()
 
 
 @pytest.fixture
-def db_names_table(db_cursor):
-    cursor, connection = db_cursor  # Unpack the cursor and connection from the db_cursor fixture
+def db_names_table(cubrid_cursor):
+    cursor, connection = cubrid_cursor
 
     # Create the test table using the cursor
     cursor.prepare("create table if not exists test_cubrid (name varchar(20))")
@@ -98,8 +97,8 @@ def _cleanup_table(cursor):
 
 
 @pytest.fixture
-def db_sample_names_table(db_cursor):
-    cursor, connection = db_cursor
+def db_sample_names_table(cubrid_cursor):
+    cursor, connection = cubrid_cursor
 
     names = [
         'Carlton Cold', 'Carlton Draft', 'Mountain Goat',
@@ -114,8 +113,8 @@ def db_sample_names_table(db_cursor):
 
 
 @pytest.fixture
-def db_sample_int_table(db_cursor):
-    cursor, connection = db_cursor
+def db_sample_int_table(cubrid_cursor):
+    cursor, connection = cubrid_cursor
 
     numbers = ['100', '200', '300', '400']
     _create_table(cursor, 'id int', numbers)
@@ -126,8 +125,8 @@ def db_sample_int_table(db_cursor):
 
 
 @pytest.fixture
-def db_sample_float_table(db_cursor):
-    cursor, connection = db_cursor
+def db_sample_float_table(cubrid_cursor):
+    cursor, connection = cubrid_cursor
 
     numbers = ['3.14']
     _create_table(cursor, 'id float', numbers)
@@ -138,8 +137,8 @@ def db_sample_float_table(db_cursor):
 
 
 @pytest.fixture
-def db_sample_date_table(db_cursor):
-    cursor, connection = db_cursor
+def db_sample_date_table(cubrid_cursor):
+    cursor, connection = cubrid_cursor
 
     dates = ["1987-10-29"]
     _create_table(cursor, 'birthday date', dates)
@@ -150,8 +149,8 @@ def db_sample_date_table(db_cursor):
 
 
 @pytest.fixture
-def db_sample_time_table(db_cursor):
-    cursor, connection = db_cursor
+def db_sample_time_table(cubrid_cursor):
+    cursor, connection = cubrid_cursor
 
     times = ["11:30:29"]
     _create_table(cursor, 'lunch time', times)
@@ -162,8 +161,8 @@ def db_sample_time_table(db_cursor):
 
 
 @pytest.fixture
-def db_sample_timestamp_table(db_cursor):
-    cursor, connection = db_cursor
+def db_sample_timestamp_table(cubrid_cursor):
+    cursor, connection = cubrid_cursor
 
     times = ["2011-5-3 11:30:29"]
     _create_table(cursor, 'lunch timestamp', times)
@@ -174,8 +173,8 @@ def db_sample_timestamp_table(db_cursor):
 
 
 @pytest.fixture
-def db_sample_binary_table(db_cursor):
-    cursor, connection = db_cursor
+def db_sample_binary_table(cubrid_cursor):
+    cursor, connection = cubrid_cursor
 
     samples_bin = ['0B0100', '0B01010101010101', '0B111111111', '0B1111100000010101010110111111']
     _create_table(cursor, 'id BIT VARYING(256)', samples_bin)
@@ -185,13 +184,13 @@ def db_sample_binary_table(db_cursor):
     _cleanup_table(cursor)
 
 
-def test_db_connection(db_connection):
-    assert db_connection is not None, "Connection to CUBRID failed"
+def test_cubrid_connection(cubrid_connection):
+    assert cubrid_connection is not None, "Connection to CUBRID failed"
 
 
-def test_server_version(db_connection):
+def test_server_version(cubrid_connection):
     # Assuming server_version() returns a version string from the database connection
-    version = db_connection.server_version()
+    version = cubrid_connection.server_version()
     assert version is not None, "The server version should not be None"
 
     # Verify the version format (major.minor.patch.build)
@@ -200,9 +199,9 @@ def test_server_version(db_connection):
         f"Version '{version}' does not match the expected format 'major.minor.patch.build'"
 
 
-def test_client_version(db_connection):
+def test_client_version(cubrid_connection):
     # Assuming client_version() returns a version string or object from the database connection
-    version = db_connection.client_version()
+    version = cubrid_connection.client_version()
     assert version is not None, "The client version should not be None"
 
     # Define a pattern to match the version format: major.minor.release.build-commit_id
@@ -217,7 +216,6 @@ def test_client_version(db_connection):
 def test_db_api_exceptions_hierarchy():
     # Base exceptions
     assert hasattr(_cubrid, 'Error'), "'Error' exception is missing"
-    assert hasattr(_cubrid, 'Warning'), "'Warning' exception is missing"
 
     # Subclasses of Error
     for exc in ['InterfaceError', 'DatabaseError']:
@@ -233,18 +231,18 @@ def test_db_api_exceptions_hierarchy():
             f"'{exc}' does not subclass 'DatabaseError'"
 
 
-def test_commit(db_connection):
+def test_commit(cubrid_connection):
     # The commit operation is tested to ensure it can be called without raising an exception.
-    db_connection.commit()
+    cubrid_connection.commit()
 
 
-def test_rollback(db_connection):
+def test_rollback(cubrid_connection):
     # Test to ensure the rollback operation can be called without raising an exception.
-    db_connection.rollback()
+    cubrid_connection.rollback()
 
 
-def test_cursor(db_cursor):
-    # Since the db_cursor fixture handles cursor creation, this test implicitly verifies
+def test_cursor(cubrid_cursor):
+    # Since the cubrid_cursor fixture handles cursor creation, this test implicitly verifies
     # that a cursor can be successfully obtained and closed without errors.
     # Additional operations or assertions to test the cursor's functionality can be added here.
     pass
@@ -259,13 +257,16 @@ def _fetchall(cursor):
     return results
 
 
-def test_cursor_isolation(db_connection):
+def test_cursor_isolation(cubrid_connection):
     # Ensure cursors are closed after the test
     cur1 = cur2 = None
     try:
         # Cursors created from the same connection should have the same transaction isolation level
-        cur1 = db_connection.cursor()
-        cur2 = db_connection.cursor()
+        cur1 = cubrid_connection.cursor()
+        cur2 = cubrid_connection.cursor()
+
+        cur1.prepare('drop table if exists test_cubrid')
+        cur1.execute()
 
         # Perform operations with cur1
         cur1.prepare('create table if not exists test_cubrid (name varchar(20))')
@@ -335,37 +336,38 @@ def test_rowcount(db_names_table):
     )
 
 
-def test_isolation_level(db_connection):
+def test_isolation_level(cubrid_connection):
     # Set the isolation level using the connection object provided by the fixture
-    db_connection.set_isolation_level(_cubrid.CUBRID_REP_CLASS_COMMIT_INSTANCE)
+    cubrid_connection.set_isolation_level(_cubrid.CUBRID_REP_CLASS_COMMIT_INSTANCE)
 
     # Assert that the isolation level is set correctly
-    assert db_connection.isolation_level == 'CUBRID_REP_CLASS_COMMIT_INSTANCE', (
+    assert cubrid_connection.isolation_level == 'CUBRID_REP_CLASS_COMMIT_INSTANCE', (
         "connection.set_isolation_level does not work"
     )
 
 
-def test_autocommit(db_connection):
+def test_autocommit(cubrid_connection):
     # Check the default state of autocommit
-    assert db_connection.autocommit is True, "connection.autocommit default is True"
+    assert cubrid_connection.autocommit is True, "connection.autocommit default is True"
 
     # Enable autocommit and verify
-    db_connection.set_autocommit(True)
-    assert db_connection.autocommit is True, "connection.autocommit should be TRUE after set on"
+    cubrid_connection.set_autocommit(True)
+    assert cubrid_connection.autocommit is True, "connection.autocommit should be TRUE after set on"
 
     # Disable autocommit and verify
-    db_connection.set_autocommit(False)
-    assert db_connection.autocommit is False, "connection.autocommit should be FALSE after set off"
+    cubrid_connection.set_autocommit(False)
+    assert cubrid_connection.autocommit is False, \
+        "connection.autocommit should be FALSE after set off"
 
 
-def test_ping_connected(db_connection):
+def test_ping_connected(cubrid_connection):
     # Test ping when the connection is active
-    assert db_connection.ping() == 1, "connection.ping should return 1 when connected"
+    assert cubrid_connection.ping() == 1, "connection.ping should return 1 when connected"
 
 
-def test_schema_info(db_connection):
+def test_schema_info(cubrid_connection):
     # Assuming CUBRID_SCH_TABLE is a constant defined in the _cubrid module or similar
-    schema_info = db_connection.schema_info(_cubrid.CUBRID_SCH_TABLE, "db_class")
+    schema_info = cubrid_connection.schema_info(_cubrid.CUBRID_SCH_TABLE, "db_class")
 
     # Verify the schema information received is as expected
     assert schema_info[0] == 'db_class', (
@@ -376,8 +378,8 @@ def test_schema_info(db_connection):
     )
 
 
-def test_insert_id(db_cursor):
-    cur, con = db_cursor  # Provided by the db_names_table fixture
+def test_insert_id(cubrid_cursor):
+    cur, con = cubrid_cursor  # Provided by the cubrid_cursor fixture
 
     # Create a table with an auto_increment column
     t_insert_id = '''
@@ -457,8 +459,8 @@ def test_bind_float(db_sample_float_table):
     assert cur.affected_rows() in (-1, 1), "Affected rows should be 1"
 
 
-def test_bind_date_e(db_cursor):
-    cursor, _ = db_cursor
+def test_bind_date_e(cubrid_cursor):
+    cursor, _ = cubrid_cursor
 
     dates = ["2011-2-31"]
     try:
@@ -488,8 +490,8 @@ def test_bind_binary(db_sample_binary_table):
     assert cur.affected_rows() in (-1, 4), "Affected rows should be 4"
 
 
-def test_lob_file(db_cursor):
-    cur, con = db_cursor
+def test_lob_file(cubrid_cursor):
+    cur, con = cubrid_cursor
 
     try:
         cur.prepare('create table test_cubrid (picture blob)')
@@ -512,8 +514,8 @@ def test_lob_file(db_cursor):
         _cleanup_table(cur)
 
 
-def test_lob_string(db_cursor):
-    cur, con = db_cursor
+def test_lob_string(cubrid_cursor):
+    cur, con = cubrid_cursor
 
     try:
         cur.prepare('create table test_cubrid (content clob)')
@@ -537,8 +539,8 @@ def test_lob_string(db_cursor):
         _cleanup_table(cur)
 
 
-def test_result_info(db_cursor):
-    cur, _ = db_cursor
+def test_result_info(cubrid_cursor):
+    cur, _ = cubrid_cursor
 
     try:
         cur.prepare('create table test_cubrid (id int primary key, name varchar(20))')

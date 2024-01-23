@@ -1,4 +1,5 @@
 [MASTER]
 extension-pkg-allow-list=_cubrid
 ignore=old_tests,old_tests2,old_samples
+init-hook='import os, sys; sys.path.append(os.getcwd())'
 load-plugins=pylint_pytest
