@@ -2109,6 +2109,7 @@ _cubrid_CursorObject_execute (_cubrid_CursorObject * self, PyObject * args)
 
 /* DB type to Python type mapping
 *
+* bit, varbit                       -> bytes
 * int, short                         -> Integer
 * float, double, numeric         -> Float
 * numeric                           -> Decimal
@@ -2139,6 +2140,7 @@ _cubrid_CursorObject_dbval_to_pyvalue (_cubrid_CursorObject * self, int type,
   switch (type)
     {
     case CCI_U_TYPE_BIT:        //CCI_A_TYPE_BIT
+    case CCI_U_TYPE_VARBIT:
       res = cci_get_data (self->handle, index, CCI_A_TYPE_STR, &buffer, &ind);
       if (res < 0)
         {
@@ -2151,17 +2153,26 @@ _cubrid_CursorObject_dbval_to_pyvalue (_cubrid_CursorObject * self, int type,
         }
       else
         {
-          len = strlen (buffer);
-          str_buffer = (char *) malloc (len + 1);
-          if (str_buffer == NULL)
+          len = strlen(buffer);
+          // Allocate buffer for half the length of the hex string
+          unsigned char* bin_data = (unsigned char*)malloc(len / 2);
+          if (bin_data == NULL)
             {
-              Py_INCREF (Py_None);
+              Py_INCREF(Py_None);
               return Py_None;
             }
-          memset (str_buffer, 0, len + 1);
-          memcpy (str_buffer, buffer, len);
-          val = _cubrid_return_PyString_FromString (str_buffer);
-          free (str_buffer);
+
+          for (int i = 0; i < len; i += 2)
+            {
+              // Convert each pair of hexadecimal characters into a byte
+              char hex[3] = {buffer[i], buffer[i + 1], 0}; // 3 for including null terminator
+              unsigned long byte = strtoul(hex, NULL, 16); // Convert from hex to long
+              bin_data[i / 2] = (unsigned char)byte; // Store the byte
+            }
+
+          // Create the Python bytes object from the binary data
+          val = PyBytes_FromStringAndSize((const char*)bin_data, len / 2);
+          free(bin_data); // Free the allocated memory
         }
 
       break;
