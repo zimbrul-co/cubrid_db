@@ -2345,12 +2345,14 @@ _cubrid_CursorObject_dbval_to_pyvalue (_cubrid_CursorObject * self, int type,
   return val;
 }
 
-/* Collection(set, multiset, sequence)         -> List,
-* Collection' item  -> String
-*/
+/*
+ * Collection(set)                        -> Set,
+ * Collection(multiset, sequence)         -> List,
+ * Collection' item  -> String
+ */
 
 static PyObject *
-_cubrid_CursorObject_dbset_to_pyvalue (_cubrid_CursorObject * self, int index)
+_cubrid_CursorObject_dbset_to_pyvalue (_cubrid_CursorObject * self, int type, int index)
 {
   int i, res, ind;
   PyObject *val;
@@ -2376,18 +2378,36 @@ _cubrid_CursorObject_dbset_to_pyvalue (_cubrid_CursorObject * self, int index)
     }
 
   set_size = cci_set_size (set);
-  val = PyList_New (set_size);
+
+  // Initialize val as a set or list based on the type argument
+  if (CCI_IS_SET_TYPE (type))
+    {
+      val = PySet_New (NULL);
+    }
+  else
+    {
+      val = PyList_New (set_size);
+    }
 
   for (i = 0; i < set_size; i++)
     {
       res = cci_set_get (set, i + 1, CCI_A_TYPE_STR, &buffer, &ind);
       if (res < 0)
         {
+          cci_set_free (set);
           return handle_error (res, NULL);
         }
 
       e = _cubrid_return_PyString_FromString (buffer);
-      PyList_SetItem (val, i, e);
+      if (CCI_IS_SET_TYPE (type))
+        {
+          PySet_Add (val, e);
+          Py_DECREF (e); // Decrement the reference count
+        }
+      else
+        {
+          PyList_SetItem (val, i, e);
+        }
     }
 
   cci_set_free (set);
@@ -2412,7 +2432,7 @@ _cubrid_row_to_tuple (_cubrid_CursorObject * self)
 
       if (CCI_IS_COLLECTION_TYPE (type))
         {
-          val = _cubrid_CursorObject_dbset_to_pyvalue (self, i + 1);
+          val = _cubrid_CursorObject_dbset_to_pyvalue (self, type, i + 1);
         }
       else
         {
@@ -2447,7 +2467,7 @@ _cubrid_row_to_dict (_cubrid_CursorObject * self)
 
       if (CCI_IS_COLLECTION_TYPE (type))
         {
-          val = _cubrid_CursorObject_dbset_to_pyvalue (self, i + 1);
+          val = _cubrid_CursorObject_dbset_to_pyvalue (self, type, i + 1);
         }
       else
         {
