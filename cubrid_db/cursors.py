@@ -210,7 +210,7 @@ class BaseCursor:
         self.__check_state()
 
         def is_iterable(obj):
-            if isinstance(obj, str) or isinstance(obj, bytes):
+            if isinstance(obj, (bytes, str)):
                 return False
             try:
                 iter(obj)
