@@ -43,8 +43,6 @@ from django.db.backends.base.base import BaseDatabaseWrapper
 from django.db.backends.signals import connection_created
 from django.utils.regex_helper import _lazy_re_compile
 
-import _cubrid
-
 try:
     import cubrid_db as Database
 except ImportError as import_error:
@@ -117,7 +115,7 @@ class CursorWrapper:
             query = re.sub('%%', '%', query)
             return self.cursor.execute(query, args)
 
-        except _cubrid.Error as e:
+        except Database.Error as e:
             raise get_django_error(e) from e
 
     def executemany(self, query, args):
@@ -156,7 +154,7 @@ class CursorWrapper:
             query = re.sub('%%', '%', query)
 
             return self.cursor.executemany(query, args)
-        except _cubrid.Error as e:
+        except Database.Error as e:
             raise get_django_error(e) from e
 
     def __getattr__(self, attr):
@@ -348,7 +346,7 @@ class DatabaseWrapper(BaseDatabaseWrapper):
     def is_usable(self):
         try:
             return bool(self.connection.ping())
-        except _cubrid.Error:
+        except Database.Error:
             return False
 
     def get_database_version(self):
@@ -359,7 +357,7 @@ class DatabaseWrapper(BaseDatabaseWrapper):
             self.connection = self.get_new_connection(None)
         version_str = self.connection.server_version()
         if not version_str:
-            raise _cubrid.InterfaceError('Unable to determine CUBRID version string')
+            raise Database.InterfaceError('Unable to determine CUBRID version string')
 
         match = db_version_re.match(version_str)
         if not match:

@@ -11,6 +11,7 @@ from time import localtime
 
 from cubrid_db import field_type
 from cubrid_db.connections import Connection
+from cubrid_db.exceptions import *
 
 # pylint: disable=invalid-name
 
