@@ -2315,6 +2315,44 @@ _cubrid_CursorObject_dbval_to_pyvalue (_cubrid_CursorObject * self, int type,
                                         dt.ss, 0);
         }
       break;
+    case 130: // JSON
+      res = cci_get_data(self->handle, index, CCI_A_TYPE_STR, &buffer, &ind);
+      if (res < 0)
+        {
+          return handle_error(res, NULL);
+        }
+      if (ind < 0)
+        {
+          Py_INCREF(Py_None);
+          val = Py_None;
+        }
+      else
+        {
+          // Assuming buffer contains the JSON string
+          PyObject *json_module = PyImport_ImportModule("json");
+          if (!json_module) return NULL; // Error importing JSON
+
+          PyObject *loads_func = PyObject_GetAttrString(json_module, "loads");
+          if (!loads_func)
+            {
+              Py_DECREF(json_module);
+              return NULL; // Error accessing loads function
+            }
+
+          PyObject *json_str = PyUnicode_FromString(buffer);
+          val = PyObject_CallFunctionObjArgs(loads_func, json_str, NULL);
+
+          Py_DECREF(json_module);
+          Py_DECREF(loads_func);
+          Py_DECREF(json_str);
+
+          if (!val)
+            {
+              // Error during json.loads, handle accordingly
+              return NULL;
+            }
+        }
+      break;
     default:
       res = cci_get_data (self->handle, index, CCI_A_TYPE_STR, &buffer, &ind);
       if (res < 0)
