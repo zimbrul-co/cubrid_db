@@ -159,9 +159,28 @@ class DatabaseOperations(BaseDatabaseOperations):
         return [(None, ("NULL", [], False))]
 
     def quote_name(self, name):
+        # Check for characters that are not allowed even when quoted.
+        if '[' in name or ']' in name or '.' in name:
+            name = name.replace("[", "!SQBL!")
+            name = name.replace("]", "!SQBR!")
+            name = name.replace(".", "!DOT!")
+
+        # Check if the name is already quoted.
         if name.startswith("`") and name.endswith("`"):
             # Quoting once is enough.
             return name
+
+        # Define a set of special characters as per CUBRID documentation.
+        special_chars = set("() +-*/%||!<>=>|^&~")
+
+        # Add conditions for special names that need double quotes.
+        # This includes names with spaces, special characters, or non-ASCII characters.
+        if any(char in name for char in special_chars) or \
+                name.startswith("__") or name.endswith("__"):
+            # Wrap the name in double quotes for CUBRID compatibility.
+            return f'"{name}"'
+
+        # For regular names, wrap them in backticks.
         return f"`{name}`"
 
     def regex_lookup(self, lookup_type):
