@@ -97,6 +97,7 @@ class DatabaseIntrospection(BaseDatabaseIntrospection):
         field_type.SET: 'TextField',
         field_type.MULTISET: 'TextField',
         field_type.SEQUENCE: 'TextField',
+        field_type.JSON: 'JSONField',
     }
 
     def get_table_list(self, cursor):
