@@ -246,7 +246,7 @@ class DatabaseWrapper(BaseDatabaseWrapper):
 
             s = 'BIT VARYING'
             if field_dict['max_length'] is not None:
-                s += f"({8 * field_dict['max_length']:i})"
+                s += f"({8 * field_dict['max_length']:d})"
             return s
 
     data_types = {
