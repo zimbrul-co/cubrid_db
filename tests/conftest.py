@@ -1,3 +1,11 @@
+"""
+This module provides pytest fixtures for establishing a connection and creating a cursor
+for interacting with a CUBRID database in a testing environment. It encapsulates the
+database connection parameters and setup logic, offering a simplified interface for
+database interactions within test cases.
+"""
+# pylint: disable=missing-function-docstring
+
 import pytest
 
 import cubrid_db
