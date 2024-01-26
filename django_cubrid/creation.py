@@ -108,8 +108,8 @@ class DatabaseCreation(BaseDatabaseCreation):
         except subprocess.CalledProcessError as e:
             self.log(f"Error creating the test database: {e}")
             if not autoclobber:
-                confirm = input(f"Type 'yes' if you would like to try deleting the test '\
-                                'database '{test_database_name}', or 'no' to cancel: ")
+                confirm = input(f"Type 'yes' if you would like to try deleting the test "
+                                f"'database '{test_database_name}', or 'no' to cancel: ")
             if autoclobber or confirm == 'yes':
                 try:
                     if verbosity >= 1:
