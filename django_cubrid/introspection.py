@@ -36,7 +36,7 @@ from cubrid_db import field_type
 
 
 InfoLine = namedtuple('InfoLine', [
-    'col_name', 'attr_type', 'data_type', 'prec scale', 'is_nullable',
+    'col_name', 'attr_type', 'data_type', 'prec', 'scale', 'is_nullable',
     'default_value', 'def_order', 'is_system_class', 'class_type', 'partitioned',
     'owner_name', 'is_reuse_old_class',
 ])
