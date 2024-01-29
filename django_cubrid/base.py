@@ -239,20 +239,22 @@ class DatabaseWrapper(BaseDatabaseWrapper):
         'endswith': "LIKE '%%' || {}",
         'iendswith': "LIKE '%%' || UPPER({})",
     }
-    class BitFieldFmt:
-        def __mod__(self, field_dict):
-            assert isinstance(field_dict, dict)
-            assert 'max_length' in field_dict
 
-            s = 'BIT VARYING'
-            if field_dict['max_length'] is not None:
-                s += f"({8 * field_dict['max_length']:d})"
-            return s
+    class VarbitStr(str):
+        """Helper class for the Django BinaryField field type, to accomodate optional max_length"""
+        def __mod__(self, field_dict):
+            assert isinstance(field_dict, dict), "field_dict trebuie să fie un dicționar"
+            assert 'max_length' in field_dict, "field_dict trebuie să conțină cheia 'max_length'"
+
+            max_length = field_dict['max_length']
+            if max_length is not None:
+                return f"bit varying({8 * max_length})"
+            return "bit varying"
 
     data_types = {
         'AutoField': 'integer AUTO_INCREMENT',
         'BigAutoField': 'bigint AUTO_INCREMENT',
-        'BinaryField': BitFieldFmt(),
+        'BinaryField': VarbitStr(),
         'BooleanField': 'short',
         'CharField': 'varchar(%(max_length)s)',
         'CommaSeparatedIntegerField': 'varchar(%(max_length)s)',
