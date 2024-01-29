@@ -212,11 +212,20 @@ class DatabaseOperations(BaseDatabaseOperations):
         if not tables:
             return []
 
-        # TODO: If there are FK constraints, the sqlflush command in Django may fail.
-
         if reset_sequences:
             # It's faster to TRUNCATE tables that require a sequence reset
             # since ALTER TABLE AUTO_INCREMENT is slower than TRUNCATE.
+            if allow_cascade:
+                return [
+                    "%s %s %s;"
+                    % (
+                        style.SQL_KEYWORD("TRUNCATE"),
+                        style.SQL_FIELD(self.quote_name(table_name)),
+                        style.SQL_KEYWORD("CASCADE"),
+                    )
+                    for table_name in tables
+                ]
+
             return [
                 "%s %s;"
                 % (
