@@ -67,11 +67,9 @@ BLOB = DBAPISet([field_type.BLOB])
 CLOB = DBAPISet([field_type.CLOB])
 ROWID = DBAPISet()
 
-def _connect(*args, **kwargs):
+def connect(**kwargs):
     """Factory function for connections.Connection."""
-    return Connection(*args, **kwargs)
-
-connect = _connect
+    return Connection(**kwargs)
 
 __all__ = [
     'connect',

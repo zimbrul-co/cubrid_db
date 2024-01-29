@@ -16,12 +16,14 @@ def _get_connect_args():
     port = "33000"
     dbname = "demodb"
 
-    return (f"CUBRID:{ip}:{port}:{dbname}:::", "dba", "",)
+    return {
+        'dsn': f"CUBRID:{ip}:{port}:{dbname}:::",
+    }
 
 
 @pytest.fixture
 def cubrid_db_connection():
-    conn = cubrid_db.connect(*_get_connect_args())
+    conn = cubrid_db.connect(**_get_connect_args())
     yield conn
     conn.close()
 

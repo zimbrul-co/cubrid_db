@@ -45,7 +45,7 @@ def cubrid_connection():
     port = "33000"
     dbname = "demodb"
 
-    conn = _cubrid.connect(f"CUBRID:{ip}:{port}:{dbname}:::", "dba", "")
+    conn = _cubrid.connect(f"CUBRID:{ip}:{port}:{dbname}:::")
     yield conn
 
     conn.close()

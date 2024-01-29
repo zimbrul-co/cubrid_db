@@ -41,6 +41,7 @@ import django.db.utils
 from django.core.exceptions import ImproperlyConfigured
 from django.db.backends.base.base import BaseDatabaseWrapper
 from django.db.backends.signals import connection_created
+from django.utils.asyncio import async_unsafe
 from django.utils.regex_helper import _lazy_re_compile
 
 try:
@@ -299,51 +300,42 @@ class DatabaseWrapper(BaseDatabaseWrapper):
         self._db_version = None
 
     def get_connection_params(self):
-        # Backend-specific parameters
-        return None
-
-    def get_new_connection(self, conn_params):
         settings_dict = self.settings_dict
 
-        # Connection to CUBRID database is made through connect() method.
-        # Syntax:
-        # connect (url[, user[password]])
-        #    url - CUBRID:host:port:db_name:db_user:db_password:::
-        #    user - Authorized username.
-        #    password - Password associated with the username.
-        url = "CUBRID"
-        user = "public"
-        passwd = ""
-
+        # Construct datasource name
+        dsn = "CUBRID"
         if settings_dict['HOST'].startswith('/'):
-            url += ':' + settings_dict['HOST']
+            dsn += ':' + settings_dict['HOST']
         elif settings_dict['HOST']:
-            url += ':' + settings_dict['HOST']
+            dsn += ':' + settings_dict['HOST']
         else:
-            url += ':localhost'
-        if settings_dict['PORT']:
-            url += ':' + settings_dict['PORT']
-        if settings_dict['NAME']:
-            url += ':' + settings_dict['NAME']
-        if settings_dict['USER']:
-            user = settings_dict['USER']
-        if settings_dict['PASSWORD']:
-            passwd = settings_dict['PASSWORD']
+            dsn += ':localhost'
+        if 'PORT' in settings_dict:
+            dsn += ':' + settings_dict['PORT']
+        if 'NAME' in settings_dict:
+            dsn += ':' + settings_dict['NAME']
+        dsn += ':::'
+        kwargs = {'dsn': dsn}
 
-        url += ':::'
+        # Set username and password, if provided
+        if 'USER' in settings_dict:
+            kwargs['user'] = settings_dict['USER']
+        if 'PASSWORD' in settings_dict:
+            kwargs['password'] = settings_dict['PASSWORD']
 
-        con = Database.connect(url, user, passwd, charset='utf8')
+        return kwargs
 
-        return con
+    @async_unsafe
+    def get_new_connection(self, conn_params):
+        return Database.connect(**conn_params)
 
     def _valid_connection(self):
-        if self.connection is not None:
-            return True
-        return False
+        return self.connection is not None
 
     def init_connection_state(self):
         pass
 
+    @async_unsafe
     def create_cursor(self, name=None):
         if not self._valid_connection():
             self.connection = self.get_new_connection(None)
