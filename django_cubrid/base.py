@@ -207,6 +207,8 @@ class DatabaseWrapper(BaseDatabaseWrapper):
     """
 
     vendor = 'cubrid'
+    display_name = 'CUBRID'
+
     # Operators taken from PosgreSQL implementation.
     # Check for differences between this syntax and CUBRID's.
     operators = {
