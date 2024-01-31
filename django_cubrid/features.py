@@ -38,8 +38,6 @@ class DatabaseFeatures(BaseDatabaseFeatures):
 
     atomic_transactions = False
 
-    can_introspect_foreign_keys = False
-
     can_rollback_ddl = True
 
     has_bulk_insert = True

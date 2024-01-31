@@ -329,7 +329,7 @@ class DatabaseIntrospection(BaseDatabaseIntrospection):
                 assert sql.strip().startswith("REFERENCES")
                 ref_name_i0 = sql.index('[')
                 ref_name_i1 = sql.index(']')
-                ref_name = sql[ref_name_i0 + 1 : ref_name_i1]
+                ref_name = sql[ref_name_i0 + 1 : ref_name_i1].split('.')[-1]
 
                 sql = sql[ref_name_i1 + 1:]
                 ref_columns_i0 = sql.index('(')
