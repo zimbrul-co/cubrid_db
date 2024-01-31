@@ -86,36 +86,3 @@ class DatabaseSchemaEditor(BaseDatabaseSchemaEditor):
 
     def prepare_default(self, value):
         return self.quote_value(value)
-
-    def column_sql(self, model, field, include_default=False):
-        """
-        Takes a field and returns its column definition.
-        The field must already have had set_attributes_from_name called.
-        """
-        # Get the column's type and use that as the basis of the SQL
-        db_params = field.db_parameters(connection=self.connection)
-        sql = db_params['type']
-        params = []
-        # Check for fields that aren't actually columns (e.g. M2M)
-        if sql is None:
-            return None, None
-        # Work out nullability
-        null = field.null
-        # If we were told to include a default value, do so
-        include_default = include_default and not self.skip_default(field)
-        if include_default:
-            default_value = self.effective_default(field)
-            if default_value is not None:
-                sql += f" DEFAULT {self.prepare_default(default_value)}"
-        if not field.get_internal_type() in ("BinaryField",):
-            if null:
-                sql += " NULL"
-            elif not null:
-                sql += " NOT NULL"
-            # Primary key/unique outputs
-            if field.primary_key:
-                sql += " PRIMARY KEY"
-            elif field.unique:
-                sql += " UNIQUE"
-        # Return the sql
-        return sql, params
