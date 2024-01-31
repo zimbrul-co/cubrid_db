@@ -79,7 +79,7 @@ class DatabaseSchemaEditor(BaseDatabaseSchemaEditor):
         if isinstance(value, str):
             return f"'{self.connection.connection.escape_string(value)}'"
         if isinstance(value, (bytes, bytearray, memoryview)):
-            return f"'{value.hex()}'"
+            return f"B'{value.hex().upper()}'"
         if isinstance(value, bool):
             return "1" if value else "0"
         return str(value)
