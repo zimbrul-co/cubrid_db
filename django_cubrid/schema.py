@@ -10,7 +10,6 @@ and efficient interaction between Django models and the CUBRID database schema.
 import datetime
 
 from django.db.backends.base.schema import BaseDatabaseSchemaEditor
-from django.db.models.fields.related import ManyToManyField
 
 
 class DatabaseSchemaEditor(BaseDatabaseSchemaEditor):
@@ -118,43 +117,3 @@ class DatabaseSchemaEditor(BaseDatabaseSchemaEditor):
                 sql += " UNIQUE"
         # Return the sql
         return sql, params
-
-    def add_field(self, model, field):
-        """
-        Creates a field on a model.
-        Usually involves adding a column, but may involve adding a
-        table instead (for M2M fields)
-        """
-        # pylint: disable=protected-access
-
-        # Special-case implicit M2M tables
-        if ((isinstance(field, ManyToManyField) or
-                field.get_internal_type() == 'ManyToManyField') and
-                field.remote_field.through._meta.auto_created):
-            self.create_model(field.remote_field.through)
-            return
-
-        # Get the column's definition
-        definition, params = self.column_sql(model, field, include_default=True)
-        # It might not actually have a column behind it
-        if definition is None:
-            return
-        # Check constraints can go on the column SQL here
-        db_params = field.db_parameters(connection=self.connection)
-        if db_params['check']:
-            definition += f" CHECK ({db_params['check']})"
-        # Build the SQL and run it
-        sql = self.sql_create_column % {
-            "table": self.quote_name(model._meta.db_table),
-            "column": self.quote_name(field.column),
-            "definition": definition,
-        }
-        self.execute(sql, params)
-
-        # Add an index, if required
-        if field.db_index and not field.unique:
-            self.deferred_sql.append(self._create_index_sql(model, fields=[field]))
-        # Add any FK constraints later
-        if field.is_relation and field.db_constraint:
-            self.deferred_sql.append(self._create_fk_sql(
-                model, field, "_fk_%(to_table)s_%(to_column)s"))
