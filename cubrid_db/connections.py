@@ -87,6 +87,13 @@ class Connection:
         """
         return self.connection.ping()
 
+    def get_last_insert_id(self):
+        """
+        Value that has been most recently inserted to the AUTO_INCREMENT
+        column by a single INSERT statement.
+        """
+        return self.connection.insert_id()
+
     def close(self):
         """
         Close the connection now

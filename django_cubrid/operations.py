@@ -21,7 +21,6 @@ This module is a critical component of the Django-CUBRID backend, enabling seaml
 and operation of Django applications with the CUBRID database.
 """
 import uuid
-import sys
 import warnings
 
 from django.conf import settings
@@ -193,19 +192,7 @@ class DatabaseOperations(BaseDatabaseOperations):
         return 9223372036854775807
 
     def last_insert_id(self, cursor, table_name, pk_name):
-        cursor.execute("SELECT LAST_INSERT_ID()")
-        result = cursor.fetchone()
-
-        # LAST_INSERT_ID() returns Decimal type value.
-        # This causes problem in django.contrib.auth test,
-        # because Decimal is not JSON serializable.
-        # So convert it to int if possible.
-        # I think LAST_INSERT_ID should be modified
-        # to return appropriate column type value.
-        if result[0] < sys.maxsize:
-            return int(result[0])
-
-        return result[0]
+        return self.connection.connection.get_last_insert_id()
 
     def sql_flush(self, style, tables, *, reset_sequences=False, allow_cascade=False):
         # pylint: disable=consider-using-f-string
