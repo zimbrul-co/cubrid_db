@@ -37,8 +37,8 @@ from cubrid_db import field_type
 
 InfoLine = namedtuple('InfoLine', [
     'col_name', 'attr_type', 'data_type', 'prec', 'scale', 'is_nullable',
-    'default_value', 'def_order', 'is_system_class', 'class_type', 'partitioned',
-    'owner_name', 'is_reuse_old_class',
+    'default_value', 'def_order', 'collation', 'comment', 'is_system_class',
+    'class_type', 'partitioned', 'owner_name', 'is_reuse_old_class',
 ])
 
 
@@ -116,7 +116,8 @@ class DatabaseIntrospection(BaseDatabaseIntrospection):
         # Get accurate information with this query (taken from cubridmanager)
         cursor.execute("""
             SELECT a.attr_name, a.attr_type, a.data_type, a.prec, a.scale, a.is_nullable,
-            a.default_value, a.def_order, c.is_system_class, c.class_type, c.partitioned,
+            a.default_value, a.def_order, a.collation, a.comment,
+            c.is_system_class, c.class_type, c.partitioned,
             c.owner_name, c.is_reuse_oid_class
             FROM db_attribute a, db_class c
             WHERE c.class_name=a.class_name AND c.class_name = ?
@@ -137,6 +138,7 @@ class DatabaseIntrospection(BaseDatabaseIntrospection):
                 info.scale,                 # scale
                 info.is_nullable == "YES",  # null_ok
                 info.default_value,         # default
+                info.collation,             # collation
             ))
         return fields
 
