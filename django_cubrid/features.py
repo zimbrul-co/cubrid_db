@@ -15,6 +15,7 @@ system. It helps maintain the database-agnostic nature of Django by providing a
 clear definition of the CUBRID database's capabilities.
 """
 from django.db.backends.base.features import BaseDatabaseFeatures
+from django.utils.functional import cached_property
 
 
 class DatabaseFeatures(BaseDatabaseFeatures):
@@ -71,3 +72,10 @@ class DatabaseFeatures(BaseDatabaseFeatures):
     supports_table_check_constraints = False
 
     supports_timezones = False
+
+    @cached_property
+    def introspected_field_types(self):
+        return {
+            **super().introspected_field_types,
+            "BooleanField": "SmallIntegerField",
+        }
