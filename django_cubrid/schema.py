@@ -25,7 +25,7 @@ class DatabaseSchemaEditor(BaseDatabaseSchemaEditor):
     specific to CUBRID, ensuring seamless schema manipulations within Django's ORM.
     """
 
-    sql_delete_table = "DROP TABLE %(table)s"
+    sql_delete_table = "DROP TABLE %(table)s CASCADE CONSTRAINTS"
     sql_delete_column = "ALTER TABLE %(table)s DROP COLUMN %(column)s"
     sql_alter_column_type = "MODIFY %(column)s %(type)s"
     sql_alter_column_null = "MODIFY %(column)s %(type)s"
