@@ -176,6 +176,12 @@ class BaseCursor:
         self._cs.close()
         self._cs = None
 
+    def _prepare(self, query):
+        if isinstance(query, (bytes, bytearray)):
+            query = query.decode()
+
+        self._cs.prepare(query)
+
     def _bind_params(self, args):
         """
         Bind parameters to a command statement in a database cursor.
@@ -253,14 +259,7 @@ class BaseCursor:
         """
         self.__check_state()
 
-        if not isinstance(query, (bytes, bytearray)):
-            stmt = query.encode(self.charset)
-        else:
-            stmt = query
-
-        stmt = stmt.decode()
-
-        self._cs.prepare(stmt)
+        self._prepare(query)
 
         if args is not None:
             self._bind_params(args)
@@ -270,24 +269,27 @@ class BaseCursor:
         self.description = self._cs.description
         return r
 
-    def executemany(self, query, args):
+    def executemany(self, query, args_list):
         """
         Execute a multi-row query.
 
         query -- string, query to execute on server
 
-        args -- Sequence of sequences or mappings, parameters to use with query
-
-        Returns long integer rows affected, if any.
+        args_list -- Sequence of sequences or mappings, parameters to use with query
 
         This method improves performance on multiple-row INSERT and REPLACE.
         Otherwise it is equivalent to looping over args with execute().
-
         """
-
         self.__check_state()
-        for p in args:
-            self.execute(query, *(p,))
+
+        self._prepare(query)
+
+        for args in args_list:
+            self._bind_params(args)
+            self._cs.execute()
+
+        self.rowcount = self._cs.rowcount
+        self.description = self._cs.description
 
     @classmethod
     def _get_fetch_type(cls):
