@@ -75,7 +75,9 @@ class DatabaseFeatures(BaseDatabaseFeatures):
 
     @cached_property
     def introspected_field_types(self):
+        """Specify how the field types are introspected with CUBRID"""
         return {
             **super().introspected_field_types,
             "BooleanField": "SmallIntegerField",
+            "DurationField": "BigIntegerField",
         }
