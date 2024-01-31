@@ -29,6 +29,8 @@ class DatabaseSchemaEditor(BaseDatabaseSchemaEditor):
     sql_alter_column_type = "MODIFY %(column)s %(type)s"
     sql_alter_column_null = "MODIFY %(column)s %(type)s"
     sql_alter_column_not_null = "MODIFY %(column)s %(type)s NOT NULL"
+    sql_alter_column_no_default = "MODIFY %(column)s %(type)s DEFAULT NULL"
+    sql_alter_column_no_default_null = "ALTER COLUMN %(column)s SET DEFAULT NULL"
 
     sql_rename_column = "ALTER TABLE %(table)s CHANGE %(old_column)s %(new_column)s %(type)s"
     sql_delete_unique = "ALTER TABLE %(table)s DROP INDEX %(name)s"
