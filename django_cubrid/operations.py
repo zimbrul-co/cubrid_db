@@ -166,7 +166,8 @@ class DatabaseOperations(BaseDatabaseOperations):
 
         # Check if the name is already quoted.
         if name.startswith("`") and name.endswith("`"):
-            # Quoting once is enough.
+            return name
+        if name.startswith('"') and name.endswith('"'):
             return name
 
         # Define a set of special characters as per CUBRID documentation.
