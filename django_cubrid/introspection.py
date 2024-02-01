@@ -35,6 +35,9 @@ from django.utils.encoding import force_str
 from cubrid_db import field_type
 
 
+VARCHAR_MAXLEN = 1073741823
+
+
 InfoLine = namedtuple('InfoLine', [
     'col_name', 'attr_type', 'data_type', 'prec', 'scale', 'is_nullable',
     'default_value', 'def_order', 'collation', 'comment', 'is_system_class',
@@ -59,6 +62,7 @@ class DatabaseIntrospection(BaseDatabaseIntrospection):
         into a format understandable by Django's ORM.
 
     Methods:
+        get_field_type(data_type, description): Get Django field type from db column type
         get_table_list(cursor): Retrieves a list of table names in the database.
         get_table_description(cursor, table_name): Provides a description of the
         specified table.
@@ -80,9 +84,7 @@ class DatabaseIntrospection(BaseDatabaseIntrospection):
         field_type.BIT: 'BinaryField',
         field_type.VARBIT: 'BinaryField',
         field_type.CHAR: 'CharField',
-        field_type.VARCHAR: 'CharField',
         field_type.NCHAR: 'CharField',
-        field_type.VARNCHAR: 'CharField',
         field_type.NUMERIC: 'DecimalField',
         field_type.INT: 'IntegerField',
         field_type.SMALLINT: 'SmallIntegerField',
@@ -93,12 +95,21 @@ class DatabaseIntrospection(BaseDatabaseIntrospection):
         field_type.TIME: 'TimeField',
         field_type.TIMESTAMP: 'DateTimeField',
         field_type.DATETIME: 'DateTimeField',
-        field_type.STRING: 'CharField',
         field_type.SET: 'TextField',
         field_type.MULTISET: 'TextField',
         field_type.SEQUENCE: 'TextField',
         field_type.JSON: 'JSONField',
     }
+
+    def get_field_type(self, data_type, description):
+        """
+        Use the cursor description to match a Django field type to a database column,
+        in case the data_type is insufficient.
+        """
+        if data_type in [field_type.VARCHAR, field_type.VARNCHAR]:
+            return 'CharField' if description.internal_size < VARCHAR_MAXLEN else 'TextField'
+
+        return super().get_field_type(data_type, description)
 
     def get_table_list(self, cursor):
         """Returns a list of table names in the current database."""
