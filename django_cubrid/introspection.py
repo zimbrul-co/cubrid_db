@@ -44,10 +44,9 @@ InfoLine = namedtuple('InfoLine', [
     'default_value', 'def_order', 'collation', 'comment', 'is_system_class',
     'class_type', 'partitioned', 'owner_name', 'is_reuse_old_class',
 ])
-TableInfo = BaseTableInfo
-# TableInfo = namedtuple("TableInfo",
-#     BaseTableInfo._fields + ("comment",),
-# )
+TableInfo = namedtuple("TableInfo",
+    BaseTableInfo._fields + ("comment",),
+)
 
 
 class DatabaseIntrospection(BaseDatabaseIntrospection):
@@ -117,10 +116,11 @@ class DatabaseIntrospection(BaseDatabaseIntrospection):
         return super().get_field_type(data_type, description)
 
     def get_table_list(self, cursor):
-        """Returns a list of table names in the current database."""
-        cursor.execute("SHOW FULL TABLES")
-        return [TableInfo(row[0], {'BASE TABLE': 't', 'VIEW': 'v'}.get(row[2]))
-                for row in cursor.fetchall()]
+        """Returns a list of tables in the current database."""
+        cursor.execute("SELECT class_name, class_type, comment FROM _db_class "
+            "WHERE is_system_class != 1")
+        return [TableInfo(r[0], {0: 't', 1: 'v'}.get(r[1]), r[2])
+                for r in cursor.fetchall()]
 
     def identifier_converter(self, name):
         """Identifiers are case insensitive under CUBRID"""
