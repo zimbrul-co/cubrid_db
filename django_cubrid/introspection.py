@@ -161,11 +161,25 @@ class DatabaseIntrospection(BaseDatabaseIntrospection):
 
     def get_relations(self, cursor, table_name):
         """
-        Returns a dictionary of {field_index: (field_index_other_table, other_table)}
-        representing all relationships to the given table. Indexes are 0-based.
+        Return a dictionary of {field_name: (field_name_other_table, other_table)}
+        representing all foreign keys in the given table.
         """
+        cursor.execute("SELECT index_name FROM _db_index "
+            "WHERE class_of.class_name = ? AND is_foreign_key = 1",
+            [table_name]
+        )
+        fk_names = [r[0] for r in cursor.fetchall()]
 
-        raise NotImplementedError
+        constraints = self.get_constraints(cursor, table_name)
+        relations = {}
+        for fk_name in fk_names:
+            attrs = constraints[fk_name]
+            field_name = attrs['columns'][0]
+            other_table = attrs['foreign_key'][0]
+            field_name_other_table = attrs['foreign_key'][1]
+            relations[field_name] = (field_name_other_table, other_table)
+
+        return relations
 
     def get_sequences(self, cursor, table_name, table_fields=()):
         """
