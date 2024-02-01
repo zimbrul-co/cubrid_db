@@ -362,7 +362,7 @@ class DatabaseIntrospection(BaseDatabaseIntrospection):
 
             return name, attrs
 
-        query = f"SHOW CREATE TABLE {table_name}"
+        query = f"SHOW CREATE TABLE {self.connection.ops.quote_name(table_name)}"
         cursor.execute(query)
         _, stmt = cursor.fetchone()
 
