@@ -39,6 +39,8 @@ class DatabaseFeatures(BaseDatabaseFeatures):
 
     atomic_transactions = False
 
+    can_introspect_check_constraints = False
+
     can_rollback_ddl = True
 
     has_bulk_insert = True
@@ -54,6 +56,8 @@ class DatabaseFeatures(BaseDatabaseFeatures):
     related_fields_match_type = True
 
     requires_literal_defaults = True
+
+    supports_column_check_constraints = False
 
     supports_date_lookup_using_string = False
 
