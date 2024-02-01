@@ -27,7 +27,7 @@ class DatabaseSchemaEditor(BaseDatabaseSchemaEditor):
     sql_delete_table = "DROP TABLE %(table)s CASCADE CONSTRAINTS"
     sql_delete_column = "ALTER TABLE %(table)s DROP COLUMN %(column)s"
     sql_alter_column_type = "MODIFY %(column)s %(type)s"
-    sql_alter_column_null = "MODIFY %(column)s %(type)s"
+    sql_alter_column_null = "MODIFY %(column)s %(type)s NULL"
     sql_alter_column_not_null = "MODIFY %(column)s %(type)s NOT NULL"
     sql_alter_column_no_default = "MODIFY %(column)s %(type)s DEFAULT NULL"
     sql_alter_column_no_default_null = "ALTER COLUMN %(column)s SET DEFAULT NULL"
