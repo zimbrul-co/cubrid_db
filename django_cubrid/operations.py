@@ -23,6 +23,8 @@ and operation of Django applications with the CUBRID database.
 import uuid
 import warnings
 
+from collections import deque
+
 from django.conf import settings
 from django.db.backends.base.operations import BaseDatabaseOperations
 from django.utils import timezone
@@ -195,52 +197,128 @@ class DatabaseOperations(BaseDatabaseOperations):
     def last_insert_id(self, cursor, table_name, pk_name):
         return self.connection.connection.get_last_insert_id()
 
+    @staticmethod
+    def _remove_relations_in_cycles(tables, relations):
+        def find_cycles(relations):
+            graph = {table: [] for table in tables}
+            for table_from, table_to in relations:
+                graph[table_from].append(table_to)
+
+            color = {u: "WHITE" for u in tables}
+            cycles = []
+
+            def dfs_visit(u, path):
+                color[u] = "GRAY"
+                path.append(u)
+                for v in graph[u]:
+                    if color[v] == "GRAY":  # Cycle detected
+                        cycle_start_index = path.index(v)
+                        cycles.append(path[cycle_start_index:].copy())
+                    elif color[v] == "WHITE":
+                        dfs_visit(v, path)
+                path.pop()
+                color[u] = "BLACK"
+
+            for u in tables:
+                if color[u] == "WHITE":
+                    dfs_visit(u, [])
+
+            return cycles
+
+        cycles = find_cycles(relations)
+        relations_to_remove = {tuple(cycle[i:i+2]) for cycle in cycles for i in range(len(cycle)-1)}
+        relations_to_remove.update({(cycle[-1], cycle[0]) for cycle in cycles})  # Close the cycles
+
+        # Remove all relations that are part of any cycle
+        filtered_relations = [r for r in relations if r not in relations_to_remove]
+
+        return filtered_relations
+
+    @staticmethod
+    def _topological_sort(tables, relations):
+        # Create a dictionary to keep the adjacency list
+        adj_list = {table: [] for table in tables}
+        # Create a dictionary to count the in-degrees (number of incoming edges)
+        in_degree = {table: 0 for table in tables}
+
+        # Build the adjacency list and calculate in-degree for each node
+        for table_from, table_to in relations:
+            adj_list[table_from].append(table_to)
+            in_degree[table_to] += 1
+
+        # Find all nodes with no initial dependencies (in-degree 0)
+        queue = deque([table for table in in_degree if in_degree[table] == 0])
+
+        sorted_list = []  # List to keep the topologically sorted order
+
+        while queue:
+            node = queue.popleft()
+            sorted_list.append(node)
+
+            # For each adjacent node, decrease in-degree and if it becomes 0, add it to the queue
+            for adjacent in adj_list[node]:
+                in_degree[adjacent] -= 1
+                if in_degree[adjacent] == 0:
+                    queue.append(adjacent)
+
+        # Check if topological sorting is possible (detect cycles)
+        if len(sorted_list) != len(tables):
+            # Could not perform a complete topological sort (cycles detected)
+            raise ValueError("Cycles detected in table dependencies, "
+                "cannot perform topological sort.")
+
+        return sorted_list
+
     def sql_flush(self, style, tables, *, reset_sequences=False, allow_cascade=False):
-        # pylint: disable=consider-using-f-string
         if not tables:
             return []
 
+        # Construct a list of all relations between the tables
+        relations = []
+        with self.connection.cursor() as cursor:
+            for table_name in tables:
+                table_rels = self.connection.introspection.get_relations(cursor, table_name)
+                table_from = table_name
+                relations.extend(((table_from, table_to)
+                    for field_name, (other_field_name, table_to) in table_rels.items()
+                    if table_to != table_from and table_to in tables))
+
+        relations = list(set(relations)) # eliminate duplicates
+        relations = self._remove_relations_in_cycles(tables, relations) # no cycles
+        sorted_tables = self._topological_sort(tables, relations)
+
+        # List of simple delete queries
+        sql_list = []
+        for table_name in sorted_tables:
+            sql_delete = style.SQL_KEYWORD("DELETE")
+            sql_from = style.SQL_KEYWORD("FROM")
+            table_name = style.SQL_FIELD(self.quote_name(table_name))
+            sql_list.append(f"{sql_delete} {sql_from} {table_name};")
+
+        # Perform sequence reset if requested
         if reset_sequences:
-            # It's faster to TRUNCATE tables that require a sequence reset
-            # since ALTER TABLE AUTO_INCREMENT is slower than TRUNCATE.
-            if allow_cascade:
-                return [
-                    "%s %s %s;"
-                    % (
-                        style.SQL_KEYWORD("TRUNCATE"),
-                        style.SQL_FIELD(self.quote_name(table_name)),
-                        style.SQL_KEYWORD("CASCADE"),
-                    )
-                    for table_name in tables
-                ]
+            sql_list += self._sequence_reset_by_table_names_sql(style, sorted_tables, 1)
 
-            return [
-                "%s %s;"
-                % (
-                    style.SQL_KEYWORD("TRUNCATE"),
-                    style.SQL_FIELD(self.quote_name(table_name)),
-                )
-                for table_name in tables
-            ]
+        return sql_list
 
-        # Otherwise issue a simple DELETE since it's faster than TRUNCATE
-        # and preserves sequences.
-        return [
-            "%s %s %s;"
-            % (
-                style.SQL_KEYWORD("DELETE"),
-                style.SQL_KEYWORD("FROM"),
-                style.SQL_FIELD(self.quote_name(table_name)),
-            )
-            for table_name in tables
-        ]
+    def _sequence_reset_sql(self, style, sequence_info, initial_value = None):
+        if initial_value is None:
+            initial_value = sequence_info['value'] + 1
 
-    def _sequence_reset_sql(self, style, sequence_info):
-        initial_value = sequence_info['value'] + 1
         table_name_sql = style.SQL_TABLE(self.quote_name(sequence_info['table']))
         return (f"{style.SQL_KEYWORD('ALTER')} {style.SQL_KEYWORD('TABLE')} "
                 f"{table_name_sql} {style.SQL_KEYWORD('AUTO_INCREMENT')} = {initial_value};"
         )
+
+    def _sequence_reset_by_table_names_sql(self, style, table_names, initial_value = None):
+        sql_list = []
+        with self.connection.cursor() as cursor:
+            for table_name in table_names:
+                sequence_info = self.connection.introspection.get_sequences(
+                    cursor, table_name)[0]
+                sql = self._sequence_reset_sql(style, sequence_info, initial_value)
+                sql_list.append(sql)
+        return sql_list
 
     def sequence_reset_by_name_sql(self, style, sequences):
         return [
@@ -250,14 +328,8 @@ class DatabaseOperations(BaseDatabaseOperations):
 
     def sequence_reset_sql(self, style, model_list):
         # pylint: disable=protected-access
-        sql_list = []
-        with self.connection.cursor() as cursor:
-            for model in model_list:
-                sequence_info = self.connection.introspection.get_sequences(
-                    cursor, model._meta.db_table)[0]
-                sql = self._sequence_reset_sql(style, sequence_info)
-                sql_list.append(sql)
-        return sql_list
+        table_names = [model._meta.db_table for model in model_list]
+        return self._sequence_reset_by_table_names_sql(style, table_names)
 
     def year_lookup_bounds(self, value):
         """
