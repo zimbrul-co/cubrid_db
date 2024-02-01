@@ -20,8 +20,6 @@ Dependencies:
     - Django's base introspection classes and methods
     - cubrid_db for CUBRID database field type definitions
 """
-import re
-
 from collections import namedtuple
 
 from django.db.backends.base.introspection import (
@@ -163,40 +161,19 @@ class DatabaseIntrospection(BaseDatabaseIntrospection):
 
     def get_sequences(self, cursor, table_name, table_fields=()):
         """
-        Retrieves information about the sequences (auto-increment fields) in a specified table
-        in a CUBRID database.
-
-        This method executes a SQL command to obtain the 'CREATE TABLE' statement for the
-        specified table. It then searches this statement for fields that are set to auto-increment.
-        In CUBRID, only one field per table can be set to auto-increment. The method identifies
-        this field (if it exists) and returns its name.
-
-        Parameters:
-            cursor (Cursor): The database cursor used to execute the query.
-            table_name (str): The name of the table for which to retrieve sequence information.
-            table_fields (tuple): Optional. The fields of the table. This parameter is not
-            currently used in the method but can be provided for future extensions or
-            compatibility with the method signature in Django's base class.
-
-        Returns:
-            list of dict: A list containing a dictionary for each auto-increment field
-            in the specified table. Each dictionary has two keys: 'table' indicating the
-            name of the table, and 'column' indicating the name of the auto-increment column.
-            If there are no auto-increment fields, the method returns an empty list.
-
-        Note:
-            The method assumes that there is at most one auto-increment field in a table,
-            which is a typical scenario in CUBRID database design.
+        Retrieves a list of sequences associated with a given table in the CUBRID database.
         """
-        cursor.execute(f"SHOW CREATE TABLE {table_name}")
-        _, stmt = cursor.fetchone()
+        cursor.execute("SELECT name, att_name, current_val FROM db_serial "
+            "WHERE class_name = ?", [table_name])
+        sequence_name, column_name, value = cursor.fetchone()
+        value = int(value) # convert from Decimal to int
 
-        # Only one auto increment possible
-        m = re.search(r'\[([\w]+)\][\w\s]*AUTO_INCREMENT', stmt)
-        if m is None:
-            return []
-
-        return [{'table': table_name, 'column': m.group(1)}]
+        return [{
+            'table': table_name,
+            'column': column_name,
+            'name': sequence_name,
+            'value': value, # used for sequence_reset
+        }]
 
     def get_indexes(self, cursor, table_name):
         """
