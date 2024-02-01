@@ -73,6 +73,8 @@ class DatabaseFeatures(BaseDatabaseFeatures):
 
     supports_timezones = False
 
+    supports_unspecified_pk = True
+
     @cached_property
     def introspected_field_types(self):
         """Specify how the field types are introspected with CUBRID"""
