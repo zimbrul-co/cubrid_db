@@ -26,7 +26,7 @@ class DatabaseSchemaEditor(BaseDatabaseSchemaEditor):
 
     sql_delete_table = "DROP TABLE %(table)s CASCADE CONSTRAINTS"
     sql_delete_column = "ALTER TABLE %(table)s DROP COLUMN %(column)s"
-    sql_alter_column_type = "MODIFY %(column)s %(type)s"
+    sql_alter_column_type = "MODIFY %(column)s %(type)s%(collation)s"
     sql_alter_column_null = "MODIFY %(column)s %(type)s NULL"
     sql_alter_column_not_null = "MODIFY %(column)s %(type)s NOT NULL"
     sql_alter_column_no_default = "MODIFY %(column)s %(type)s DEFAULT NULL"
@@ -101,3 +101,6 @@ class DatabaseSchemaEditor(BaseDatabaseSchemaEditor):
         """
         sql = super()._alter_column_comment_sql(model, new_field, new_type, new_db_comment)
         return (sql[0].replace('= COMMENT', '='), sql[1])
+
+    def _collate_sql(self, collation, old_collation=None, table_name=None):
+        return "COLLATE " + collation if collation else ""
