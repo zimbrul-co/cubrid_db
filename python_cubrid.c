@@ -2436,7 +2436,15 @@ _cubrid_CursorObject_dbset_to_pyvalue (_cubrid_CursorObject * self, int type, in
           return handle_error (res, NULL);
         }
 
-      e = _cubrid_return_PyString_FromString (buffer);
+      if (buffer == NULL)
+        {
+          e = PyUnicode_FromString ("");
+        }
+      else
+        {
+          e = _cubrid_return_PyString_FromString (buffer);
+        }
+
       if (CCI_IS_SET_TYPE (type))
         {
           PySet_Add (val, e);
