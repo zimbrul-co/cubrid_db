@@ -234,18 +234,29 @@ class DatabaseOperations(BaseDatabaseOperations):
             for table_name in tables
         ]
 
+    def _sequence_reset_sql(self, style, sequence_info):
+        initial_value = sequence_info['value'] + 1
+        table_name_sql = style.SQL_TABLE(self.quote_name(sequence_info['table']))
+        return (f"{style.SQL_KEYWORD('ALTER')} {style.SQL_KEYWORD('TABLE')} "
+                f"{table_name_sql} {style.SQL_KEYWORD('AUTO_INCREMENT')} = {initial_value};"
+        )
+
     def sequence_reset_by_name_sql(self, style, sequences):
-        # pylint: disable=consider-using-f-string
         return [
-            "%s %s %s %s = 1;"
-            % (
-                style.SQL_KEYWORD('ALTER'),
-                style.SQL_KEYWORD('TABLE'),
-                style.SQL_TABLE(self.quote_name(sequence_info['table'])),
-                style.SQL_KEYWORD('AUTO_INCREMENT'),
-            )
+            self._sequence_reset_sql(style, sequence_info)
             for sequence_info in sequences
         ]
+
+    def sequence_reset_sql(self, style, model_list):
+        # pylint: disable=protected-access
+        sql_list = []
+        with self.connection.cursor() as cursor:
+            for model in model_list:
+                sequence_info = self.connection.introspection.get_sequences(
+                    cursor, model._meta.db_table)[0]
+                sql = self._sequence_reset_sql(style, sequence_info)
+                sql_list.append(sql)
+        return sql_list
 
     def year_lookup_bounds(self, value):
         """
