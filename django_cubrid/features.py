@@ -59,6 +59,10 @@ class DatabaseFeatures(BaseDatabaseFeatures):
 
     supports_column_check_constraints = False
 
+    supports_comments = True
+
+    supports_comments_inline = True
+
     supports_date_lookup_using_string = False
 
     supports_expression_indexes = False

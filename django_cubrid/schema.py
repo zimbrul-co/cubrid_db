@@ -46,6 +46,9 @@ class DatabaseSchemaEditor(BaseDatabaseSchemaEditor):
     sql_create_pk = "ALTER TABLE %(table)s ADD CONSTRAINT %(name)s PRIMARY KEY (%(columns)s)"
     sql_delete_pk = "ALTER TABLE %(table)s DROP PRIMARY KEY"
 
+    sql_alter_table_comment = "ALTER TABLE %(table)s COMMENT = %(comment)s"
+    sql_alter_column_comment = "ALTER TABLE %(table)s COMMENT ON COLUMN %(column)s = %(comment)s"
+
     def quote_value(self, value):
         """
         Quotes a value for use in a SQL statement, adapting it to the CUBRID database format.
@@ -84,3 +87,17 @@ class DatabaseSchemaEditor(BaseDatabaseSchemaEditor):
 
     def prepare_default(self, value):
         return self.quote_value(value)
+
+    def _comment_sql(self, comment):
+        return f'COMMENT {self.quote_value(comment or "")}'
+
+    def _alter_column_comment_sql(self, model, new_field, new_type, new_db_comment):
+        """
+        The base implementation uses _comment_sql and inserts an extra COMMENT keyword.
+        Need to remove this extra keyword.
+        Cannot keep the base _comment_sql() implementation because it fails to add COMMENT.
+        This behavior can change in future Django versions, so this situation may not apply
+        for Django > 4.2.
+        """
+        sql = super()._alter_column_comment_sql(model, new_field, new_type, new_db_comment)
+        return (sql[0].replace('= COMMENT', '='), sql[1])

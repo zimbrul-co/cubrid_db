@@ -24,8 +24,8 @@ from collections import namedtuple
 
 from django.db.backends.base.introspection import (
     BaseDatabaseIntrospection,
-    FieldInfo,
-    TableInfo,
+    FieldInfo as BaseFieldInfo,
+    TableInfo as BaseTableInfo,
 )
 from django.db.models.indexes import Index
 from django.utils.encoding import force_str
@@ -36,11 +36,18 @@ from cubrid_db import field_type
 VARCHAR_MAXLEN = 1073741823
 
 
+FieldInfo = namedtuple("FieldInfo",
+    BaseFieldInfo._fields + ("comment",),
+)
 InfoLine = namedtuple('InfoLine', [
     'col_name', 'attr_type', 'data_type', 'prec', 'scale', 'is_nullable',
     'default_value', 'def_order', 'collation', 'comment', 'is_system_class',
     'class_type', 'partitioned', 'owner_name', 'is_reuse_old_class',
 ])
+TableInfo = BaseTableInfo
+# TableInfo = namedtuple("TableInfo",
+#     BaseTableInfo._fields + ("comment",),
+# )
 
 
 class DatabaseIntrospection(BaseDatabaseIntrospection):
@@ -148,6 +155,7 @@ class DatabaseIntrospection(BaseDatabaseIntrospection):
                 info.is_nullable == "YES",  # null_ok
                 info.default_value,         # default
                 info.collation,             # collation
+                info.comment,               # comment
             ))
         return fields
 
