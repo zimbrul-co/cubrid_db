@@ -332,11 +332,22 @@ class DatabaseIntrospection(BaseDatabaseIntrospection):
 
             return name, attrs
 
+        def parse_index_columns_sql(columns_sql):
+            columns, orders = [], []
+            for element in map(lambda s: s.strip(), columns_sql.split(',')):
+                if ' ' in element:
+                    name, order = element.split(' ')
+                    columns.append(name.strip(' []'))
+                    orders.append(order.strip())
+                else:
+                    columns.append(element.strip(' []'))
+                    orders.append('ASC')
+            return columns, orders
+
         def parse_index_sql(sql):
             name = sql.split('[')[1].split(']')[0]
             columns_sql = sql.split('(')[1].split(')')[0]
-            columns = parse_columns_sql(columns_sql)
-            orders = ['DESC' if column.find('DESC') > -1 else 'ASC' for column in columns]
+            columns, orders = parse_index_columns_sql(columns_sql)
 
             attrs = {
                 'columns': columns,
