@@ -1633,8 +1633,14 @@ static PyObject *
 _cubrid_CursorObject_bind_param (_cubrid_CursorObject * self, PyObject * args)
 {
   int res, index = -1;
-  char *value = NULL;
-  int type = 0;
+  PyObject *temp_bytes = NULL; // Used when the second argument is str
+  PyObject *value_obj = NULL; // Use PyObject* to accept any object type
+  Py_buffer value_view = {NULL, NULL}; // For obtaining a view on the object as bytes
+  int bind_type = 0;
+  void *bind_value;
+  int u_type = CCI_U_TYPE_CHAR;
+  int a_type = CCI_A_TYPE_STR;
+  T_CCI_BIT bit_value; // Declare the T_CCI_BIT structure
 
   if (self->state == CURSOR_STATE_CLOSED)
     {
@@ -1645,30 +1651,53 @@ _cubrid_CursorObject_bind_param (_cubrid_CursorObject * self, PyObject * args)
       return handle_error (CUBRID_ER_SQL_UNPREPARE, NULL);
     }
 
-  if (!PyArg_ParseTuple (args, "iz|i", &index, &value, &type))
+  if (!PyArg_ParseTuple(args, "iO|i", &index, &value_obj, &bind_type))
     {
       return NULL;
     }
 
-  if (index < 1 || index > self->bind_num)
-    {
-      return handle_error (CUBRID_ER_PARAM_UNBIND, NULL);
-    }
-  if (type != 0)
-    {
-      int a_type = CCI_A_TYPE_STR;
-      if (type == CCI_U_TYPE_BIT || type == CCI_U_TYPE_VARBIT)
-        {
-          a_type = CCI_A_TYPE_BIT;
-        }
+  // Check if the second argument is a string and encode it to bytes if necessary
+  if (PyUnicode_Check(value_obj)) {
+      // value_obj is a Unicode object (str in Python 3), encode it to bytes
+      temp_bytes = PyUnicode_AsEncodedString(value_obj, "utf-8", "strict");
+      if (!temp_bytes) {
+          // Encoding failed, return NULL
+          return NULL;
+      }
+      // Successfully encoded the string to bytes, now get the buffer
+      if (PyObject_GetBuffer(temp_bytes, &value_view, PyBUF_SIMPLE) != 0) {
+          Py_DECREF(temp_bytes); // Don't forget to decrement the reference count
+          return NULL; // Unable to get buffer
+      }
+      // Keep a reference to the temporary bytes object to prevent it from being deallocated
+      value_obj = temp_bytes;
+  } else if (PyObject_GetBuffer(value_obj, &value_view, PyBUF_SIMPLE) != 0) {
+      // value_obj is not a string and getting buffer directly failed
+      return NULL;
+  }
 
-      res = cci_bind_param (self->handle, index, a_type, value, type, 0);
-    }
-  else
+  bind_value = value_view.buf; // Default to direct buffer binding
+
+  if (bind_type != 0)
     {
-      res =
-        cci_bind_param (self->handle, index, CCI_A_TYPE_STR, value,
-            CCI_U_TYPE_CHAR, 0);
+      u_type = bind_type;
+    }
+  if (u_type == CCI_U_TYPE_BIT || u_type == CCI_U_TYPE_VARBIT)
+    {
+      bit_value.size = value_view.len; // Set the size of the data
+      bit_value.buf = value_view.buf; // Point to the actual data
+      bind_value = &bit_value; // Bind the structure instead of the buffer
+      a_type = CCI_A_TYPE_BIT;
+    }
+
+  res = cci_bind_param(self->handle, index, a_type, bind_value, u_type, 0);
+
+  PyBuffer_Release(&value_view); // Always release the buffer after use
+
+  // If temp_bytes was used, decrement its reference count after the buffer is released
+  if (temp_bytes)
+    {
+      Py_DECREF(temp_bytes);
     }
 
   if (res < 0)

@@ -36,40 +36,9 @@ refer to the official CUBRID documentation and Python API guidelines.
 
 from datetime import date, time, datetime
 from decimal import Decimal
-from functools import reduce
 
 from cubrid_db import field_type
 from cubrid_db.exceptions import InterfaceError
-
-
-def bytes_to_binstr(b):
-    """
-    Convert a bytes object to a binary string representation.
-
-    This function takes a bytes object as input and converts each byte
-    in it to its binary representation, then concatenates these binary
-    strings into a single continuous binary string.
-
-    Args:
-        b (bytes): A bytes object to be converted to binary string.
-
-    Returns:
-        str: A string representing the binary representation of the input
-        bytes object. Each byte is represented by its 8-bit binary
-        format, concatenated without spaces or separators.
-
-    Example:
-        >>> bytes_to_binstr(b'\x01\x02\x03')
-        '000000010000000100000011'
-
-    Note:
-        This function strips the '0b' prefix that is typically present
-        in the binary representations provided by Python.
-    """
-    return reduce(
-        lambda x1, x2: x1 + x2[2:],
-        map(lambda x: format(x, '#010b'), b)
-    )
 
 
 def get_set_element_type(iterable):
@@ -240,7 +209,6 @@ class BaseCursor:
                 s.imports(tuple(arg), element_type)
                 self._cs.bind_set(i + 1, s)
             elif isinstance(arg, bytes):
-                arg = bytes_to_binstr(arg)
                 self._cs.bind_param(i + 1, arg, field_type.VARBIT)
             elif isinstance(arg, str):
                 self._cs.bind_param(i + 1, arg)
