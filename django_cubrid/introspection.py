@@ -186,7 +186,7 @@ class DatabaseIntrospection(BaseDatabaseIntrospection):
         Retrieves a list of sequences associated with a given table in the CUBRID database.
         """
         cursor.execute("SELECT name, att_name, current_val FROM db_serial "
-            "WHERE class_name = ?", [table_name])
+            "WHERE class_name = ?", [table_name.lower()])
         sequence_name, column_name, value = cursor.fetchone()
         value = int(value) # convert from Decimal to int
 
