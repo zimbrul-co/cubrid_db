@@ -194,6 +194,19 @@ class DatabaseOperations(BaseDatabaseOperations):
         # 2**63 - 1
         return 9223372036854775807
 
+    def last_executed_query(self, cursor, sql, params):
+        """
+        Return a string of the query last executed by the given cursor, with
+        placeholders replaced with actual values.
+        """
+        if not params:
+            return sql
+
+        assert not isinstance(params, dict)
+
+        u_params = tuple(force_str(val, strings_only=True, errors="replace") for val in params)
+        return sql % u_params
+
     def last_insert_id(self, cursor, table_name, pk_name):
         return self.connection.connection.get_last_insert_id()
 
