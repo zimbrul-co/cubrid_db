@@ -190,6 +190,12 @@ class DatabaseIntrospection(BaseDatabaseIntrospection):
         sequence_name, column_name, value = cursor.fetchone()
         value = int(value) # convert from Decimal to int
 
+        # Ensure the value for the sequence will be greater or equal to max id
+        qn = self.connection.ops.quote_name
+        cursor.execute(f"SELECT MAX({qn(column_name)}) FROM {qn(table_name)}")
+        max_id = cursor.fetchone()[0]
+        value = max(value, max_id or 0)
+
         return [{
             'table': table_name,
             'column': column_name,
