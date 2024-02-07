@@ -15,6 +15,7 @@ system. It helps maintain the database-agnostic nature of Django by providing a
 clear definition of the CUBRID database's capabilities.
 """
 from django.db.backends.base.features import BaseDatabaseFeatures
+from django.db.utils import InterfaceError
 from django.utils.functional import cached_property
 
 
@@ -42,6 +43,8 @@ class DatabaseFeatures(BaseDatabaseFeatures):
     can_introspect_check_constraints = False
 
     can_rollback_ddl = True
+
+    closed_cursor_error_class = InterfaceError
 
     has_bulk_insert = True
 
