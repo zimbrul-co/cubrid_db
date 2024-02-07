@@ -94,3 +94,33 @@ class DatabaseFeatures(BaseDatabaseFeatures):
             "BooleanField": "SmallIntegerField",
             "DurationField": "BigIntegerField",
         }
+
+    django_test_skips = {
+        "CUBRID does not support disabling constraint checks": {
+            "backends.base.test_creation.TestDeserializeDbFromString.test_circular_reference",
+            "backends.base.test_creation.TestDeserializeDbFromString.test_self_reference",
+            "backends.base.test_creation.TestDeserializeDbFromString."
+            "test_circular_reference_with_natural_key",
+            "backends.tests.FkConstraintsTests.test_disable_constraint_checks_manually",
+            "backends.tests.FkConstraintsTests.test_disable_constraint_checks_context_manager",
+            "backends.tests.FkConstraintsTests.test_check_constraints",
+            "backends.tests.FkConstraintsTests.test_check_constraints_sql_keywords",
+        },
+        "CUBRID does not allow duplicate indexes": {
+            "schema.tests.SchemaTests.test_add_inline_fk_index_update_data",
+            "schema.tests.SchemaTests.test_remove_index_together_does_not_remove_meta_indexes",
+        },
+        "CUBRID does not allow auto increment on char field": {
+            "schema.tests.SchemaTests.test_alter_auto_field_to_char_field",
+        },
+        "CUBRID does not support removing the primary key": {
+            "schema.tests.SchemaTests.test_alter_not_unique_field_to_primary_key",
+            "schema.tests.SchemaTests.test_primary_key",
+        },
+        "CUBRID does not allow foreign key to reference non-primary key": {
+            "schema.tests.SchemaTests.test_rename_referenced_field",
+        },
+        "CUBRID cannot change attributes used in foreign keys": {
+            "schema.tests.SchemaTests.test_alter_pk_with_self_referential_field"
+        },
+    }
