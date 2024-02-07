@@ -112,8 +112,14 @@ class CursorWrapper:
         cursor.execute("SELECT * FROM my_table WHERE column = %s", (value,))
         """
         try:
-            query = re.sub('([^%])%s', '\\1?', query)
-            query = re.sub('%%', '%', query)
+            if args:
+                query = re.sub('([^%])%s', '\\1?', query)
+                query = query.replace('%%', '%')
+            else:
+                # If there are no args, assume '%s' is intended to be literal and
+                # should not be replaced.
+                query = query.replace('%%', '%')
+
             return self.cursor.execute(query, args)
 
         except Database.Error as e:
