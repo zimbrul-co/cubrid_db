@@ -32,6 +32,7 @@ To generate a coverage report, add the `--cov=_cubrid` option.
 """
 # pylint: disable=missing-function-docstring
 
+import datetime
 import re
 
 import pytest
@@ -76,7 +77,7 @@ def db_names_table(cubrid_cursor):
     cursor.execute()
 
 
-def _create_table(cursor, columns_sql, samples):
+def _create_table(cursor, columns_sql, samples, bind_type = None):
     # Create the test table using the cursor
     cursor.prepare(f"create table if not exists test_cubrid ({columns_sql})")
     cursor.execute()
@@ -86,7 +87,10 @@ def _create_table(cursor, columns_sql, samples):
     insert_query = f"insert into test_cubrid values {placeholders}"
     cursor.prepare(insert_query)
     for i, sample in enumerate(samples, start=1):
-        cursor.bind_param(i, sample)
+        if bind_type is None:
+            cursor.bind_param(i, sample)
+        else:
+            cursor.bind_param(i, sample, bind_type)
     cursor.execute()
 
 
@@ -106,78 +110,6 @@ def db_sample_names_table(cubrid_cursor):
     ]
 
     _create_table(cursor, 'name varchar(20)', names)
-
-    yield cursor, connection
-
-    _cleanup_table(cursor)
-
-
-@pytest.fixture
-def db_sample_int_table(cubrid_cursor):
-    cursor, connection = cubrid_cursor
-
-    numbers = ['100', '200', '300', '400']
-    _create_table(cursor, 'id int', numbers)
-
-    yield cursor, connection
-
-    _cleanup_table(cursor)
-
-
-@pytest.fixture
-def db_sample_float_table(cubrid_cursor):
-    cursor, connection = cubrid_cursor
-
-    numbers = ['3.14']
-    _create_table(cursor, 'id float', numbers)
-
-    yield cursor, connection
-
-    _cleanup_table(cursor)
-
-
-@pytest.fixture
-def db_sample_date_table(cubrid_cursor):
-    cursor, connection = cubrid_cursor
-
-    dates = ["1987-10-29"]
-    _create_table(cursor, 'birthday date', dates)
-
-    yield cursor, connection
-
-    _cleanup_table(cursor)
-
-
-@pytest.fixture
-def db_sample_time_table(cubrid_cursor):
-    cursor, connection = cubrid_cursor
-
-    times = ["11:30:29"]
-    _create_table(cursor, 'lunch time', times)
-
-    yield cursor, connection
-
-    _cleanup_table(cursor)
-
-
-@pytest.fixture
-def db_sample_timestamp_table(cubrid_cursor):
-    cursor, connection = cubrid_cursor
-
-    times = ["2011-5-3 11:30:29"]
-    _create_table(cursor, 'lunch timestamp', times)
-
-    yield cursor, connection
-
-    _cleanup_table(cursor)
-
-
-@pytest.fixture
-def db_sample_binary_table(cubrid_cursor):
-    cursor, connection = cubrid_cursor
-
-    samples_bin = ['0B0100', '0B01010101010101', '0B111111111', '0B1111100000010101010110111111']
-    _create_table(cursor, 'id BIT VARYING(256)', samples_bin)
 
     yield cursor, connection
 
@@ -449,14 +381,40 @@ def test_row_seek(db_sample_names_table):
     assert cur.row_tell() == 5, "cursor.row_seek move forward error"
 
 
-def test_bind_int(db_sample_int_table):
-    cur, _ = db_sample_int_table
-    assert cur.affected_rows() in (-1, 4), "Affected rows should be 4"
+def _test_bind(cursor, columns_sql, samples, bind_type = None):
+    n_samples = len(samples)
+    try:
+        # Create table and insert samples
+        _create_table(cursor, columns_sql, samples, bind_type)
+        assert cursor.affected_rows() in (-1, n_samples)
+
+        # Get the rows and verify they match the samples
+        cursor.prepare("select * from test_cubrid")
+        cursor.execute()
+        inserted = []
+        row = cursor.fetch_row()
+        while row:
+            inserted.append(row[0])
+            row = cursor.fetch_row()
+        return inserted
+    finally:
+        _cleanup_table(cursor)
 
 
-def test_bind_float(db_sample_float_table):
-    cur, _ = db_sample_float_table
-    assert cur.affected_rows() in (-1, 1), "Affected rows should be 1"
+def test_bind_int(cubrid_cursor):
+    cursor, _ = cubrid_cursor
+    numbers = ['100', '200', '300', '400']
+    numbers_int = [int(x) for x in numbers]
+    inserted = _test_bind(cursor, 'id int', numbers)
+    assert inserted == numbers_int
+
+
+def test_bind_float(cubrid_cursor):
+    cursor, _ = cubrid_cursor
+    numbers = ['3.14']
+    numbers_float = [float(x) for x in numbers]
+    inserted = _test_bind(cursor, 'id float', numbers)
+    assert inserted == numbers_float
 
 
 def test_bind_date_e(cubrid_cursor):
@@ -470,24 +428,52 @@ def test_bind_date_e(cubrid_cursor):
         _cleanup_table(cursor)
 
 
-def test_bind_date(db_sample_date_table):
-    cur, _ = db_sample_date_table
-    assert cur.affected_rows() in (-1, 1), "Affected rows should be 1"
+def test_bind_date(cubrid_cursor):
+    cursor, _ = cubrid_cursor
+    dates = ["1987-10-29"]
+    dates_dt = [datetime.datetime.strptime(x, "%Y-%m-%d").date() for x in dates]
+    inserted = _test_bind(cursor, 'birthday date', dates)
+    assert inserted == dates_dt
 
 
-def test_bind_time(db_sample_time_table):
-    cur, _ = db_sample_time_table
-    assert cur.affected_rows() in (-1, 1), "Affected rows should be 1"
+def test_bind_time(cubrid_cursor):
+    cursor, _ = cubrid_cursor
+    times = ["11:30:29"]
+    times_dt = [datetime.datetime.strptime(x, "%H:%M:%S").time() for x in times]
+    inserted = _test_bind(cursor, 'lunch time', times)
+    assert inserted == times_dt
 
 
-def test_bind_timestamp(db_sample_timestamp_table):
-    cur, _ = db_sample_timestamp_table
-    assert cur.affected_rows() in (-1, 1), "Affected rows should be 1"
+def test_bind_timestamp(cubrid_cursor):
+    cursor, _ = cubrid_cursor
+    times = ["2011-5-3 11:30:29"]
+    times_dt = [datetime.datetime.strptime(x, "%Y-%m-%d %H:%M:%S") for x in times]
+    inserted = _test_bind(cursor, 'lunch timestamp', times)
+    assert inserted == times_dt
 
 
-def test_bind_binary(db_sample_binary_table):
-    cur, _ = db_sample_binary_table
-    assert cur.affected_rows() in (-1, 4), "Affected rows should be 4"
+def test_bind_binary(cubrid_cursor):
+    cur, _ = cubrid_cursor
+    samples_bin = ['0B0100', '0B01010101010101', '0B111111111', '0B1111100000010101010110111111']
+
+    # Function to convert a binary string to bytes
+    def binary_str_to_bytes(binary_str):
+        # Convert to integer
+        integer_representation = int(binary_str, 2)
+
+        # Convert integer to bytes
+        # Calculate the length of the bytes object needed
+        bytes_length = (len(binary_str) + 7) // 8  # Round up division
+        return integer_representation.to_bytes(bytes_length, 'big')
+
+    samples_bytes = [binary_str_to_bytes(x) for x in samples_bin]
+
+    bt_char = 1
+    bt_varbit = 6
+    inserted = _test_bind(cur, 'id BIT VARYING(256)', samples_bytes, bt_varbit)
+    assert inserted == samples_bytes
+
+    inserted = _test_bind(cur, 'id BIT VARYING(256)', samples_bin, bt_char)
 
 
 def test_lob_file(cubrid_cursor):
