@@ -8,6 +8,7 @@ database interactions within test cases.
 
 import pytest
 
+import _cubrid
 import cubrid_db
 
 
@@ -19,6 +20,24 @@ def _get_connect_args():
     return {
         'dsn': f"CUBRID:{ip}:{port}:{dbname}:::",
     }
+
+
+@pytest.fixture
+def cubrid_connection():
+    conn = _cubrid.connect(_get_connect_args()['dsn'])
+    yield conn
+
+    conn.close()
+
+
+@pytest.fixture
+def cubrid_cursor(cubrid_connection):
+    # Obtain a cursor from the database connection provided by the cubrid_connection fixture
+    cursor = cubrid_connection.cursor()
+    yield cursor, cubrid_connection
+
+    # Ensure the cursor is closed after the test
+    cursor.close()
 
 
 @pytest.fixture

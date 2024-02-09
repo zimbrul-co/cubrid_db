@@ -41,28 +41,6 @@ import _cubrid
 
 
 @pytest.fixture
-def cubrid_connection():
-    ip = "localhost"
-    port = "33000"
-    dbname = "demodb"
-
-    conn = _cubrid.connect(f"CUBRID:{ip}:{port}:{dbname}:::")
-    yield conn
-
-    conn.close()
-
-
-@pytest.fixture
-def cubrid_cursor(cubrid_connection):
-    # Obtain a cursor from the database connection provided by the cubrid_connection fixture
-    cursor = cubrid_connection.cursor()
-    yield cursor, cubrid_connection
-
-    # Ensure the cursor is closed after the test
-    cursor.close()
-
-
-@pytest.fixture
 def db_names_table(cubrid_cursor):
     cursor, connection = cubrid_cursor
 
