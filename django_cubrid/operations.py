@@ -431,9 +431,7 @@ class DatabaseOperations(BaseDatabaseOperations):
         """
         converters = super().get_db_converters(expression)
         internal_type = expression.output_field.get_internal_type()
-        if internal_type == 'BinaryField':
-            converters.append(self.convert_binaryfield_value)
-        elif internal_type == 'TextField':
+        if internal_type == 'TextField':
             converters.append(self.convert_textfield_value)
         elif internal_type in ['BooleanField', 'NullBooleanField']:
             converters.append(self.convert_booleanfield_value)
@@ -446,32 +444,10 @@ class DatabaseOperations(BaseDatabaseOperations):
             converters.append(self.convert_ipaddress_value)
         return converters
 
-    # The following methods (convert_binaryfield_value, convert_textfield_value,
-    # convert_booleanfield_value, convert_datetimefield_value, convert_uuidfield_value,
-    # and convert_ipaddress_value) are converters used in get_db_converters. They
+    # The following methods are converters used in get_db_converters. They
     # take a value, an expression, and a connection as arguments, and return a converted value.
 
     # pylint: disable=unused-argument
-
-    def convert_binaryfield_value(self, value, expression, connection):
-        """
-        Converts a binary field value from a database-specific format to a Python bytes object.
-
-        Args:
-            value (str): The binary value as a string.
-            expression, connection: Unused, but required for interface consistency.
-
-        Returns:
-            bytes: The converted binary value.
-        """
-        if not value.startswith('0B'):
-            raise ValueError(f'Unexpected value: {value}')
-        value = value[2:]
-        def gen_bytes():
-            for i in range(0, len(value), 8):
-                yield int(value[i:i + 8], 2)
-        value = bytes(gen_bytes())
-        return value
 
     def convert_textfield_value(self, value, expression, connection):
         """
