@@ -647,6 +647,12 @@ def test_bind_int(cubrid_db_cursor):
     assert inserted == numbers
 
 
+def test_bind_bigint(cubrid_db_cursor):
+    numbers_bigint = [-9223372036854775808, +9223372036854775807, 567890987654321012]
+    inserted = _test_binding(cubrid_db_cursor[0], 'x bigint', numbers_bigint)
+    assert inserted == numbers_bigint
+
+
 def test_bind_float(cubrid_db_cursor):
     numbers = [1.234, 3.14, -10.441875, 5.]
     inserted = _test_binding(cubrid_db_cursor[0], 'x float', numbers)

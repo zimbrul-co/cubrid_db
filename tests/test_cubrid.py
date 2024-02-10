@@ -385,6 +385,16 @@ def test_bind_int(cubrid_cursor):
     numbers_int = [int(x) for x in numbers]
     inserted = _test_bind(cursor, 'id int', numbers)
     assert inserted == numbers_int
+    inserted = _test_bind(cursor, 'id int', numbers_int)
+    assert inserted == numbers_int
+
+
+def test_bind_bigint(cubrid_cursor):
+    cursor, _ = cubrid_cursor
+    numbers_bigint = [-9223372036854775808, +9223372036854775807, 567890987654321012]
+    bt_bigint = 21
+    inserted = _test_bind(cursor, 'id bigint', numbers_bigint, bt_bigint)
+    assert inserted == numbers_bigint
 
 
 def test_bind_float(cubrid_cursor):
@@ -392,6 +402,8 @@ def test_bind_float(cubrid_cursor):
     numbers = ['3.14']
     numbers_float = [float(x) for x in numbers]
     inserted = _test_bind(cursor, 'id float', numbers)
+    assert inserted == numbers_float
+    inserted = _test_bind(cursor, 'id float', numbers_float)
     assert inserted == numbers_float
 
 
@@ -412,6 +424,8 @@ def test_bind_date(cubrid_cursor):
     dates_dt = [datetime.datetime.strptime(x, "%Y-%m-%d").date() for x in dates]
     inserted = _test_bind(cursor, 'birthday date', dates)
     assert inserted == dates_dt
+    inserted = _test_bind(cursor, 'birthday date', dates_dt)
+    assert inserted == dates_dt
 
 
 def test_bind_time(cubrid_cursor):
@@ -419,6 +433,18 @@ def test_bind_time(cubrid_cursor):
     times = ["11:30:29"]
     times_dt = [datetime.datetime.strptime(x, "%H:%M:%S").time() for x in times]
     inserted = _test_bind(cursor, 'lunch time', times)
+    assert inserted == times_dt
+    inserted = _test_bind(cursor, 'lunch time', times_dt)
+    assert inserted == times_dt
+
+
+def test_bind_datetime(cubrid_cursor):
+    cursor, _ = cubrid_cursor
+    times = ["1987-10-29 11:30:29"]
+    times_dt = [datetime.datetime.strptime(x, "%Y-%m-%d %H:%M:%S") for x in times]
+    inserted = _test_bind(cursor, 'xdt datetime', times)
+    assert inserted == times_dt
+    inserted = _test_bind(cursor, 'xdt datetime', times_dt)
     assert inserted == times_dt
 
 
@@ -428,6 +454,20 @@ def test_bind_timestamp(cubrid_cursor):
     times_dt = [datetime.datetime.strptime(x, "%Y-%m-%d %H:%M:%S") for x in times]
     inserted = _test_bind(cursor, 'lunch timestamp', times)
     assert inserted == times_dt
+    inserted = _test_bind(cursor, 'lunch timestamp', times_dt)
+    assert inserted == times_dt
+
+
+def test_bind_datetime_now(cubrid_cursor):
+    cursor, _ = cubrid_cursor
+    now = datetime.datetime.now()
+    formatted_now = now.strftime("%Y-%m-%d %H:%M:%S.%f")
+    inserted = _test_bind(cursor, 'now datetime', [formatted_now])
+    formatted_ins = inserted[0].strftime("%Y-%m-%d %H:%M:%S.%f")
+    assert formatted_now[:-3] == formatted_ins[:-3]
+    inserted = _test_bind(cursor, 'now datetime', [now])
+    formatted_ins = inserted[0].strftime("%Y-%m-%d %H:%M:%S.%f")
+    assert formatted_now[:-3] == formatted_ins[:-3]
 
 
 def test_bind_binary(cubrid_cursor):
