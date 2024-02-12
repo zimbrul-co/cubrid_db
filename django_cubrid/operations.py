@@ -56,6 +56,13 @@ class DatabaseOperations(BaseDatabaseOperations):
 
     compiler_module = "django_cubrid.compiler"
 
+    cast_data_types = {
+        'AutoField': 'integer',
+        'BigAutoField': 'bigint',
+        'SmallAutoField': 'smallint',
+    }
+    cast_char_field_without_max_length = "varchar"
+
     _extract_format_re = _lazy_re_compile(r"[A-Z_]+")
 
     def format_for_duration_arithmetic(self, sql):
