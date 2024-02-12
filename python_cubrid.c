@@ -34,7 +34,27 @@ static PyObject *_cubrid_internal_error;
 static PyObject *_cubrid_programming_error;
 static PyObject *_cubrid_not_supported_error;
 
-static PyObject *_func_Decimal;
+static PyObject *DecimalType = NULL;
+
+// Function to import the Decimal type from the decimal module
+static int import_decimal_type()
+{
+  PyObject *decimal_module = PyImport_ImportModule("decimal");
+  if (!decimal_module)
+    {
+      return -1; // Failed to import module
+    }
+
+  DecimalType = PyObject_GetAttrString(decimal_module, "Decimal");
+  Py_DECREF(decimal_module);
+
+  if (!DecimalType)
+    {
+      return -1; // Failed to get Decimal type
+    }
+
+  return 0; // Success
+}
 
 static struct _cubrid_isolation
 {
@@ -1610,6 +1630,7 @@ optimal performance and compatibility.\n\
 Supported Python types for binding include:\n\
   - int (mapped to CUBRID INT or BIGINT based on size)\n\
   - float (mapped to CUBRID FLOAT or DOUBLE)\n\
+  - decimal.Decimal (mapped to CUBRID NUMERIC)\n\
   - str (encoded as UTF-8 bytes, mapped to CUBRID CHAR or STRING types)\n\
   - bytes (directly mapped to CUBRID BIT or BIT VARYING based on bind_type)\n\
   - date (mapped to CUBRID DATE)\n\
@@ -1622,7 +1643,7 @@ the Python type of the value argument, unless the bind_type is explicitly specif
 Parameters:\n\
   index (int): The index of the variable in the prepared statement to bind the value to.\n\
   value: The Python object to bind to the variable. Supported types include int, float,\n\
-         str, bytes, date, time, and datetime.\n\
+         decimal.Decimal, str, bytes, date, time, and datetime.\n\
   bind_type (optional): The CUBRID column type to bind the value as. This parameter\n\
                         is optional and is recommended for use in specific scenarios\n\
                         where the automatic type resolution needs to be overridden.\n\
@@ -1638,8 +1659,9 @@ static PyObject *
 _cubrid_CursorObject_bind_param (_cubrid_CursorObject * self, PyObject * args)
 {
   int res, index = -1;
-  PyObject *temp_bytes = NULL; // Used when the second argument is str
-  PyObject *value_obj = NULL; // Use PyObject* to accept any object type
+  PyObject *temp_bytes = NULL; // Used when the second argument is str or decimal.Decimal
+  PyObject *temp_str = NULL;   // Used when the second argument is decimal.Decimal
+  PyObject *value_obj = NULL;  // Use PyObject* to accept any object type
   Py_buffer value_view = {NULL, NULL}; // For obtaining a view on the object as bytes
   int bind_type = 0;
   void *bind_value;
@@ -1648,6 +1670,7 @@ _cubrid_CursorObject_bind_param (_cubrid_CursorObject * self, PyObject * args)
   long long_value;
   int64_t int64_value;
   double double_value;
+  char *str_value = NULL;
   T_CCI_DATE date_value;
   T_CCI_BIT bit_value;
 
@@ -1704,6 +1727,30 @@ _cubrid_CursorObject_bind_param (_cubrid_CursorObject * self, PyObject * args)
       bind_value = &double_value;
       a_type = CCI_A_TYPE_DOUBLE;
       u_type = CCI_U_TYPE_DOUBLE;
+    }
+  else if (PyObject_IsInstance(value_obj, DecimalType))
+    {
+      temp_str = PyObject_Str(value_obj); // Convert Decimal to str
+      if (!temp_str)
+        {
+          return NULL;
+        }
+      temp_bytes = PyUnicode_AsEncodedString(temp_str, "utf-8", "strict");
+      if (!temp_bytes)
+        {
+          Py_DECREF(temp_str);
+          return NULL;
+        }
+      str_value = PyBytes_AsString(temp_bytes);
+      if (!str_value)
+        {
+          Py_DECREF(temp_str);
+          Py_DECREF(temp_bytes);
+          return NULL;
+        }
+      bind_value = str_value;
+      u_type = CCI_U_TYPE_NUMERIC;
+      a_type = CCI_A_TYPE_STR;
     }
   else if (PyDate_Check(value_obj) || PyTime_Check(value_obj) || PyDateTime_Check(value_obj))
     {
@@ -1794,7 +1841,12 @@ _cubrid_CursorObject_bind_param (_cubrid_CursorObject * self, PyObject * args)
   // If temp_bytes was used, decrement its reference count after the buffer is released
   if (temp_bytes)
     {
-      Py_DECREF(temp_bytes);
+      Py_DECREF (temp_bytes);
+    }
+
+  if (temp_str)
+    {
+      Py_DECREF (temp_str);
     }
 
   if (res < 0)
@@ -2369,7 +2421,7 @@ _cubrid_CursorObject_dbval_to_pyvalue (_cubrid_CursorObject * self, int type,
         {
           tmpval = PyTuple_New (1);
           PyTuple_SetItem (tmpval, 0, Py_BuildValue ("s", buffer));
-          val = PyObject_CallObject (_func_Decimal, tmpval);
+          val = PyObject_CallObject (DecimalType, tmpval);
           Py_DECREF (tmpval);
         }
       break;
@@ -4547,21 +4599,10 @@ PyInit__cubrid (void)
       goto Error;
     }
 
-  /* import function Decimal from module decimal */
-  mDecimal = PyImport_ImportModule ("decimal");
-  if (!mDecimal)
+  if (import_decimal_type() != 0)
     {
       goto Error;
     }
-
-  _func_Decimal = PyObject_GetAttrString (mDecimal, "Decimal");
-  if (!_func_Decimal)
-    {
-      goto Error;
-    }
-
-  Py_INCREF (_func_Decimal);
-  Py_DECREF (mDecimal);
 
   /* invoke PyDateTime_IMPORT macro to use functions from datetime.h */
   PyDateTime_IMPORT;

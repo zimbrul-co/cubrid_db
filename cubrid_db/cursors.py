@@ -84,7 +84,7 @@ def get_set_element_type(iterable):
         elif isinstance(obj, float):
             t = field_type.FLOAT
         elif isinstance(obj, Decimal):
-            t = field_type.MONETARY
+            t = field_type.NUMERIC
         elif isinstance(obj, date):
             t = field_type.DATE
         elif isinstance(obj, time):
@@ -212,7 +212,7 @@ class BaseCursor:
                     self._cs.bind_param(i, arg, field_type.BIGINT)
                 else:
                     self._cs.bind_param(i, arg)
-            elif isinstance(arg, (float, str, date, time, datetime)):
+            elif isinstance(arg, (float, str, date, time, datetime, Decimal)):
                 self._cs.bind_param(i, arg)
             elif isinstance(arg, bytes):
                 self._cs.bind_param(i, arg, field_type.VARBIT)
