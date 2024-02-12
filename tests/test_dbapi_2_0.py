@@ -33,45 +33,41 @@ import cubrid_db
 TABLE_PREFIX = 'dbapi20test_'
 
 
+def _create_table(cubrid_db_cursor, name_suffix, columns_sql):
+    cur, _ = cubrid_db_cursor
+    table_name = f'{TABLE_PREFIX}{name_suffix}'
+    cur.execute(f'drop table if exists {table_name}')
+    cur.execute(f'create table {table_name} ({columns_sql})')
+    return table_name
+
+def _drop_table(cubrid_db_cursor, table_name):
+    cur, _ = cubrid_db_cursor
+    cur.execute(f'drop table if exists {table_name}')
+
+
 @pytest.fixture
 def booze_table(cubrid_db_cursor):
-    cur, _ = cubrid_db_cursor
-    table_name = f'{TABLE_PREFIX}booze'
-    cur.execute(f'drop table if exists {table_name}')
-    cur.execute(f'create table {table_name} (name varchar(20))')
-
+    table_name = _create_table(cubrid_db_cursor, 'booze', 'name varchar(20)')
     yield table_name
-
-    cur.execute(f'drop table if exists {table_name}')
+    _drop_table(cubrid_db_cursor, table_name)
 
 
 @pytest.fixture
 def barflys_table(cubrid_db_cursor):
-    cur, _ = cubrid_db_cursor
-    table_name = f'{TABLE_PREFIX}barflys'
-    cur.execute(f'drop table if exists {table_name}')
-    cur.execute(f'create table {table_name} (name varchar(20))')
-
+    table_name = _create_table(cubrid_db_cursor, 'barflys', 'name varchar(20)')
     yield table_name
-
-    cur.execute(f'drop table if exists {table_name}')
+    _drop_table(cubrid_db_cursor, table_name)
 
 
 @pytest.fixture
 def datatype_table(cubrid_db_cursor):
-    cur, _ = cubrid_db_cursor
-    table_name = f'{TABLE_PREFIX}datatype'
-    cur.execute(f'drop table if exists {table_name}')
-    cur.execute(f'create table {table_name} '
-        '(col1 int, col2 float, col3 numeric(12,3), '
+    columns_sql = ('col1 int, col2 float, col3 numeric(12,3), '
         'col4 time, col5 date, col6 datetime, col7 timestamp, '
         'col8 bit varying(100), col9 varchar(100), col10 set(char(1)), '
-        'col11 list(char(1)), col12 json)'
-    )
-
+        'col11 list(char(1)), col12 json')
+    table_name = _create_table(cubrid_db_cursor, 'datatype', columns_sql)
     yield table_name
-
-    cur.execute(f'drop table if exists {table_name}')
+    _drop_table(cubrid_db_cursor, table_name)
 
 
 BOOZE_SAMPLES = [
