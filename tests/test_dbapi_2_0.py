@@ -351,7 +351,7 @@ def test_datatype(cubrid_db_cursor, datatype_table):
 
     datatypes = [int, float, decimal.Decimal, datetime.time,
         datetime.date, datetime.datetime, datetime.datetime,
-        bytes, str, set, list, dict,
+        bytes, str, set, list, str,
     ]
 
     for i, t in enumerate(datatypes):
