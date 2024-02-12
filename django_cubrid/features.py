@@ -74,6 +74,8 @@ class DatabaseFeatures(BaseDatabaseFeatures):
 
     supports_ignore_conflicts = False
 
+    supports_microsecond_precision = False  # Removed from mainline Django, kept for tests
+
     supports_paramstyle_pyformat = False
 
     supports_partial_indexes = False
@@ -85,6 +87,8 @@ class DatabaseFeatures(BaseDatabaseFeatures):
     supports_timezones = False
 
     supports_unspecified_pk = True
+
+    time_cast_precision = 0
 
     @cached_property
     def introspected_field_types(self):
