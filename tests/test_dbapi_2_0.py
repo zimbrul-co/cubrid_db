@@ -98,6 +98,20 @@ def fetchmany_table(cubrid_db_cursor):
     _drop_table(cubrid_db_cursor, table_name)
 
 
+@pytest.fixture
+def desc_table(cubrid_db_cursor):
+    table_name = _create_table(cubrid_db_cursor, 'description',
+        "c_int int, c_short short,c_numeric numeric,c_float float,"
+        "c_double double,c_monetary monetary,"
+        "c_date date, c_time time, c_datetime datetime, c_timestamp timestamp,"
+        "c_bit bit(8),c_varbit bit varying(8),"
+        "c_char char(4),c_varchar varchar(4),c_string string,"
+        "c_set set,c_multiset multiset, c_sequence sequence"
+        )
+    yield table_name
+    _drop_table(cubrid_db_cursor, table_name)
+
+
 def test_connect(cubrid_db_connection):
     assert cubrid_db_connection is not None, "Connection to cubrid_db failed"
 
@@ -230,6 +244,85 @@ def test_description(cubrid_db_cursor, booze_table):
             'no-result statments (eg. DDL)'
     finally:
         cur.execute(f'drop table if exists {table_name}')
+
+
+def _test_description(cubrid_db_cursor, description_table, expected):
+    cur, _ = cubrid_db_cursor
+    column_name = expected[0]
+    cur.execute(f"SELECT {column_name} from {description_table}")
+    assert cur.description[0] == expected
+
+
+def test_description_int(cubrid_db_cursor, desc_table):
+    _test_description(cubrid_db_cursor, desc_table, ('c_int', 8, 0, 0, 10, 0, 1))
+
+
+def test_description_short(cubrid_db_cursor, desc_table):
+    _test_description(cubrid_db_cursor, desc_table, ('c_short', 9, 0, 0, 5, 0, 1))
+
+
+def test_description_numeric(cubrid_db_cursor, desc_table):
+    _test_description(cubrid_db_cursor, desc_table, ('c_numeric', 7, 0, 0, 15, 0, 1))
+
+
+def test_description_float(cubrid_db_cursor, desc_table):
+    _test_description(cubrid_db_cursor, desc_table, ('c_float', 11, 0, 0, 7, 0, 1))
+
+
+def test_description_double(cubrid_db_cursor, desc_table):
+    _test_description(cubrid_db_cursor, desc_table, ('c_double', 12, 0, 0, 15, 0, 1))
+
+
+def test_description_monetary(cubrid_db_cursor, desc_table):
+    _test_description(cubrid_db_cursor, desc_table, ('c_monetary', 10, 0, 0, 15, 0, 1))
+
+
+def test_description_date(cubrid_db_cursor, desc_table):
+    _test_description(cubrid_db_cursor, desc_table, ('c_date', 13, 0, 0, 10, 0, 1))
+
+
+def test_description_time(cubrid_db_cursor, desc_table):
+    _test_description(cubrid_db_cursor, desc_table, ('c_time', 14, 0, 0, 8, 0, 1))
+
+
+def test_description_datetime(cubrid_db_cursor, desc_table):
+    _test_description(cubrid_db_cursor, desc_table, ('c_datetime', 22, 0, 0, 23, 3, 1))
+
+
+def test_description_timestamp(cubrid_db_cursor, desc_table):
+    _test_description(cubrid_db_cursor, desc_table, ('c_timestamp', 15, 0, 0, 19, 0, 1))
+
+
+def test_description_bit(cubrid_db_cursor, desc_table):
+    _test_description(cubrid_db_cursor, desc_table, ('c_bit', 5, 0, 0, 8, 0, 1))
+
+
+def test_description_varbit(cubrid_db_cursor, desc_table):
+    _test_description(cubrid_db_cursor, desc_table, ('c_varbit', 6, 0, 0, 8, 0, 1))
+
+
+def test_description_char(cubrid_db_cursor, desc_table):
+    _test_description(cubrid_db_cursor, desc_table, ('c_char', 1, 0, 0, 4, 0, 1))
+
+
+def test_description_varchar(cubrid_db_cursor, desc_table):
+    _test_description(cubrid_db_cursor, desc_table, ('c_varchar', 2, 0, 0, 4, 0, 1))
+
+
+def test_description_string(cubrid_db_cursor, desc_table):
+    _test_description(cubrid_db_cursor, desc_table, ('c_string', 2, 0, 0, 1073741823, 0, 1))
+
+
+def test_description_set(cubrid_db_cursor, desc_table):
+    _test_description(cubrid_db_cursor, desc_table, ('c_set', 32, 0, 0, 0, 0, 1))
+
+
+def test_description_multiset(cubrid_db_cursor, desc_table):
+    _test_description(cubrid_db_cursor, desc_table, ('c_multiset', 64, 0, 0, 0, 0, 1))
+
+
+def test_description_sequence(cubrid_db_cursor, desc_table):
+    _test_description(cubrid_db_cursor, desc_table, ('c_sequence', 96, 0, 0, 0, 0, 1))
 
 
 def test_rowcount(cubrid_db_cursor, booze_table):
