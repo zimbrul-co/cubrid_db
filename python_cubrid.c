@@ -2442,44 +2442,7 @@ _cubrid_CursorObject_dbval_to_pyvalue (_cubrid_CursorObject * self, int type,
         }
       break;
     case 130: // JSON
-      res = cci_get_data(self->handle, index, CCI_A_TYPE_STR, &buffer, &ind);
-      if (res < 0)
-        {
-          return handle_error(res, NULL);
-        }
-      if (ind < 0)
-        {
-          Py_INCREF(Py_None);
-          val = Py_None;
-        }
-      else
-        {
-          // Assuming buffer contains the JSON string
-          PyObject *json_module = PyImport_ImportModule("json");
-          if (!json_module) return NULL; // Error importing JSON
-
-          PyObject *loads_func = PyObject_GetAttrString(json_module, "loads");
-          if (!loads_func)
-            {
-              Py_DECREF(json_module);
-              return NULL; // Error accessing loads function
-            }
-
-          PyObject *json_str = PyUnicode_FromString(buffer);
-          val = PyObject_CallFunctionObjArgs(loads_func, json_str, NULL);
-
-          Py_DECREF(json_module);
-          Py_DECREF(loads_func);
-          Py_DECREF(json_str);
-
-          if (!val)
-            {
-              // Error during json.loads, handle accordingly
-              return NULL;
-            }
-        }
-      break;
-    default:
+    case CCI_U_TYPE_STRING:
       res = cci_get_data (self->handle, index, CCI_A_TYPE_STR, &buffer, &ind);
       if (res < 0)
         {
@@ -2492,16 +2455,65 @@ _cubrid_CursorObject_dbval_to_pyvalue (_cubrid_CursorObject * self, int type,
         }
       else
         {
-          if (self->charset != NULL && *(self->charset) != '\0')
-            {
-              val =
-                _cubrid_return_PyUnicode_FromString (buffer, strlen (buffer),
+          val = _cubrid_return_PyUnicode_FromString (buffer, strlen (buffer),
                                                      self->charset, NULL);
+        }
+      break;
+    default:
+      // Unknown type, try int
+      res = cci_get_data (self->handle, index, CCI_A_TYPE_INT, &num, &ind);
+      if (res == 0)
+        {
+          if (ind < 0)
+            {
+              Py_INCREF (Py_None);
+              return Py_None;
+            }
+
+          return _cubrid_return_PyInt_FromLong (num);
+        }
+
+      // Unknown type, try date, time or datetime
+      res = cci_get_data (self->handle, index, CCI_A_TYPE_DATE, &dt, &ind);
+      if (res == 0)
+        {
+          if (ind < 0)
+            {
+              Py_INCREF (Py_None);
+              val = Py_None;
+            }
+
+          if (dt.yr == 0)
+            {
+              return PyTime_FromTime(dt.hh, dt.mm, dt.ss, dt.ms * 1000);
+            }
+          if (dt.hh == 0 && dt.mm == 0 && dt.ss == 0 && dt.ms == 0)
+            {
+              return PyDate_FromDate (dt.yr, dt.mon, dt.day);
             }
           else
             {
-              val = _cubrid_return_PyString_FromString (buffer);
+              return PyDateTime_FromDateAndTime (dt.yr, dt.mon, dt.day, dt.hh,
+                                                 dt.mm, dt.ss, dt.ms * 1000);
             }
+        }
+
+      // Unknown type, try str
+      res = cci_get_data (self->handle, index, CCI_A_TYPE_STR, &buffer, &ind);
+      if (res < 0)
+        {
+          return handle_error (res, NULL);
+        }
+      if (ind < 0)
+        {
+          Py_INCREF (Py_None);
+          val = Py_None;
+        }
+      else
+        {
+          val =
+            _cubrid_return_PyUnicode_FromString (buffer, strlen (buffer),
+                                                  self->charset, NULL);
         }
       break;
     }
