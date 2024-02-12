@@ -2332,7 +2332,7 @@ _cubrid_CursorObject_dbval_to_pyvalue (_cubrid_CursorObject * self, int type,
         }
       else
         {
-          val = PyLong_FromLong (bignum);
+          val = PyLong_FromLongLong (bignum);
         }
       break;
     case CCI_U_TYPE_FLOAT:
