@@ -87,6 +87,17 @@ def populated_booze_table(cubrid_db_cursor, booze_table):
     yield booze_table
 
 
+@pytest.fixture
+def fetchmany_table(cubrid_db_cursor):
+    cur, _ = cubrid_db_cursor
+    table_name = _create_table(cubrid_db_cursor, 'fetchmany',
+        "id NUMERIC AUTO_INCREMENT(1, 1), age int, name varchar(50)")
+    cur.executemany(f"insert into {table_name} values (?, ?, ?)",
+        [(None, 20 + i % 30, f'myName-{i}') for i in range(1, 100)])
+    yield table_name
+    _drop_table(cubrid_db_cursor, table_name)
+
+
 def test_connect(cubrid_db_connection):
     assert cubrid_db_connection is not None, "Connection to cubrid_db failed"
 
@@ -513,6 +524,47 @@ def test_fetchmany_empty_table(cubrid_db_cursor, populated_booze_table,
     assert cur.rowcount in (-1, 0)
 
 
+def test_fetchmany_nosize(cubrid_db_cursor, fetchmany_table):
+    cur, _ = cubrid_db_cursor
+
+    cur.execute(f"select * from {fetchmany_table}")
+    data = cur.fetchmany()
+    assert len(data) == 1
+    assert data == [(1, 21, 'myName-1')]
+
+
+def test_fetchmany_negativeone(cubrid_db_cursor, fetchmany_table):
+    cur, _ = cubrid_db_cursor
+
+    cur.execute(f"select * from {fetchmany_table}")
+    data = cur.fetchmany(-1)
+    assert not data
+
+
+def test_fetchmany_zero(cubrid_db_cursor, fetchmany_table):
+    cur, _ = cubrid_db_cursor
+
+    cur.execute(f"select * from {fetchmany_table}")
+    data = cur.fetchmany(0)
+    assert not data
+
+
+def test_fetchmany_all(cubrid_db_cursor, fetchmany_table):
+    cur, _ = cubrid_db_cursor
+
+    cur.execute(f"select * from {fetchmany_table}")
+    data = cur.fetchmany(cur.rowcount)
+    assert len(data) == cur.rowcount
+
+
+def test_fetchmany_overflow(cubrid_db_cursor, fetchmany_table):
+    cur, _ = cubrid_db_cursor
+
+    cur.execute(f"select * from {fetchmany_table}")
+    data = cur.fetchmany(cur.rowcount + 10)
+    assert len(data) == cur.rowcount
+
+
 @pytest.mark.xfail(reason="CCI does not return error when fetchall cannot return rows")
 def test_fetchall_error_no_rows(cubrid_db_cursor, booze_table):
     cur, _ = cubrid_db_cursor
@@ -570,6 +622,120 @@ def test_fetchall_empty_table(cubrid_db_cursor, populated_booze_table,
     assert not rows,\
             'cursor.fetchall should return an empty list '\
             'if a select query returns no rows'
+
+
+def _test_fetchall_datatype(cur, columns_sql, rows, expected_rows = None):
+    table_name = f'{TABLE_PREFIX}fetchall'
+    placeholders = ','.join(['?'] * len(rows[0]))
+    cur.execute(f'drop table if exists {table_name}')
+    try:
+        cur.execute(f"create table if not exists {table_name} ({columns_sql})")
+        cur.executemany(f"insert into {table_name} values ({placeholders})", rows)
+        assert cur.rowcount == 1
+
+        cur.execute(f"select * from {table_name}")
+        fetched_rows = cur.fetchall()
+        expected_rows = expected_rows or rows
+        assert fetched_rows == expected_rows
+    finally:
+        cur.execute(f'drop table if exists {table_name}')
+
+
+def test_fetchall_int(cubrid_db_cursor):
+    cur, _ = cubrid_db_cursor
+    rows = [(x,) for x in [1,0,-1,2147483647,-2147483648]]
+    _test_fetchall_datatype(cur, 'c_int int', rows)
+
+
+def test_fetchall_short(cubrid_db_cursor):
+    cur, _ = cubrid_db_cursor
+    rows = [(x,) for x in [1,0,-1,32767,-32768]]
+    _test_fetchall_datatype(cur, 'c_int short', rows)
+
+
+def test_fetchall_numeric(cubrid_db_cursor):
+    cur, _ = cubrid_db_cursor
+    rows = [(decimal.Decimal(x),) for x in ['12345.6789','0.12345678','-0.123456789']]
+    expected_rows = [(decimal.Decimal(x),) for x in ['12345.6789','0.1235','-0.1235']]
+    _test_fetchall_datatype(cur, 'c_num numeric(10,4)', rows, expected_rows)
+
+
+def test_fetchall_float(cubrid_db_cursor):
+    cur, _ = cubrid_db_cursor
+    rows = [(x,) for x in [1.1,0.0,-1.1]]
+    _test_fetchall_datatype(cur, 'c_float float', rows)
+
+
+def test_fetchall_double(cubrid_db_cursor):
+    cur, _ = cubrid_db_cursor
+    rows = [(x,) for x in [1.1,0.0,-1.1]]
+    _test_fetchall_datatype(cur, 'c_double double', rows)
+
+
+def test_fetchall_char(cubrid_db_cursor):
+    cur, _ = cubrid_db_cursor
+    rows = [(x,) for x in ['a','abcd','zzz']]
+    expected_rows = [(x,) for x in ['a   ','abcd','zzz ']]
+    _test_fetchall_datatype(cur, 'c_char char(4)', rows, expected_rows)
+
+
+def test_fetchall_varchar(cubrid_db_cursor):
+    cur, _ = cubrid_db_cursor
+    rows = [(x,) for x in ['a','abcd','abc']]
+    _test_fetchall_datatype(cur, 'c_varchar varchar(4)', rows)
+
+
+def test_fetchall_string(cubrid_db_cursor):
+    cur, _ = cubrid_db_cursor
+    rows = [(x,) for x in ['a','abcd','abcdefgh']]
+    _test_fetchall_datatype(cur, 'c_string string', rows)
+
+
+def test_fetchall_date(cubrid_db_cursor):
+    cur, _ = cubrid_db_cursor
+    rows = [(x,) for x in [datetime.date.min, datetime.date.today(), datetime.date.max]]
+    _test_fetchall_datatype(cur, 'c_date date', rows)
+
+
+def test_fetchall_time(cubrid_db_cursor):
+    cur, _ = cubrid_db_cursor
+    rows = [(t,) for t in [datetime.time.min, datetime.time.max]]
+    expected_rows = [(datetime.time(t.hour, t.minute, t.second),)
+                     for t in [datetime.time.min, datetime.time.max]]
+    _test_fetchall_datatype(cur, 'c_time time', rows, expected_rows)
+
+
+def test_fetchall_datetime(cubrid_db_cursor):
+    cur, _ = cubrid_db_cursor
+    rows = [(t,) for t in [datetime.datetime.now(), datetime.datetime.max]]
+    expected_rows = [(datetime.datetime(t.year, t.month, t.day,
+        t.hour, t.minute, t.second, t.microsecond // 1000 * 1000),)
+        for t in [datetime.datetime.now(), datetime.datetime.max]]
+    _test_fetchall_datatype(cur, 'c_datetime datetime', rows, expected_rows)
+
+
+def test_fetchall_bit(cubrid_db_cursor):
+    cur, _ = cubrid_db_cursor
+    rows = [(x,) for x in [b'\xde\xad', b'\xbe\xaf', b'\x55']]
+    expected_rows = [(x,) for x in [b'\xde\xad', b'\xbe\xaf', b'\x55\x00']]
+    _test_fetchall_datatype(cur, 'c_bit bit(16)', rows, expected_rows)
+
+
+def test_fetchall_varbit(cubrid_db_cursor):
+    cur, _ = cubrid_db_cursor
+    rows = [(x,) for x in [b'\xde\xad\xbe\xef', b'\xbe\xaf', b'\x55']]
+    _test_fetchall_datatype(cur, 'c_varbit bit varying', rows)
+
+
+def test_fetchall_multiple_columns(cubrid_db_cursor):
+    cur, _ = cubrid_db_cursor
+    rows = [
+        (1400, 0.987654321, "ana has apples", datetime.date.today()),
+        (1500, 1.987654321, "bonny has oranges", datetime.date.today()),
+        (1600, 2.987654321, "chris has bananas", datetime.date.today()),
+        (2000, 3.987654321, "dora has pies", datetime.date.today()),
+    ]
+    _test_fetchall_datatype(cur, 'c_int int, c_double double, c_varchar varchar, c_date date', rows)
 
 
 def test_mixdfetch(cubrid_db_cursor, populated_booze_table):
