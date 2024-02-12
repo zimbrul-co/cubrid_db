@@ -281,6 +281,7 @@ class DatabaseWrapper(BaseDatabaseWrapper):
         'JSONField': 'json',
         'NullBooleanField': 'short',
         'OneToOneField': 'integer',
+        'PositiveBigIntegerField': 'bigint',
         'PositiveIntegerField': 'integer',
         'PositiveSmallIntegerField': 'smallint',
         'SlugField': 'varchar(%(max_length)s)',
