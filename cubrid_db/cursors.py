@@ -41,6 +41,10 @@ from cubrid_db import field_type
 from cubrid_db.exceptions import InterfaceError
 
 
+INT_MIN = -2147483648
+INT_MAX = +2147483647
+
+
 def get_set_element_type(iterable):
     """
     Determine the homogeneous data type of elements in an iterable.
@@ -196,25 +200,30 @@ class BaseCursor:
         if not is_iterable(args):
             args = [args,]
 
-        for i, arg in enumerate(args):
+        for i, arg in enumerate(args, start=1):
             if arg is None:
                 continue
 
             if isinstance(arg, bool):
                 arg = '1' if arg else '0'
-                self._cs.bind_param(i + 1, arg)
+                self._cs.bind_param(i, arg)
+            elif isinstance(arg, int):
+                if arg < INT_MIN or arg > INT_MAX:
+                    self._cs.bind_param(i, arg, field_type.BIGINT)
+                else:
+                    self._cs.bind_param(i, arg)
+            elif isinstance(arg, (float, str, date, time, datetime)):
+                self._cs.bind_param(i, arg)
+            elif isinstance(arg, bytes):
+                self._cs.bind_param(i, arg, field_type.VARBIT)
             elif is_iterable(arg):
                 element_type = get_set_element_type(arg)
                 s = self.con.connection.set()
                 s.imports(tuple(arg), element_type)
-                self._cs.bind_set(i + 1, s)
-            elif isinstance(arg, bytes):
-                self._cs.bind_param(i + 1, arg, field_type.VARBIT)
-            elif isinstance(arg, str):
-                self._cs.bind_param(i + 1, arg)
+                self._cs.bind_set(i, s)
             else:
                 arg = str(arg)
-                self._cs.bind_param(i + 1, arg)
+                self._cs.bind_param(i, arg)
 
     def execute(self, query, args=None):
         """

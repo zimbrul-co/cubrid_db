@@ -1599,35 +1599,40 @@ _cubrid_CursorObject_prepare (_cubrid_CursorObject * self, PyObject * args)
 }
 
 static char _cubrid_CursorObject_bind_param__doc__[] =
-  "bind_param(index, string,bind_type)\n\
-This function is used to bind values in prepare() variable. You can pass\n\
-any type as string, except BLOB/CLOB type.\n\
-In CUBRID shard envrioment, the bind_type must be included in the bind_param function.\n\
-The following shows the types of substitute values::\n\
-  CHAR\n\
-  STRING\n\
-  NCHAR\n\
-  VARCHAR\n\
-  NCHAR VARYING\n\
-  BIT\n\
-  BIT VARYING\n\
-  SHORT\n\
-  INT\n\
-  NUMERIC\n\
-  FLOAT\n\
-  DOUBLE\n\
-  TIME\n\
-  DATE\n\
-  TIMESTAMP\n\
-  OBJECT\n\
-  BLOB\n\
-  CLOB\n\
-  NULL\n\
+  "bind_param(index, value, bind_type=None)\n\
+This function is used to bind a value to a prepared statement variable. It supports\n\
+binding of various Python data types, including int, float, str (encoded as bytes),\n\
+date, time, and datetime objects, in addition to handling BLOB/CLOB types.\n\
 \n\
-Parameters::\n\
-  index: int, index for binding\n\
-  value: string, actual value for binding\n\
-  bind_type(optional):column type of database \n";
+In a CUBRID shard environment, specifying the bind_type is recommended for\n\
+optimal performance and compatibility.\n\
+\n\
+Supported Python types for binding include:\n\
+  - int (mapped to CUBRID INT or BIGINT based on size)\n\
+  - float (mapped to CUBRID FLOAT or DOUBLE)\n\
+  - str (encoded as UTF-8 bytes, mapped to CUBRID CHAR or STRING types)\n\
+  - bytes (directly mapped to CUBRID BIT or BIT VARYING based on bind_type)\n\
+  - date (mapped to CUBRID DATE)\n\
+  - time (mapped to CUBRID TIME)\n\
+  - datetime (mapped to CUBRID TIMESTAMP)\n\
+\n\
+The function automatically determines the appropriate CUBRID data type based on\n\
+the Python type of the value argument, unless the bind_type is explicitly specified.\n\
+\n\
+Parameters:\n\
+  index (int): The index of the variable in the prepared statement to bind the value to.\n\
+  value: The Python object to bind to the variable. Supported types include int, float,\n\
+         str, bytes, date, time, and datetime.\n\
+  bind_type (optional): The CUBRID column type to bind the value as. This parameter\n\
+                        is optional and is recommended for use in specific scenarios\n\
+                        where the automatic type resolution needs to be overridden.\n\
+\n\
+Returns:\n\
+  None: This function does not return a value.\n\
+\n\
+Raises:\n\
+  ValueError: If an unsupported type is passed or if the function encounters\n\
+              an error while binding the value.\n";
 
 static PyObject *
 _cubrid_CursorObject_bind_param (_cubrid_CursorObject * self, PyObject * args)
@@ -1640,7 +1645,11 @@ _cubrid_CursorObject_bind_param (_cubrid_CursorObject * self, PyObject * args)
   void *bind_value;
   int u_type = CCI_U_TYPE_CHAR;
   int a_type = CCI_A_TYPE_STR;
-  T_CCI_BIT bit_value; // Declare the T_CCI_BIT structure
+  long long_value;
+  int64_t int64_value;
+  double double_value;
+  T_CCI_DATE date_value;
+  T_CCI_BIT bit_value;
 
   if (self->state == CURSOR_STATE_CLOSED)
     {
@@ -1656,38 +1665,126 @@ _cubrid_CursorObject_bind_param (_cubrid_CursorObject * self, PyObject * args)
       return NULL;
     }
 
-  // Check if the second argument is a string and encode it to bytes if necessary
-  if (PyUnicode_Check(value_obj)) {
-      // value_obj is a Unicode object (str in Python 3), encode it to bytes
-      temp_bytes = PyUnicode_AsEncodedString(value_obj, "utf-8", "strict");
-      if (!temp_bytes) {
-          // Encoding failed, return NULL
-          return NULL;
-      }
-      // Successfully encoded the string to bytes, now get the buffer
-      if (PyObject_GetBuffer(temp_bytes, &value_view, PyBUF_SIMPLE) != 0) {
-          Py_DECREF(temp_bytes); // Don't forget to decrement the reference count
-          return NULL; // Unable to get buffer
-      }
-      // Keep a reference to the temporary bytes object to prevent it from being deallocated
-      value_obj = temp_bytes;
-  } else if (PyObject_GetBuffer(value_obj, &value_view, PyBUF_SIMPLE) != 0) {
-      // value_obj is not a string and getting buffer directly failed
-      return NULL;
-  }
-
-  bind_value = value_view.buf; // Default to direct buffer binding
-
   if (bind_type != 0)
     {
       u_type = bind_type;
     }
-  if (u_type == CCI_U_TYPE_BIT || u_type == CCI_U_TYPE_VARBIT)
+
+  // Handling for int type
+  if (PyLong_Check(value_obj))
     {
-      bit_value.size = value_view.len; // Set the size of the data
-      bit_value.buf = value_view.buf; // Point to the actual data
-      bind_value = &bit_value; // Bind the structure instead of the buffer
-      a_type = CCI_A_TYPE_BIT;
+      if (u_type == CCI_U_TYPE_BIGINT)
+        {
+          int64_value = PyLong_AsLongLong(value_obj);
+          if (int64_value == -1 && PyErr_Occurred())
+            {
+              PyErr_SetString(PyExc_OverflowError, "Python int out of range of C int64_t");
+              return NULL;
+            }
+          bind_value = &int64_value;
+          a_type = CCI_A_TYPE_BIGINT;
+        }
+      else
+        {
+          long_value = PyLong_AsLong(value_obj);
+          if (long_value == -1 && PyErr_Occurred())
+            {
+              PyErr_SetString(PyExc_OverflowError, "Python int out of range of C long");
+              return NULL;
+            }
+          bind_value = &long_value;
+          u_type = CCI_U_TYPE_INT;
+          a_type = CCI_A_TYPE_INT;
+        }
+    }
+  // Handling for float type
+  else if (PyFloat_Check(value_obj))
+    {
+      double_value = PyFloat_AsDouble(value_obj);
+      bind_value = &double_value;
+      a_type = CCI_A_TYPE_DOUBLE;
+      u_type = CCI_U_TYPE_DOUBLE;
+    }
+  else if (PyDate_Check(value_obj) || PyTime_Check(value_obj) || PyDateTime_Check(value_obj))
+    {
+      if (PyDate_Check(value_obj) || PyDateTime_Check(value_obj))
+        {
+          date_value.yr = PyDateTime_GET_YEAR(value_obj);
+          date_value.mon = PyDateTime_GET_MONTH(value_obj);
+          date_value.day = PyDateTime_GET_DAY(value_obj);
+        }
+
+      if (PyDateTime_Check(value_obj))
+        {
+          date_value.hh = PyDateTime_DATE_GET_HOUR(value_obj);
+          date_value.mm = PyDateTime_DATE_GET_MINUTE(value_obj);
+          date_value.ss = PyDateTime_DATE_GET_SECOND(value_obj);
+          date_value.ms = PyDateTime_DATE_GET_MICROSECOND(value_obj) / 1000;
+        }
+      else if (PyTime_Check(value_obj))
+        {
+          date_value.hh = PyDateTime_TIME_GET_HOUR(value_obj);
+          date_value.mm = PyDateTime_TIME_GET_MINUTE(value_obj);
+          date_value.ss = PyDateTime_TIME_GET_SECOND(value_obj);
+          date_value.ms = PyDateTime_TIME_GET_MICROSECOND(value_obj) / 1000;
+        }
+
+      bind_value = &date_value;
+      a_type = CCI_A_TYPE_DATE;
+      if (PyDate_Check(value_obj))
+        {
+          u_type = CCI_U_TYPE_DATE;
+        }
+      if (PyTime_Check(value_obj))
+        {
+          u_type = CCI_U_TYPE_TIME;
+        }
+      if (PyDateTime_Check(value_obj))
+        {
+          u_type= CCI_U_TYPE_DATETIME;
+        }
+    }
+  // Check if the second argument is a string and encode it to bytes if necessary
+  else if (PyUnicode_Check(value_obj))
+    {
+      // value_obj is a Unicode object (str in Python 3), encode it to bytes
+      temp_bytes = PyUnicode_AsEncodedString(value_obj, "utf-8", "strict");
+      if (!temp_bytes)
+        {
+          // Encoding failed, return NULL
+          return NULL;
+        }
+      // Successfully encoded the string to bytes, now get the buffer
+      if (PyObject_GetBuffer(temp_bytes, &value_view, PyBUF_SIMPLE) != 0)
+        {
+          Py_DECREF(temp_bytes); // Don't forget to decrement the reference count
+          return NULL; // Unable to get buffer
+        }
+
+      bind_value = value_view.buf;
+    }
+  else if (PyBytes_Check(value_obj))
+    {
+      if (PyObject_GetBuffer(value_obj, &value_view, PyBUF_SIMPLE) != 0)
+        {
+          return NULL;
+        }
+
+      if (u_type == CCI_U_TYPE_BIT || u_type == CCI_U_TYPE_VARBIT)
+        {
+          bit_value.size = value_view.len; // Set the size of the data
+          bit_value.buf = value_view.buf; // Point to the actual data
+          bind_value = &bit_value; // Bind the structure instead of the buffer
+          a_type = CCI_A_TYPE_BIT;
+        }
+      else
+        {
+          bind_value = value_view.buf;
+        }
+    }
+  else
+    {
+      return NULL;
     }
 
   res = cci_bind_param(self->handle, index, a_type, bind_value, u_type, 0);
