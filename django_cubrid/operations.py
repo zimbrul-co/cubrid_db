@@ -422,6 +422,29 @@ class DatabaseOperations(BaseDatabaseOperations):
         values_sql = ", ".join(f"({sql})" for sql in placeholder_rows_sql)
         return "VALUES " + values_sql
 
+    def adapt_datefield_value(self, value):
+        return value
+
+    def adapt_datetimefield_value(self, value):
+        if value is None:
+            return None
+        # Expression values are adapted by the database.
+        if hasattr(value, "resolve_expression"):
+            return value
+
+        return value
+
+    def adapt_timefield_value(self, value):
+        if value is None:
+            return None
+        # Expression values are adapted by the database.
+        if hasattr(value, "resolve_expression"):
+            return value
+
+        if timezone.is_aware(value):
+            raise ValueError("backend does not support timezone-aware times.")
+        return value
+
     def get_db_converters(self, expression):
         """
         Returns a list of database value converters for a given field type.
