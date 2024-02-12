@@ -465,9 +465,6 @@ class DatabaseOperations(BaseDatabaseOperations):
             converters.append(self.convert_textfield_value)
         elif internal_type in ['BooleanField', 'NullBooleanField']:
             converters.append(self.convert_booleanfield_value)
-        elif internal_type == 'DateTimeField':
-            if settings.USE_TZ:
-                converters.append(self.convert_datetimefield_value)
         elif internal_type == 'UUIDField':
             converters.append(self.convert_uuidfield_value)
         elif internal_type in ['IPAddressField', 'GenericIPAddressField']:
@@ -507,21 +504,6 @@ class DatabaseOperations(BaseDatabaseOperations):
         """
         if value in (0, 1):
             value = bool(value)
-        return value
-
-    def convert_datetimefield_value(self, value, expression, connection):
-        """
-        Converts a datetime field value to a timezone-aware Python datetime object.
-
-        Args:
-            value (datetime): The datetime value.
-            expression, connection: Unused, but required for interface consistency.
-
-        Returns:
-            datetime: The timezone-aware datetime object.
-        """
-        if value is not None:
-            value = timezone.make_aware(value, self.connection.timezone)
         return value
 
     def convert_uuidfield_value(self, value, expression, connection):
