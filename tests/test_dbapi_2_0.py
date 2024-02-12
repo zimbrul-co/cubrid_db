@@ -401,13 +401,29 @@ def test_fetchone(cubrid_db_cursor, booze_table):
     cur.execute(f"insert into {booze_table} values ('Victoria Bitter')")
     cur.execute(f"select name from {booze_table}")
     r = cur.fetchone()
-    assert len(r) == 1, 'cursor.fecthone should have retrieved a single row'
+    assert len(r) == 1, 'cursor.fetchone should have retrieved a single column'
 
     assert r[0] == 'Victoria Bitter', 'cursor.fetchone retrieved incorrect data'
 
     assert cur.fetchone() is None,\
         'cursor.fetchone should return None if no more rows available'
     assert cur.rowcount in (-1, 1)
+
+
+def test_fetchone_multi(cubrid_db_cursor, populated_booze_table):
+    cur, _ = cubrid_db_cursor
+
+    cur.execute(f"select name from {populated_booze_table}")
+    r = cur.fetchone()
+    l = [r[0]]
+    while r is not None:
+        r = cur.fetchone()
+        if r is None:
+            break
+        assert len(r) == 1, 'cursor.fetchone should have retrieved a single column'
+        l.append(r[0])
+
+    assert l == BOOZE_SAMPLES
 
 
 def test_fetchmany_error_no_query(cubrid_db_cursor):
