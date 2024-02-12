@@ -127,4 +127,19 @@ class DatabaseFeatures(BaseDatabaseFeatures):
         "CUBRID cannot change attributes used in foreign keys": {
             "schema.tests.SchemaTests.test_alter_pk_with_self_referential_field"
         },
+        "CUBRID does not implement ISO year extraction": {
+            "db_functions.datetime.test_extract_trunc.DateFunctionTests.test_extract_iso_year_func",
+            "db_functions.datetime.test_extract_trunc.DateFunctionTests."
+            "test_extract_iso_year_func_boundaries",
+        },
+        "CUBRID does not implement SHA224, SHA256, SHA384, SHA512": {
+            "db_functions.text.test_sha224.SHA224Tests.test_basic",
+            "db_functions.text.test_sha224.SHA224Tests.test_transform",
+            "db_functions.text.test_sha256.SHA256Tests.test_basic",
+            "db_functions.text.test_sha256.SHA256Tests.test_transform",
+            "db_functions.text.test_sha384.SHA384Tests.test_basic",
+            "db_functions.text.test_sha384.SHA384Tests.test_transform",
+            "db_functions.text.test_sha512.SHA512Tests.test_basic",
+            "db_functions.text.test_sha512.SHA512Tests.test_transform",
+        },
     }
