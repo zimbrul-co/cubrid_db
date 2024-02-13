@@ -168,12 +168,15 @@ def _fetchall(cursor):
 
 
 def test_cursor_isolation(cubrid_connection):
+    #;pylint: disable=protected-access
     # Ensure cursors are closed after the test
     cur1 = cur2 = None
     try:
         # Cursors created from the same connection should have the same transaction isolation level
         cur1 = cubrid_connection.cursor()
         cur2 = cubrid_connection.cursor()
+        cur1._set_charset_name('utf8')
+        cur2._set_charset_name('utf8')
 
         cur1.prepare('drop table if exists test_cubrid')
         cur1.execute()

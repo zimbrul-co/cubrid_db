@@ -32,8 +32,10 @@ def cubrid_connection():
 
 @pytest.fixture
 def cubrid_cursor(cubrid_connection):
+    #;pylint: disable=protected-access
     # Obtain a cursor from the database connection provided by the cubrid_connection fixture
     cursor = cubrid_connection.cursor()
+    cursor._set_charset_name('utf8')
     yield cursor, cubrid_connection
 
     # Ensure the cursor is closed after the test
