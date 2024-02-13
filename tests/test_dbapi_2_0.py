@@ -23,93 +23,17 @@ Usage:
 import datetime
 import decimal
 import random
+import re
 import time
 
 import pytest
 
+from conftest import (
+    BOOZE_SAMPLES,
+    TABLE_PREFIX,
+)
+
 import cubrid_db
-
-
-TABLE_PREFIX = 'dbapi20test_'
-
-
-def _create_table(cubrid_db_cursor, name_suffix, columns_sql):
-    cur, _ = cubrid_db_cursor
-    table_name = f'{TABLE_PREFIX}{name_suffix}'
-    cur.execute(f'drop table if exists {table_name}')
-    cur.execute(f'create table {table_name} ({columns_sql})')
-    return table_name
-
-def _drop_table(cubrid_db_cursor, table_name):
-    cur, _ = cubrid_db_cursor
-    cur.execute(f'drop table if exists {table_name}')
-
-
-@pytest.fixture
-def booze_table(cubrid_db_cursor):
-    table_name = _create_table(cubrid_db_cursor, 'booze', 'name varchar(20)')
-    yield table_name
-    _drop_table(cubrid_db_cursor, table_name)
-
-
-@pytest.fixture
-def barflys_table(cubrid_db_cursor):
-    table_name = _create_table(cubrid_db_cursor, 'barflys', 'name varchar(20)')
-    yield table_name
-    _drop_table(cubrid_db_cursor, table_name)
-
-
-@pytest.fixture
-def datatype_table(cubrid_db_cursor):
-    columns_sql = ('col1 int, col2 float, col3 numeric(12,3), '
-        'col4 time, col5 date, col6 datetime, col7 timestamp, '
-        'col8 bit varying(100), col9 varchar(100), col10 set(char(1)), '
-        'col11 list(char(1)), col12 json')
-    table_name = _create_table(cubrid_db_cursor, 'datatype', columns_sql)
-    yield table_name
-    _drop_table(cubrid_db_cursor, table_name)
-
-
-BOOZE_SAMPLES = [
-    'Carlton Cold',
-    'Carlton Draft',
-    'Mountain Goat',
-    'Redback',
-    'Victoria Bitter',
-    'XXXX'
-]
-
-
-@pytest.fixture
-def populated_booze_table(cubrid_db_cursor, booze_table):
-    cur, _ = cubrid_db_cursor
-    cur.executemany(f'insert into {booze_table} values (?)', BOOZE_SAMPLES)
-    yield booze_table
-
-
-@pytest.fixture
-def fetchmany_table(cubrid_db_cursor):
-    cur, _ = cubrid_db_cursor
-    table_name = _create_table(cubrid_db_cursor, 'fetchmany',
-        "id NUMERIC AUTO_INCREMENT(1, 1), age int, name varchar(50)")
-    cur.executemany(f"insert into {table_name} values (?, ?, ?)",
-        [(None, 20 + i % 30, f'myName-{i}') for i in range(1, 100)])
-    yield table_name
-    _drop_table(cubrid_db_cursor, table_name)
-
-
-@pytest.fixture
-def desc_table(cubrid_db_cursor):
-    table_name = _create_table(cubrid_db_cursor, 'description',
-        "c_int int, c_short short,c_numeric numeric,c_float float,"
-        "c_double double,c_monetary monetary,"
-        "c_date date, c_time time, c_datetime datetime, c_timestamp timestamp,"
-        "c_bit bit(8),c_varbit bit varying(8),"
-        "c_char char(4),c_varchar varchar(4),c_string string,"
-        "c_set set,c_multiset multiset, c_sequence sequence"
-        )
-    yield table_name
-    _drop_table(cubrid_db_cursor, table_name)
 
 
 def test_connect(cubrid_db_connection):
