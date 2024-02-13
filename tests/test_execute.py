@@ -1,4 +1,4 @@
-# pylint: disable=missing-function-docstring
+# pylint: disable=missing-function-docstring,missing-module-docstring
 import re
 
 def test_execute(cubrid_db_cursor, booze_table):

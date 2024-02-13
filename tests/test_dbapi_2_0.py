@@ -297,10 +297,7 @@ def test_executemany(cubrid_db_cursor, booze_table):
     res = cur.fetchall()
     assert len(res) == 2, 'cursor.fetchall returned incorrect number of rows'
     beers = [res[0][0], res[1][0]]
-    beers.sort()
-    assert beers[0] == "Boag's",\
-        'cursor.fetchall retrieved incorrect data, or data inserted incorrectly'
-    assert beers[1] == "Cooper's",\
+    assert beers == [a[0] for a in largs], \
         'cursor.fetchall retrieved incorrect data, or data inserted incorrectly'
 
 
