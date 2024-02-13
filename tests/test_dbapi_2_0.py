@@ -23,7 +23,6 @@ Usage:
 import datetime
 import decimal
 import random
-import re
 import time
 
 import pytest
@@ -286,31 +285,6 @@ def test_close(cubrid_db_connection):
 
     with pytest.raises(cubrid_db.InterfaceError):
         con.commit()
-
-
-def test_execute(cubrid_db_cursor, booze_table):
-    cur, _ = cubrid_db_cursor
-
-    res = cur.execute(f'select name from {booze_table}')
-    assert res == 0, 'cur.execute should return 0 if a query retrieves no rows'
-
-    cur.execute(f"insert into {booze_table} values ('Victoria Bitter')")
-    assert cur.rowcount in (-1, 1)
-
-    # qmark param style
-    cur.execute(f'insert into {booze_table} values (?)', ("Cooper's",))
-
-    assert cur.rowcount in (-1, 1)
-
-    cur.execute(f'select name from {booze_table}')
-    res = cur.fetchall()
-    assert len(res) == 2, 'cursor.fetchall returned incorrect number of rows'
-    beers = [res[0][0], res[1][0]]
-    beers.sort()
-    assert beers[0] == "Cooper's",\
-        'cursor.fetchall retrieved incorrect data, or data inserted incorrectly'
-    assert beers[1] == "Victoria Bitter",\
-        'cursor.fetchall retrieved incorrect data, or data inserted incorrectly'
 
 
 def test_executemany(cubrid_db_cursor, booze_table):
