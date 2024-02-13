@@ -119,6 +119,27 @@ class SQLInsertCompiler(compiler.SQLInsertCompiler, SQLCompiler):
     on its parent classes, it serves as a bridge that combines the general insert
     compilation logic with CUBRID-specific customizations.
     """
+    def execute_sql(self, returning_fields=None):
+        """
+        Custom implementation for the insert execute_sql.
+        last_insert_id() does not work if the pk value is provided, and returns None.
+        In that case, we need to use the pre-save value of the pk and put in in the
+        returned tuple, so the model instance does not have the value set to None
+        after saving.
+        """
+        rows = super().execute_sql(returning_fields)
+        if not self.returning_fields:
+            return rows
+
+        assert len(rows) == 1
+
+        pre_save_values = [self.pre_save_val(field, self.query.objs[0])
+            for field in self.returning_fields]
+        returning_values = list(rows[0])
+        returning_values = [psv if rv is None else rv for psv, rv in
+            zip(pre_save_values, returning_values)]
+        return [tuple(returning_values)]
+
 
 
 class SQLDeleteCompiler(compiler.SQLDeleteCompiler, SQLCompiler):
