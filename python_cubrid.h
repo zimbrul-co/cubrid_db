@@ -8,10 +8,6 @@
 #include "cas_cci.h"
 #include "broker_cas_error.h"
 
-#define PyString_FromString PyBytes_FromString
-#define PyString_AsString PyBytes_AsString
-#define PyString_Check PyBytes_Check
-
 #define CUBRID_ER_NO_MORE_MEMORY	    -30001
 #define CUBRID_ER_INVALID_SQL_TYPE	    -30002
 #define CUBRID_ER_CANNOT_GET_COLUMN_INFO    -30003
