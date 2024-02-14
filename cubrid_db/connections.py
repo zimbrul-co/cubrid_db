@@ -11,22 +11,25 @@ from cubrid_db.cursors import DictCursor, Cursor
 class Connection:
     """CUBRID Database Connection Object"""
 
-    def __init__(self, **kwargs):
+    def __init__(self, *,
+        dsn = "",
+        user = "public",
+        password = "",
+        charset = "utf8",
+    ):
         """
         Create a connecton to the database.
         Note:
         The guideline for arguments can be found here:
         https://peps.python.org/pep-0249/#id48
         """
-        kwargs = kwargs.copy()
+        self.charset = charset
 
-        kwargs['url'] = kwargs.pop('dsn')
-        kwargs.setdefault('user', "public")
-        kwargs['passwd'] = kwargs.pop('password', "")
-
-        self.charset = kwargs.pop('charset', 'utf8')
-
-        self.connection = cubrid_connect(**kwargs)
+        self.connection = cubrid_connect(
+            url = dsn,
+            user = user,
+            passwd = password,
+        )
 
     def __del__(self):
         pass
