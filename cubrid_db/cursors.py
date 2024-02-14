@@ -128,7 +128,7 @@ class BaseCursor:
         self.description = None
 
         self.charset = conn.charset
-        self._cs._set_charset_name(conn.charset)
+        self._cs.set_charset(conn.charset)
 
     def __del__(self):
         try:

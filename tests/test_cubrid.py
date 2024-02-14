@@ -167,16 +167,32 @@ def _fetchall(cursor):
     return results
 
 
+def test_cursor_no_charset(cubrid_connection):
+    cur = cubrid_connection.cursor()
+    try:
+        cur.prepare('drop table if exists test_cubrid')
+        cur.execute()
+        cur.prepare('create table if not exists test_cubrid (name varchar(20))')
+        cur.execute()
+        cur.prepare("insert into test_cubrid values ('Blair'), ('Țărână'), ('흙')")
+        cur.execute()
+        cur.prepare('select * from test_cubrid')
+        cur.execute()
+        results = _fetchall(cur)
+        assert results == [('Blair',), ('Țărână',), ('흙',)]
+    finally:
+        cur.prepare('drop table if exists test_cubrid')
+        cur.execute()
+        cur.close()
+
+
 def test_cursor_isolation(cubrid_connection):
-    #;pylint: disable=protected-access
     # Ensure cursors are closed after the test
     cur1 = cur2 = None
     try:
         # Cursors created from the same connection should have the same transaction isolation level
         cur1 = cubrid_connection.cursor()
         cur2 = cubrid_connection.cursor()
-        cur1._set_charset_name('utf8')
-        cur2._set_charset_name('utf8')
 
         cur1.prepare('drop table if exists test_cubrid')
         cur1.execute()

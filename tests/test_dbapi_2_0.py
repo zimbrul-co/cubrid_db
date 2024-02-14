@@ -287,6 +287,17 @@ def test_close(cubrid_db_connection):
         con.commit()
 
 
+def test_insert_utf8(cubrid_db_cursor, barflys_table):
+    cur, _ = cubrid_db_cursor
+
+    rc = cur.execute(f"insert into {barflys_table} (name) values (?)", ['Tom',])
+    assert rc == 1
+    rc = cur.execute(f"insert into {barflys_table} (name) values (?)", [b'Jenny',])
+    assert rc == 1
+    rc = cur.execute(f"insert into {barflys_table} (name) values (?)", ['小王',])
+    assert rc == 1
+
+
 def test_executemany(cubrid_db_cursor, booze_table):
     cur, _ = cubrid_db_cursor
 
