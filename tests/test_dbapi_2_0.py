@@ -39,6 +39,16 @@ def test_connect(cubrid_db_connection):
     assert cubrid_db_connection is not None, "Connection to cubrid_db failed"
 
 
+def test_connect_empty_dsn():
+    with pytest.raises(cubrid_db.InterfaceError):
+        cubrid_db.connect(dsn = "")
+
+
+def test_connect_no_dsn():
+    with pytest.raises(cubrid_db.InterfaceError):
+        cubrid_db.connect()
+
+
 def test_apilevel():
     # Must exist
     assert hasattr(cubrid_db, 'apilevel'), "Driver doesn't define apilevel"

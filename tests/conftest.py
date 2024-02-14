@@ -145,3 +145,14 @@ def exc_table(cubrid_db_cursor):
         "a int primary key, b varchar(20), c timestamp")
     yield table_name
     _drop_table(cubrid_db_cursor, table_name)
+
+
+@pytest.fixture
+def exc_issue_table(cubrid_db_cursor):
+    table_name = _create_table(cubrid_db_cursor, 'execute_issue',
+        "nameid int primary key ,age int,name VARCHAR(40)")
+    cur, _ = cubrid_db_cursor
+    cur.execute(f"INSERT INTO {table_name} (name,nameid,age) "
+                "VALUES('Mike',1,30),('John',2,28),('Bill',3,45)")
+    yield table_name
+    _drop_table(cubrid_db_cursor, table_name)

@@ -1,6 +1,11 @@
 # pylint: disable=missing-function-docstring,missing-module-docstring
 import re
 
+import pytest
+
+import cubrid_db
+
+
 def test_execute(cubrid_db_cursor, booze_table):
     cur, _ = cubrid_db_cursor
 
@@ -74,3 +79,46 @@ def test_execute_delete(cubrid_db_cursor, exc_table):
     cur.execute(f"select count(*) from {exc_table} where a >= 0")
     row = cur.fetchone()
     assert row[0] == 4
+
+
+def test_execute_error_statement(cubrid_db_cursor):
+    cur, _ = cubrid_db_cursor
+    with pytest.raises(cubrid_db.ProgrammingError, match = r'-493'):
+        cur.execute("error information")
+
+
+def test_execute_empty_statement(cubrid_db_cursor):
+    cur, _ = cubrid_db_cursor
+    with pytest.raises(TypeError, match = r"missing 1 required positional argument"):
+        cur.execute()
+
+    with pytest.raises(cubrid_db.DatabaseError, match = r'-424'):
+        cur.execute("")
+
+
+def test_create_table_no_column(cubrid_db_cursor):
+    cur, _ = cubrid_db_cursor
+    with pytest.raises(cubrid_db.ProgrammingError, match = r'-493'):
+        cur.execute("create table nocolumn()")
+
+
+def test_select_from_empty_table(cubrid_db_cursor, exc_issue_table):
+    cur, _ = cubrid_db_cursor
+    with pytest.raises(cubrid_db.ProgrammingError, match = r'-493'):
+        cur.execute(f"select from {exc_issue_table}")
+
+
+def test_select_wrong_param_count(cubrid_db_cursor, exc_issue_table):
+    cur, _ = cubrid_db_cursor
+    with pytest.raises(cubrid_db.InterfaceError, match = r'-20009'):
+        cur.execute(f"insert into {exc_issue_table} values()",(1,58,'aaaa'))
+
+    with pytest.raises(cubrid_db.IntegrityError, match = r'-494'):
+        cur.execute(f"insert into {exc_issue_table}(nameid,age) values(?,?,?)",(1,58))
+
+
+def test_select_wrong_param_value(cubrid_db_cursor, exc_issue_table):
+    cur, _ = cubrid_db_cursor
+
+    with pytest.raises(cubrid_db.IntegrityError, match = r'-494'):
+        cur.execute(f"insert into {exc_issue_table} values(?,?,?)",(8,'58aaa','aaaa'))
