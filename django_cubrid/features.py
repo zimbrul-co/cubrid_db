@@ -95,8 +95,11 @@ class DatabaseFeatures(BaseDatabaseFeatures):
         """Specify how the field types are introspected with CUBRID"""
         return {
             **super().introspected_field_types,
+            "AutoField": "IntegerField",
+            "BigAutoField": "BigIntegerField",
             "BooleanField": "SmallIntegerField",
             "DurationField": "BigIntegerField",
+            "SmallAutoField": "SmallIntegerField",
         }
 
     django_test_skips = {
