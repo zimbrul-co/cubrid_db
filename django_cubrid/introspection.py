@@ -187,7 +187,11 @@ class DatabaseIntrospection(BaseDatabaseIntrospection):
         """
         cursor.execute("SELECT name, att_name, current_val FROM db_serial "
             "WHERE class_name = ?", [table_name.lower()])
-        sequence_name, column_name, value = cursor.fetchone()
+        row = cursor.fetchone()
+        if row is None:
+            return []
+
+        sequence_name, column_name, value = row
         value = int(value) # convert from Decimal to int
 
         # Ensure the value for the sequence will be greater or equal to max id
