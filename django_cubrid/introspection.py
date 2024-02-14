@@ -148,7 +148,7 @@ class DatabaseIntrospection(BaseDatabaseIntrospection):
             fields.append(FieldInfo(
                 force_str(line[0]),         # name
                 line[1],                    # type
-                line[2],                    # display_size
+                info.prec,                  # display_size - use precision value
                 info.prec,                  # internal size - use precision value
                 info.prec,                  # precision
                 info.scale,                 # scale
