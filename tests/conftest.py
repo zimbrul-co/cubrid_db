@@ -156,3 +156,25 @@ def exc_issue_table(cubrid_db_cursor):
                 "VALUES('Mike',1,30),('John',2,28),('Bill',3,45)")
     yield table_name
     _drop_table(cubrid_db_cursor, table_name)
+
+
+@pytest.fixture
+def exc_index_tables(cubrid_db_cursor):
+    t = _create_table(cubrid_db_cursor, 'index_t', "id int, val int, fk int")
+    u = _create_table(cubrid_db_cursor, 'index_u', "id int, val int,text string")
+
+    cur, _ = cubrid_db_cursor
+
+    cur.execute(f"create index _t_id on {t}(id)")
+    cur.execute(f"create index _t_val on {t}(val)")
+    cur.execute(f"create index _u_id on {u}(id)")
+    cur.execute(f"create index _u_val on {u}(val)")
+    cur.execute(f"create index _u_r_text on {u}(text)")
+    cur.execute(f"insert into {t} values (1, 100, 1),(2, 200, 1),(3, 300, 2),(4, 300, 3)")
+    cur.execute(f"insert into {u} values (1, 1000, '1000 text'),(2, 2000, '2000 text'),"
+                "(3, 3000, '3000 text'),(3, 3001, '3001 text')")
+
+    yield t, u
+
+    _drop_table(cubrid_db_cursor, t)
+    _drop_table(cubrid_db_cursor, u)

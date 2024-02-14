@@ -122,3 +122,79 @@ def test_select_wrong_param_value(cubrid_db_cursor, exc_issue_table):
 
     with pytest.raises(cubrid_db.IntegrityError, match = r'-494'):
         cur.execute(f"insert into {exc_issue_table} values(?,?,?)",(8,'58aaa','aaaa'))
+
+
+def test_index_select_single(cubrid_db_cursor, exc_index_tables):
+    cur, _ = cubrid_db_cursor
+    t, _ = exc_index_tables
+
+    cur.execute(f"select * from {t} use index (_t_id) where id < 2")
+    row = cur.fetchone()
+    assert row[0] == 1
+
+
+def test_index_select_recompile(cubrid_db_cursor, exc_index_tables):
+    cur, _ = cubrid_db_cursor
+    t, _ = exc_index_tables
+
+    cur.execute(f"select /*+ recompile */ * from {t} use index (_t_id) where id > 1;")
+    cur.fetchall()
+
+    cur.execute(f"select /*+ recompile */ count(*) from {t} use index (_t_id) where id > 1;")
+    row = cur.fetchone()
+    assert row[0] == 3
+
+
+def test_index_select_join(cubrid_db_cursor, exc_index_tables):
+    cur, _ = cubrid_db_cursor
+    t, u = exc_index_tables
+
+    cur.execute(f"select /*+ recompile */ * from {t} force index (_t_val) inner join {u} use "
+                f"index (_u_id) on {t}.fk = {u}.id where right(text, 2) < 'zz' and {u}.id < 100")
+    cur.fetchall()
+
+    cur.execute(f"select /*+ recompile */ count(*) from {t} force index (_t_val) inner join {u} "
+                f"use index (_u_id) on {t}.fk = {u}.id where right(text, 2) < 'zz' and "
+                f"{u}.id < 100")
+    row = cur.fetchone()
+    assert row[0] == 5
+
+
+def test_index_select_subselect(cubrid_db_cursor, exc_index_tables):
+    cur, _ = cubrid_db_cursor
+    t, u = exc_index_tables
+
+    cur.execute(f"select /*+ recompile */ * from {t} force index (_t_val) inner join (select * "
+                f"from {u} force index (_u_id) where right(text, 2) < 'zz') x on {t}.fk = x.id ")
+    cur.fetchall()
+
+    cur.execute(f"select /*+ recompile */ count(*) from {t} force index (_t_val) inner join "
+                f"(select * from {u} force index (_u_id) where right(text, 2) < 'zz') x on "
+                f"{t}.fk = x.id")
+    row = cur.fetchone()
+    assert row[0] == 5
+
+
+def test_index_update(cubrid_db_cursor, exc_index_tables):
+    cur, _ = cubrid_db_cursor
+    t, _ = exc_index_tables
+
+    rc = cur.execute(f"update {t} use index (_t_id, _t_val) set val = 1000 where id <4")
+    assert rc == 3
+
+    cur.execute(f"select * from {t}")
+    cur.fetchall()
+
+    cur.execute(f"select count(*) from {t} where val=1000")
+    row = cur.fetchone()
+    assert row[0] == 3
+
+
+def test_index_delete(cubrid_db_cursor, exc_index_tables):
+    cur, _ = cubrid_db_cursor
+    t, _ = exc_index_tables
+
+    cur.executemany(f"delete from {t} use index (_t_id, _t_val) where id =?",((1),(4),(3)))
+    cur.execute(f"select * from {t}")
+    row = cur.fetchone()
+    assert row[0] == 2
