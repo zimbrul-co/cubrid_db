@@ -178,3 +178,13 @@ def exc_index_tables(cubrid_db_cursor):
 
     _drop_table(cubrid_db_cursor, t)
     _drop_table(cubrid_db_cursor, u)
+
+
+@pytest.fixture
+def exc_part_table(cubrid_db_cursor):
+    table_name = _create_table(cubrid_db_cursor, 'partition',
+        "id int not null, test_char char(50),test_varchar varchar(2000), test_bit bit(16),"
+        "test_varbit bit varying(20),test_nchar nchar(50),test_nvarchar nchar varying(2000),"
+        "test_string string,test_datetime timestamp, primary key (id, test_char)")
+    yield table_name
+    _drop_table(cubrid_db_cursor, table_name)

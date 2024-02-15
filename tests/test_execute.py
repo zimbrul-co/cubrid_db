@@ -198,3 +198,93 @@ def test_index_delete(cubrid_db_cursor, exc_index_tables):
     cur.execute(f"select * from {t}")
     row = cur.fetchone()
     assert row[0] == 2
+
+
+def test_partition_select_empty_table(cubrid_db_cursor, exc_part_table):
+    cur, _ = cubrid_db_cursor
+
+    cur.execute(f"select count(*) from {exc_part_table}")
+    row = cur.fetchone()
+    assert row[0] == 0
+
+    cur.execute(f"select max(id) from {exc_part_table}")
+    row = cur.fetchone()
+    assert row[0] is None
+
+
+def test_partition_alter(cubrid_db_cursor, exc_part_table):
+    cur, _ = cubrid_db_cursor
+
+    rc = cur.execute(f"ALTER TABLE {exc_part_table} PARTITION BY LIST (test_char) "
+        "(PARTITION p0 VALUES IN ('aaa','bbb','ddd'),PARTITION p1 VALUES IN "
+        "('fff','ggg','hhh',NULL),PARTITION p2 VALUES IN ('kkk','lll','mmm') )")
+    assert rc == 0
+
+
+def test_partition_insert(cubrid_db_cursor, exc_part_table):
+    cur, _ = cubrid_db_cursor
+
+    rc = cur.execute(f"ALTER TABLE {exc_part_table} PARTITION BY LIST (test_char) "
+        "(PARTITION p0 VALUES IN ('aaa','bbb','ddd'),PARTITION p1 VALUES IN "
+        "('fff','ggg','hhh',NULL),PARTITION p2 VALUES IN ('kkk','lll','mmm') )")
+    assert rc == 0
+
+    rc = cur.execute(f"insert into {exc_part_table} values(1,'aaa','aaa',B'1',B'1011',"
+        "N'aaa',N'aaa','aaaaaaaaaa','2006-03-01 09:00:00')")
+    assert rc == 1
+    rc = cur.execute(f"insert into {exc_part_table} values(5,'ggg','ggg',B'101',B'1111',"
+        "N'ggg',N'ggg','gggggggggg','2006-03-01 09:00:00')")
+    assert rc == 1
+
+
+def test_partition_select(cubrid_db_cursor, exc_part_table):
+    cur, _ = cubrid_db_cursor
+
+    rc = cur.execute(f"ALTER TABLE {exc_part_table} PARTITION BY LIST (test_char) "
+        "(PARTITION p0 VALUES IN ('aaa','bbb','ddd'),PARTITION p1 VALUES IN "
+        "('fff','ggg','hhh',NULL),PARTITION p2 VALUES IN ('kkk','lll','mmm') )")
+    assert rc == 0
+
+    rc = cur.execute(f"insert into {exc_part_table} values(1,'aaa','aaa',B'1',B'1011',"
+        "N'aaa',N'aaa','aaaaaaaaaa','2006-03-01 09:00:00')")
+    assert rc == 1
+
+    rc = cur.execute(f"insert into {exc_part_table} values(5,'ggg','ggg',B'101',B'1111',"
+        "N'ggg',N'ggg','gggggggggg','2006-03-01 09:00:00')")
+    assert rc == 1
+
+    rc = cur.execute(f"insert into {exc_part_table} values(10, 'kkk',null,null,null,null,"
+        "null,null,'2007-01-01 09:00:00');")
+    assert rc == 1
+
+    cur.execute(f"select * from {exc_part_table}__p__p0 order by id;")
+    row = cur.fetchone()
+    assert row[1] == 'aaa                                               '
+
+
+def test_partition_delete(cubrid_db_cursor, exc_part_table):
+    cur, _ = cubrid_db_cursor
+
+    rc = cur.execute(f"ALTER TABLE {exc_part_table} PARTITION BY LIST (test_char) "
+        "(PARTITION p0 VALUES IN ('aaa','bbb','ddd'),PARTITION p1 VALUES IN "
+        "('fff','ggg','hhh',NULL),PARTITION p2 VALUES IN ('kkk','lll','mmm') )")
+    assert rc == 0
+
+    rc = cur.execute(f"insert into {exc_part_table} values(1,'aaa','aaa',B'1',B'1011',"
+        "N'aaa',N'aaa','aaaaaaaaaa','2006-03-01 09:00:00')")
+    assert rc == 1
+
+    rc = cur.execute(f"insert into {exc_part_table} values(5,'ggg','ggg',B'101',B'1111',"
+        "N'ggg',N'ggg','gggggggggg','2006-03-01 09:00:00')")
+    assert rc == 1
+
+    rc = cur.execute(f"insert into {exc_part_table} values(10, 'kkk',null,null,null,null,"
+        "null,null,'2007-01-01 09:00:00');")
+    assert rc == 1
+
+    rc = cur.execute(f"delete from {exc_part_table} where id = 1")
+    assert rc == 1
+
+    cur.execute(f"select count(*) from {exc_part_table} where id >= 0")
+    row = cur.fetchone()
+    assert row[0] == 2
