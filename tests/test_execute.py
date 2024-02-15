@@ -3,6 +3,12 @@ import re
 
 import pytest
 
+from conftest import (
+    TABLE_PREFIX,
+    _create_table,
+    _drop_table,
+)
+
 import cubrid_db
 
 
@@ -389,3 +395,66 @@ def test_rollback_extra_argument_error(cubrid_db_cursor, exc_rollback_table):
 
     with pytest.raises(TypeError, match = r'takes 1 positional argument but 2 were given'):
         con.rollback("pass a parameter")
+
+
+def test_select_calculate_subselect(cubrid_db_cursor):
+    cur, _ = cubrid_db_cursor
+
+    table_name = f"{TABLE_PREFIX}sctb"
+
+    try:
+        _drop_table(cubrid_db_cursor, table_name)
+        _create_table(cubrid_db_cursor, "sctb",
+            "nameid int primary key ,name VARCHAR(40)")
+
+        cur.execute(f"INSERT INTO {table_name} (name,nameid) "
+            "VALUES('Mike',1),('John',2),('Bill',3)")
+        cur.execute(f"SELECT * FROM ( SELECT * FROM {table_name} ) WHERE Name in ('John')")
+        row = cur.fetchone()
+        assert row[0] == 2
+    finally:
+        _drop_table(cubrid_db_cursor, table_name)
+
+
+def test_select_calculate(cubrid_db_cursor):
+    cur, _ = cubrid_db_cursor
+
+    cur.execute("SELECT 4 + '5.2'")
+    row = cur.fetchone()
+    assert row[0] == 9.1999999999999993
+
+    cur.execute("select date'2001-02-03' - datetime'2001-02-02 12:00:00 am'")
+    row = cur.fetchone()
+    assert row[0] == 86400000
+
+    cur.execute("SELECT date'2002-01-01' + '10'")
+    row = cur.fetchone()
+    assert row[0].isoformat() == '2002-01-11'
+
+    cur.execute("SELECT '1'+'1'")
+    row = cur.fetchone()
+    assert row[0] == '11'
+
+    cur.execute("SELECT '3'*'2'")
+    row = cur.fetchone()
+    assert row[0] == 6.0000000000000000
+
+    cur.execute("select BIT_LENGTH('CUBRID')")
+    row = cur.fetchone()
+    assert row[0] == 48
+
+    cur.execute("select BIT_LENGTH(B'010101010')")
+    row = cur.fetchone()
+    assert row[0] == 9
+
+    cur.execute("SELECT LENGTH('')")
+    row = cur.fetchone()
+    assert row[0] == 0
+
+    cur.execute("SELECT CHR(68) || CHR(68-2)")
+    row = cur.fetchone()
+    assert row[0] == 'DB'
+
+    cur.execute("SELECT INSTR ('12345abcdeabcde','b', -1)")
+    row = cur.fetchone()
+    assert row[0] == 12
