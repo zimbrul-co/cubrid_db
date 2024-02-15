@@ -207,3 +207,21 @@ def exc_primary_tables(cubrid_db_cursor):
 
     _drop_table(cubrid_db_cursor, ftb)
     _drop_table(cubrid_db_cursor, ptb)
+
+
+@pytest.fixture
+def exc_rollback_table(cubrid_db_cursor):
+    table_name = _create_table(cubrid_db_cursor, 'rollback',
+        "nameid int primary key ,age int,name VARCHAR(40)")
+
+    cur, con = cubrid_db_cursor
+    cur.execute(f"INSERT INTO {table_name} (name,nameid,age) VALUES('Mike',1,30),"
+        "('John',2,28),('Bill',3,45)")
+
+    con.set_autocommit(False)
+
+    yield table_name
+
+    con.set_autocommit(True)
+
+    _drop_table(cubrid_db_cursor, table_name)

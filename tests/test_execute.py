@@ -364,3 +364,28 @@ def test_primary_delete(cubrid_db_cursor, exc_primary_tables):
     cur.execute(f"select count(*) from {ftb}")
     row = cur.fetchone()
     assert row[0] == 4
+
+
+def test_rollback(cubrid_db_cursor, exc_rollback_table):
+    cur, con = cubrid_db_cursor
+
+    cur.execute(f"INSERT INTO {exc_rollback_table} (name,nameid,age) "
+        "VALUES('forrollback',6,66)")
+    cur.execute(f"select * from {exc_rollback_table} where nameid=6")
+    row = cur.fetchone()
+    assert row[1] == 66
+
+    con.rollback()
+
+    cur.execute(f"select * from {exc_rollback_table} where nameid=6")
+    rows = cur.fetchall()
+    assert not rows
+
+
+def test_rollback_extra_argument_error(cubrid_db_cursor, exc_rollback_table):
+    cur, con = cubrid_db_cursor
+    cur.execute(f"INSERT INTO {exc_rollback_table} (name,nameid,age) "
+        "VALUES('forrollback',6,66)")
+
+    with pytest.raises(TypeError, match = r'takes 1 positional argument but 2 were given'):
+        con.rollback("pass a parameter")
