@@ -486,3 +486,35 @@ def test_trigger(cubrid_db_cursor):
     finally:
         _drop_table(cubrid_db_cursor, hi)
         _drop_table(cubrid_db_cursor, tt1)
+
+
+def test_view_select(cubrid_db_cursor, exc_view_v, exc_view_table):
+    cur, _ = cubrid_db_cursor
+    vtb = exc_view_table
+
+    cur.execute(f"select * from {exc_view_v}")
+    row = cur.fetchone()
+    assert row[2] == 150
+
+    cur.execute(f"SHOW CREATE VIEW {exc_view_v}")
+    row = cur.fetchone()
+    assert row[1] == (f'select [public.{vtb}].[qty], [public.{vtb}].[price], '
+        f'[public.{vtb}].[qty]*[public.{vtb}].[price] from [public.{vtb}] [public.{vtb}]')
+
+
+def test_view_alter(cubrid_db_cursor, exc_view_b, exc_view_a_table):
+    cur, _ = cubrid_db_cursor
+
+    cur.execute(f"ALTER VIEW {exc_view_b} ADD QUERY "
+        f"SELECT * FROM {exc_view_a_table} WHERE id IN (1,2)")
+    cur.execute(f"select * from {exc_view_b}")
+    rows = cur.fetchall()
+    assert rows == [(1, '111-1111'), (2, '222-2222'), (3, '333-3333'),
+                    (1, '111-1111'), (2, '222-2222')]
+
+
+def test_view_update(cubrid_db_cursor, exc_view_b):
+    cur, _ = cubrid_db_cursor
+
+    with pytest.raises(cubrid_db.IntegrityError, match = r'-494'):
+        cur.execute(f"UPDATE {exc_view_b} SET phone=NULL")

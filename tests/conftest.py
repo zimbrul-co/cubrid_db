@@ -225,3 +225,60 @@ def exc_rollback_table(cubrid_db_cursor):
     con.set_autocommit(True)
 
     _drop_table(cubrid_db_cursor, table_name)
+
+
+VIEW_PREFIX = 'dbapi20testview_'
+
+
+def _create_view(cdb_cur, name_suffix, view_sql):
+    cur, _ = cdb_cur
+    view_name = f'{TABLE_PREFIX}{name_suffix}'
+    cur.execute(f'drop view if exists {view_name}')
+    cur.execute(f'create view {view_name} AS {view_sql}')
+    return view_name
+
+def _drop_view(cdb_cur, view_name):
+    cur, _ = cdb_cur
+    cur.execute(f'drop view if exists {view_name}')
+
+
+@pytest.fixture
+def exc_view_table(cubrid_db_cursor):
+    table_name = _create_table(cubrid_db_cursor, 'viewtbl', "qty INT, price INT")
+
+    cur, _ = cubrid_db_cursor
+    rc = cur.execute(f"INSERT INTO {table_name} VALUES (3,50)")
+    assert rc == 1
+
+    yield table_name
+    _drop_table(cubrid_db_cursor, table_name)
+
+
+@pytest.fixture
+def exc_view_a_table(cubrid_db_cursor):
+    table_name = _create_table(cubrid_db_cursor, 'view_py_a',
+        "id INT NOT NULL,phone VARCHAR(10)")
+
+    cur, _ = cubrid_db_cursor
+    rc = cur.execute(f"INSERT INTO {table_name} VALUES(1,'111-1111'), (2,'222-2222'), "
+        "(3, '333-3333'), (4, NULL), (5, NULL)")
+    assert rc == 5
+
+    yield table_name
+    _drop_table(cubrid_db_cursor, table_name)
+
+
+@pytest.fixture
+def exc_view_v(cubrid_db_cursor, exc_view_table):
+    view_name = _create_view(cubrid_db_cursor, 'v',
+        f'SELECT qty, price, qty*price AS "value" FROM {exc_view_table}')
+    yield view_name
+    _drop_view(cubrid_db_cursor, view_name)
+
+
+@pytest.fixture
+def exc_view_b(cubrid_db_cursor, exc_view_a_table):
+    view_name = _create_view(cubrid_db_cursor, 'b',
+        f"SELECT * FROM {exc_view_a_table} WHERE phone IS NOT NULL WITH CHECK OPTION")
+    yield view_name
+    _drop_view(cubrid_db_cursor, view_name)
