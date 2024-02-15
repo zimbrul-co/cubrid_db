@@ -205,8 +205,7 @@ class BaseCursor:
                 continue
 
             if isinstance(arg, bool):
-                arg = '1' if arg else '0'
-                self._cs.bind_param(i, arg)
+                self._cs.bind_param(i, 1 if arg else 0)
             elif isinstance(arg, int):
                 if arg < INT_MIN or arg > INT_MAX:
                     self._cs.bind_param(i, arg, field_type.BIGINT)
