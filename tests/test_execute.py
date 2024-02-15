@@ -458,3 +458,31 @@ def test_select_calculate(cubrid_db_cursor):
     cur.execute("SELECT INSTR ('12345abcdeabcde','b', -1)")
     row = cur.fetchone()
     assert row[0] == 12
+
+
+def test_trigger(cubrid_db_cursor):
+    cur, _ = cubrid_db_cursor
+
+    hi = f"{TABLE_PREFIX}hi"
+    tt1 = f"{TABLE_PREFIX}tt1"
+
+    try:
+        _drop_table(cubrid_db_cursor, hi)
+        _drop_table(cubrid_db_cursor, tt1)
+        _create_table(cubrid_db_cursor, "hi", "a int , b string")
+        _create_table(cubrid_db_cursor, "tt1", "a int , b string")
+
+        cur.execute(f"create trigger tt1_insert after insert on {tt1} execute "
+            f"insert into {hi}(a, b) values( obj.a ,to_char(obj.a))")
+
+        cur.execute(f"insert into {tt1}(a,b) values(1, 'test')")
+        cur.execute(f"select * from {hi}")
+        rows = cur.fetchall()
+        assert rows == [(1, '1')]
+
+        cur.execute(f"select * from {tt1}")
+        rows = cur.fetchall()
+        assert rows == [(1, 'test')]
+    finally:
+        _drop_table(cubrid_db_cursor, hi)
+        _drop_table(cubrid_db_cursor, tt1)
