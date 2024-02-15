@@ -288,3 +288,79 @@ def test_partition_delete(cubrid_db_cursor, exc_part_table):
     cur.execute(f"select count(*) from {exc_part_table} where id >= 0")
     row = cur.fetchone()
     assert row[0] == 2
+
+
+def _insert_ptb_ftb_data(cur, ptb, ftb):
+    rc = cur.execute(f"insert into {ptb} values ('001','aaaa', 'aaaa'), "
+        "('002','bbbb', 'bbbb'),('003','cccc', 'cccc'),('004','dddd', 'dddd'),"
+        "('005','eeee', 'eeee')")
+    assert rc == 5
+
+    rc = cur.execute(f"insert into {ftb} values ( '001' , 1,1,'1212'),"
+        "( '001' , 2,2,'2323'), ( '002' , 3,3,'3434'),( '002' , 4,4,'4545'), "
+        "( '003' , 5,5,'5656'), ( '003' , 6,6,'6767')")
+    assert rc == 6
+
+
+def test_primary_insert(cubrid_db_cursor, exc_primary_tables):
+    cur, _ = cubrid_db_cursor
+    ptb, ftb = exc_primary_tables
+    _insert_ptb_ftb_data(cur, ptb, ftb)
+
+
+def test_primary_select(cubrid_db_cursor, exc_primary_tables):
+    cur, _ = cubrid_db_cursor
+    ptb, ftb = exc_primary_tables
+    _insert_ptb_ftb_data(cur, ptb, ftb)
+
+    cur.execute(f"select title from {ptb} where id like ?", ('001%',))
+    row = cur.fetchone()
+    assert row[0] == 'aaaa'
+
+    cur.execute(f"select song from {ftb} where dsk=?", (6,))
+    row = cur.fetchone()
+    assert row[0] == '6767'
+
+
+def test_primary_update(cubrid_db_cursor, exc_primary_tables):
+    cur, _ = cubrid_db_cursor
+    ptb, ftb = exc_primary_tables
+    _insert_ptb_ftb_data(cur, ptb, ftb)
+
+    rc = cur.execute(f"update {ptb} set id = 'changeid11' where id like '004%'")
+    assert rc == 1
+
+    cur.execute(f"select * from {ptb} where id like 'change%'")
+    row = cur.fetchone()
+    assert row[2] == 'dddd'
+
+
+    rc = cur.execute(f"update {ftb} set song = 'changesong' where album like '003%'")
+    assert rc == 2
+
+    cur.execute(f"select * from {ftb}  where album like '003%'")
+    row = cur.fetchone()
+    assert row[1] == 5
+
+    row = cur.fetchone()
+    assert row[1] == 6
+
+
+def test_primary_delete(cubrid_db_cursor, exc_primary_tables):
+    cur, _ = cubrid_db_cursor
+    ptb, ftb = exc_primary_tables
+    _insert_ptb_ftb_data(cur, ptb, ftb)
+
+    rc = cur.execute(f"delete from {ptb}  where id like '004%'")
+    assert rc == 1
+
+    cur.execute(f"select count(*) from {ptb} ")
+    row = cur.fetchone()
+    assert row[0] == 4
+
+    rc = cur.execute(f"delete from {ftb} where album like '003%'")
+    assert rc == 2
+
+    cur.execute(f"select count(*) from {ftb}")
+    row = cur.fetchone()
+    assert row[0] == 4

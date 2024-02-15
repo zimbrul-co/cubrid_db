@@ -188,3 +188,22 @@ def exc_part_table(cubrid_db_cursor):
         "test_string string,test_datetime timestamp, primary key (id, test_char)")
     yield table_name
     _drop_table(cubrid_db_cursor, table_name)
+
+
+@pytest.fixture
+def exc_primary_tables(cubrid_db_cursor):
+    # Avoid drop error if primary_table is dropped first
+    ftb = f'{TABLE_PREFIX}foreign_table'
+    _drop_table(cubrid_db_cursor, ftb)
+
+    # Create tables
+    ptb = _create_table(cubrid_db_cursor, 'primary_table',
+        "id CHAR(10) PRIMARY KEY, title VARCHAR(100), artist VARCHAR(100)")
+    ftb = _create_table(cubrid_db_cursor, 'foreign_table',
+        "album CHAR(10),dsk INTEGER,posn INTEGER,song VARCHAR(255),"
+        f"FOREIGN KEY (album) REFERENCES {ptb}(id) ON UPDATE RESTRICT")
+
+    yield ptb, ftb
+
+    _drop_table(cubrid_db_cursor, ftb)
+    _drop_table(cubrid_db_cursor, ptb)
