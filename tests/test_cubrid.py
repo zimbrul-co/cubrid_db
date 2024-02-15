@@ -33,6 +33,7 @@ To generate a coverage report, add the `--cov=_cubrid` option.
 # pylint: disable=missing-function-docstring
 
 import datetime
+import os
 import re
 
 import pytest
@@ -513,8 +514,24 @@ def test_bind_binary(cubrid_cursor):
     inserted = _test_bind(cur, 'id BIT VARYING(256)', samples_bin, bt_char)
 
 
+def _are_files_identical(file1_path, file2_path, chunk_size=4096):
+    with open(file1_path, 'rb') as file1, open(file2_path, 'rb') as file2:
+        while True:
+            file1_chunk = file1.read(chunk_size)
+            file2_chunk = file2.read(chunk_size)
+
+            if file1_chunk != file2_chunk:
+                return False
+
+            if not file1_chunk:
+                return True
+
+
 def test_lob_file(cubrid_cursor):
     cur, con = cubrid_cursor
+
+    fp1 = 'tests/cubrid_logo.png'
+    fp2 = 'tests/lob_out.png'
 
     try:
         cur.prepare('create table test_cubrid (picture blob)')
@@ -522,7 +539,7 @@ def test_lob_file(cubrid_cursor):
 
         cur.prepare('insert into test_cubrid values (?)')
         lob = con.lob()
-        lob.imports('tests/cubrid_logo.png')
+        lob.imports(fp1)
         cur.bind_lob(1, lob)
         cur.execute()
         lob.close()
@@ -531,10 +548,15 @@ def test_lob_file(cubrid_cursor):
         cur.execute()
         lob_fetch = con.lob()
         cur.fetch_lob(1, lob_fetch)
-        lob_fetch.export('out')
+        lob_fetch.export(fp2)
         lob_fetch.close()
+
+        assert _are_files_identical(fp1, fp2)
     finally:
         _cleanup_table(cur)
+
+        if os.path.exists(fp2):
+            os.remove(fp2)
 
 
 def test_lob_string(cubrid_cursor):
