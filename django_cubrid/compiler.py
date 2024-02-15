@@ -29,10 +29,78 @@ Note:
 - Understanding of Django's ORM internals and CUBRID's SQL syntax is essential for
   modifying or extending this module.
 """
-from django.db.models.sql import compiler
+from django.db.models.sql.compiler import (
+    SQLCompiler as BaseSQLCompiler,
+    SQLInsertCompiler as BaseSQLInsertCompiler,
+    SQLDeleteCompiler as BaseSQLDeleteCompiler,
+    SQLUpdateCompiler as BaseSQLUpdateCompiler,
+    SQLAggregateCompiler as BaseSQLAggregateCompiler,
+)
+from django.db.models.fields.json import (
+    compile_json_path,
+    ContainedBy,
+    DataContains,
+    HasKeyLookup,
+    KeyTransform,
+    KeyTransformIn,
+)
 
 
-class SQLCompiler(compiler.SQLCompiler):
+def json_data_contains_as_cubrid(self, compiler, connection):
+    """For json data_contains, need to compare the result of JSON_CONTAINS with 1"""
+    sql, params = self.as_sql(compiler, connection)
+    sql = f"{sql}=1"
+    return sql, params
+
+setattr(DataContains, 'as_cubrid', json_data_contains_as_cubrid)
+
+
+def json_contained_by_as_cubrid(self, compiler, connection):
+    """For json contained_by, need to compare the result of JSON_CONTAINS with 1"""
+    sql, params = self.as_sql(compiler, connection)
+    sql = f"{sql}=1"
+    return sql, params
+
+setattr(ContainedBy, 'as_cubrid', json_contained_by_as_cubrid)
+
+
+def json_key_transform_as_cubrid(self, compiler, connection):
+    """For json key transform, set usage of JSON_EXTRACT function"""
+    lhs, params, key_transforms = self.preprocess_lhs(compiler, connection)
+    json_path = compile_json_path(key_transforms)
+    return f"JSON_EXTRACT({lhs}, '{json_path}')", params
+
+setattr(KeyTransform, 'as_cubrid', json_key_transform_as_cubrid)
+
+
+def json_has_key_lookup_as_cubrid(self, compiler, connection):
+    """For json has_key, set usage of JSON_CONTAINS_PATH function"""
+    sql, params = self.as_sql(compiler, connection,
+        template="JSON_CONTAINS_PATH(%s, 'one', %%s)=1",
+    )
+    return sql, params
+
+setattr(HasKeyLookup, 'as_cubrid', json_has_key_lookup_as_cubrid)
+
+
+def json_key_transform_in_resolve_expression_parameter(self, compiler, connection, sql, param):
+    """Use the JSON_EXTRACT function, like the MySQL backend"""
+    sql, params = super(KeyTransformIn, self).resolve_expression_parameter(
+        compiler,
+        connection,
+        sql,
+        param,
+    )
+    if not hasattr(param, "as_sql"):
+        sql = "JSON_EXTRACT(%s, '$')"
+    return sql, params
+
+setattr(KeyTransformIn, 'resolve_expression_parameter',
+        json_key_transform_in_resolve_expression_parameter)
+
+
+
+class SQLCompiler(BaseSQLCompiler):
     """
     Custom SQL Compiler for the CUBRID Database Backend in Django.
 
@@ -99,7 +167,7 @@ class SQLCompiler(compiler.SQLCompiler):
         return sql, params
 
 
-class SQLInsertCompiler(compiler.SQLInsertCompiler, SQLCompiler):
+class SQLInsertCompiler(BaseSQLInsertCompiler, BaseSQLCompiler):
     """
     SQL Insert Compiler for the CUBRID Database Backend in Django.
 
@@ -142,7 +210,7 @@ class SQLInsertCompiler(compiler.SQLInsertCompiler, SQLCompiler):
 
 
 
-class SQLDeleteCompiler(compiler.SQLDeleteCompiler, SQLCompiler):
+class SQLDeleteCompiler(BaseSQLDeleteCompiler, BaseSQLCompiler):
     """
     SQL Delete Compiler for the CUBRID Database Backend in Django.
 
@@ -165,7 +233,7 @@ class SQLDeleteCompiler(compiler.SQLDeleteCompiler, SQLCompiler):
     """
 
 
-class SQLUpdateCompiler(compiler.SQLUpdateCompiler, SQLCompiler):
+class SQLUpdateCompiler(BaseSQLUpdateCompiler, BaseSQLCompiler):
     """
     SQL Update Compiler for the CUBRID Database Backend in Django.
 
@@ -187,7 +255,7 @@ class SQLUpdateCompiler(compiler.SQLUpdateCompiler, SQLCompiler):
     """
 
 
-class SQLAggregateCompiler(compiler.SQLAggregateCompiler, SQLCompiler):
+class SQLAggregateCompiler(BaseSQLAggregateCompiler, BaseSQLCompiler):
     """
     SQL Aggregate Compiler for the CUBRID Database Backend in Django.
 

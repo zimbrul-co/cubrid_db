@@ -48,8 +48,6 @@ class DatabaseFeatures(BaseDatabaseFeatures):
 
     has_bulk_insert = True
 
-    has_native_json_field = True
-
     has_select_for_update = True
 
     has_select_for_update_nowait = False
