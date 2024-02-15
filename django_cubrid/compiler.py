@@ -36,6 +36,13 @@ from django.db.models.sql.compiler import (
     SQLUpdateCompiler as BaseSQLUpdateCompiler,
     SQLAggregateCompiler as BaseSQLAggregateCompiler,
 )
+from django.db.models.expressions import (
+    Col,
+)
+from django.db.models.lookups import (
+    BuiltinLookup,
+    Exact,
+)
 from django.db.models.fields.json import (
     compile_json_path,
     ContainedBy,
@@ -44,6 +51,20 @@ from django.db.models.fields.json import (
     KeyTransform,
     KeyTransformIn,
 )
+
+
+def exact_as_sql(self, compiler, connection):
+    """
+    For the Exact lookup with boolean values, use the super() implementation,
+    because BOOL is not supported by CUBRID.
+    BooleanField is like a SmallIntegerField, for CUBRID.
+    """
+    if isinstance(self.lhs, Col):
+        return BuiltinLookup.as_sql(self, compiler, connection)
+    return exact_as_sql_default_impl(self, compiler, connection)
+
+exact_as_sql_default_impl = Exact.as_sql
+setattr(Exact, 'as_sql', exact_as_sql)
 
 
 def json_data_contains_as_cubrid(self, compiler, connection):
