@@ -23,6 +23,7 @@
 #define CUBRID_BLOB 'B'
 #define CUBRID_LOB_BUF_SIZE 4096
 #define CUBRID_ER_MSG_LEN 1024
+#define CUBRID_ER_MSG_LEN2 1152
 
 static PyObject *_cubrid_error;
 static PyObject *_cubrid_interface_error;
@@ -147,7 +148,7 @@ handle_error (int e, T_CCI_ERROR * error)
 {
   PyObject *t, *exception = NULL;
   int err_code;
-  char msg[CUBRID_ER_MSG_LEN] = { '0' };
+  char msg[CUBRID_ER_MSG_LEN2] = { '0' };
   char err_msg[CUBRID_ER_MSG_LEN] = { '\0' }, *facility_msg;
 
   exception = _cubrid_error;
@@ -233,7 +234,7 @@ handle_error (int e, T_CCI_ERROR * error)
         }
     }
 
-  snprintf (msg, CUBRID_ER_MSG_LEN, "ERROR: %s, %d, %s", facility_msg,
+  snprintf (msg, CUBRID_ER_MSG_LEN2, "ERROR: %s, %d, %s", facility_msg,
             err_code, err_msg);
 
   if (!(t = PyTuple_New (2)))
