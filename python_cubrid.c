@@ -1944,7 +1944,7 @@ _cubrid_CursorObject_bind_Set (_cubrid_CursorObject * self, PyObject * args)
   return Py_None;
 }
 
-static int
+static void
 _cubrid_CursorObject_set_description (_cubrid_CursorObject * self)
 {
   PyObject *desc, *item;
@@ -1953,13 +1953,13 @@ _cubrid_CursorObject_set_description (_cubrid_CursorObject * self)
 
   if (self->state == CURSOR_STATE_CLOSED)
     {
-      return handle_error (CUBRID_ER_INVALID_CURSOR, NULL);
+      return;
     }
   if (self->col_count == 0)
     {
       Py_XDECREF (self->description);
       self->description = PyTuple_New (0);
-      return 1;
+      return;
     }
 
   desc = (PyObject *) PyTuple_New (self->col_count);
@@ -1990,8 +1990,6 @@ _cubrid_CursorObject_set_description (_cubrid_CursorObject * self)
 
   Py_XDECREF (self->description);
   self->description = desc;
-
-  return 1;
 }
 
 static char _cubrid_CursorObject_result_info__doc__[] = "result_info(n)\n\
