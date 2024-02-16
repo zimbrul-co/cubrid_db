@@ -2467,6 +2467,7 @@ _cubrid_CursorObject_dbval_to_pyvalue (_cubrid_CursorObject * self, int type,
         }
       break;
     case 130: // JSON
+    case CCI_U_TYPE_CHAR:
     case CCI_U_TYPE_STRING:
       res = cci_get_data (self->handle, index, CCI_A_TYPE_STR, &buffer, &ind);
       if (res < 0)
