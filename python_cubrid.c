@@ -958,8 +958,8 @@ _cubrid_ConnectionObject_batch_execute (_cubrid_ConnectionObject * self,
   T_CCI_ERROR cci_error;
   PyObject *p_tube;
   PyObject *p_value;
-  PyDictObject *p_result;
-  PyTupleObject *p_batch_result;
+  PyObject *p_result;
+  PyObject *p_batch_result;
 
   if (!PyArg_ParseTuple (args, "O", &p_tube))
     {
