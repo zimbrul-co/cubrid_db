@@ -4320,12 +4320,24 @@ PyTypeObject _cubrid_CursorObject_type = {
 };
 
 #define _CUBRID_VERSION_    "11.0.0.0001"
-static char _cubrid_doc[] = "CUBRID API Module for Python";
+static char _cubrid_doc[] =
+"The CUBRID Database Module for Python provides a native interface to the CUBRID database server. "
+"It facilitates direct execution of SQL queries, transaction management, and access to database "
+"features from Python code, supporting connection handling, query execution, result management, "
+"and error handling. Features include:\n"
+"  - Direct execution of SQL commands\n"
+"  - Transaction control\n"
+"  - Prepared statement support\n"
+"  - Comprehensive error reporting\n"
+"  - Support for large object (LOB) handling\n"
+"Usage is straightforward for those familiar with database programming in Python, following the "
+"DB-API 2.0 specification where applicable. This module aids developers in building robust, "
+"high-performance applications that interact seamlessly with CUBRID databases.";
 
 static struct PyModuleDef cubriddef = {
   PyModuleDef_HEAD_INIT,
   "_cubrid",
-  NULL,
+  _cubrid_doc,
   0,
   _cubrid_methods,
   NULL,
