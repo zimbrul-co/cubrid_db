@@ -415,6 +415,14 @@ class DatabaseOperations(BaseDatabaseOperations):
         values_sql = ", ".join(f"({sql})" for sql in placeholder_rows_sql)
         return "VALUES " + values_sql
 
+    def adapt_booleanfield_value(self, value):
+        """
+        Adapt Python True/False to 1 or 0 for CUBRID
+        This method is called by BooleanField, patched for CUBRID in compiler.py
+        See boolean_field_get_db_prep_value() from compiler.py
+        """
+        return 1 if value else 0
+
     def adapt_datefield_value(self, value):
         return value
 

@@ -29,6 +29,7 @@ Note:
 - Understanding of Django's ORM internals and CUBRID's SQL syntax is essential for
   modifying or extending this module.
 """
+from django.core.exceptions import EmptyResultSet
 from django.db.models.sql.compiler import (
     SQLCompiler as BaseSQLCompiler,
     SQLInsertCompiler as BaseSQLInsertCompiler,
@@ -37,12 +38,15 @@ from django.db.models.sql.compiler import (
     SQLAggregateCompiler as BaseSQLAggregateCompiler,
 )
 from django.db.models.expressions import (
+    Case,
     Col,
+    Combinable,
+    NegatedExpression,
+    Subquery,
+    Value,
 )
-from django.db.models.lookups import (
-    BuiltinLookup,
-    Exact,
-)
+from django.db.models.fields import BooleanField
+from django.db.models.lookups import Exact
 from django.db.models.fields.json import (
     compile_json_path,
     ContainedBy,
@@ -53,18 +57,66 @@ from django.db.models.fields.json import (
 )
 
 
+def combinable__pow__(self, other):
+    """Not supported by CUBRID"""
+    raise NotImplementedError("CUBRID does not have a power operator")
+def combinable__rpow__(self, other):
+    """Not supported by CUBRID"""
+    raise NotImplementedError("CUBRID does not have a power operator")
+
+Combinable.__pow__ = combinable__pow__
+Combinable.__rpow__ = combinable__rpow__
+Combinable.BITXOR = "^"
+Combinable.POW = ""
+
+
+def boolean_field_get_db_prep_value(self, value, connection, prepared = False):
+    """Use an adapter for the BooleanField value"""
+    if not prepared:
+        value = self.get_prep_value(value)
+    return connection.ops.adapt_booleanfield_value(value)
+
+BooleanField.get_db_prep_value = boolean_field_get_db_prep_value
+
+
+def negated_expression_as_sql(self, compiler, connection):
+    """
+    The negated expression needs adaptations for CUBRID SQL, which does not
+    use boolean values. If the negated expression is a column with bool value,
+    or if the expression is a value of bool type, we need to compare with 0 or 1.
+    """
+    try:
+        sql, params = super(NegatedExpression, self).as_sql(compiler, connection)
+    except EmptyResultSet:
+        return "1=1", ()
+
+    if isinstance(self.expression, Col) and \
+            isinstance(self.expression.output_field, BooleanField):
+        return f"{sql}=0", params
+
+    if isinstance(self.expression, Value) and isinstance(self.expression.value, bool):
+        return (f"{sql}=1" if self.expression.value else f"{sql}=0"), params
+
+    return f"NOT {sql}", params
+
+NegatedExpression.as_sql = negated_expression_as_sql
+
+
 def exact_as_sql(self, compiler, connection):
     """
-    For the Exact lookup with boolean values, use the super() implementation,
-    because BOOL is not supported by CUBRID.
-    BooleanField is like a SmallIntegerField, for CUBRID.
+    For the Exact lookup with boolean values or conditional expression results,
+    use the super() implementation, which makes a suitable logical expression.
+    * Column
+    * Case expression
+    * Subquery with SELECT with Column
     """
-    if isinstance(self.lhs, Col):
-        return BuiltinLookup.as_sql(self, compiler, connection)
+    if isinstance(self.lhs, (Case, Col)) or (isinstance(self.lhs, Subquery) and \
+            self.lhs.query.select and isinstance(self.lhs.query.select[0], Col)):
+        return super(Exact, self).as_sql(compiler, connection)
     return exact_as_sql_default_impl(self, compiler, connection)
 
 exact_as_sql_default_impl = Exact.as_sql
-setattr(Exact, 'as_sql', exact_as_sql)
+Exact.as_sql = exact_as_sql
 
 
 def json_data_contains_as_cubrid(self, compiler, connection):

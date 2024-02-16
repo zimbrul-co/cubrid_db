@@ -58,6 +58,8 @@ class DatabaseFeatures(BaseDatabaseFeatures):
 
     requires_literal_defaults = True
 
+    supports_boolean_expr_in_select_clause = False
+
     supports_column_check_constraints = False
 
     supports_comments = True
