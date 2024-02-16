@@ -119,12 +119,6 @@ static struct _error_message
   0, ""}
 };
 
-static void *libcascci = NULL;
-typedef int (*CCI_GET_LAST_INSERT_ID) (int con, void *buff,
-                                       T_CCI_ERROR * err_buf);
-static CCI_GET_LAST_INSERT_ID cci_get_last_insert_id_fp = NULL;
-
-
 static int
 get_error_msg (int err_code, char *err_msg)
 {
@@ -1082,7 +1076,7 @@ _cubrid_ConnectionObject_schema_to_pyvalue (_cubrid_ConnectionObject * self,
                                             int request, int type, int index)
 {
   int res, ind;
-  PyObject *val, *tmpval;
+  PyObject *val;
   char *buffer;
   int num;
 
@@ -2281,7 +2275,6 @@ _cubrid_CursorObject_dbval_to_pyvalue (_cubrid_CursorObject * self, int type,
   int num;
   CUBRID_LONG_LONG bignum;
   T_CCI_DATE dt;
-  char *str_buffer;
   int len;
 
   if (self->state == CURSOR_STATE_CLOSED)
@@ -4521,7 +4514,7 @@ all_ins (PyObject * d)
 PyObject *
 PyInit__cubrid (void)
 {
-  PyObject *dict, *module, *mDecimal;
+  PyObject *dict, *module;
 
   module = PyModule_Create (&cubriddef);
 
