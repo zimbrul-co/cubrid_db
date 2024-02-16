@@ -203,6 +203,18 @@ def exc_primary_tables(cubrid_db_cursor):
         "album CHAR(10),dsk INTEGER,posn INTEGER,song VARCHAR(255),"
         f"FOREIGN KEY (album) REFERENCES {ptb}(id) ON UPDATE RESTRICT")
 
+    # Insert data
+    cur, _ = cubrid_db_cursor
+    rc = cur.execute(f"insert into {ptb} values ('001','aaaa', 'aaaa'), "
+        "('002','bbbb', 'bbbb'),('003','cccc', 'cccc'),('004','dddd', 'dddd'),"
+        "('005','eeee', 'eeee')")
+    assert rc == 5
+
+    rc = cur.execute(f"insert into {ftb} values ( '001' , 1,1,'1212'),"
+        "( '001' , 2,2,'2323'), ( '002' , 3,3,'3434'),( '002' , 4,4,'4545'), "
+        "( '003' , 5,5,'5656'), ( '003' , 6,6,'6767')")
+    assert rc == 6
+
     yield ptb, ftb
 
     _drop_table(cubrid_db_cursor, ftb)
@@ -282,3 +294,11 @@ def exc_view_b(cubrid_db_cursor, exc_view_a_table):
         f"SELECT * FROM {exc_view_a_table} WHERE phone IS NOT NULL WITH CHECK OPTION")
     yield view_name
     _drop_view(cubrid_db_cursor, view_name)
+
+
+@pytest.fixture
+def exc_many_table(cubrid_db_cursor):
+    table_name = _create_table(cubrid_db_cursor, 'executemany',
+        "name VARCHAR(40),category VARCHAR(40)")
+    yield table_name
+    _drop_table(cubrid_db_cursor, table_name)
