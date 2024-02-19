@@ -82,6 +82,8 @@ class DatabaseFeatures(BaseDatabaseFeatures):
 
     supports_regex_backreferencing = False
 
+    supports_select_for_update_with_limit = False
+
     supports_table_check_constraints = False
 
     supports_timezones = False
