@@ -34,7 +34,7 @@ class Connection:
     def __del__(self):
         pass
 
-    def cursor(self, dict_cursor = None):
+    def cursor(self, dict_cursor = False):
         """Return a new Cursor Object using the connection."""
         cursor_class = DictCursor if dict_cursor else Cursor
         return cursor_class(self)
