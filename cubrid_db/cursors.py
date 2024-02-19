@@ -31,9 +31,6 @@ Note:
 For more detailed documentation on the use of this module and the Python CUBRID API,
 refer to the official CUBRID documentation and Python API guidelines.
 """
-
-
-
 from datetime import date, time, datetime
 from decimal import Decimal
 
@@ -43,6 +40,13 @@ from cubrid_db.exceptions import InterfaceError
 
 INT_MIN = -2147483648
 INT_MAX = +2147483647
+
+
+def bytes_to_binary_string(bytes_value):
+    binary_string = ''
+    for byte in bytes_value:
+        binary_string += bin(byte)[2:].zfill(8)
+    return binary_string
 
 
 def get_set_element_type(iterable):
@@ -218,7 +222,13 @@ class BaseCursor:
             elif is_iterable(arg):
                 element_type = get_set_element_type(arg)
                 s = self.con.connection.set()
-                s.imports(tuple(arg), element_type)
+
+                if element_type == field_type.VARBIT:
+                    adapt = bytes_to_binary_string
+                else:
+                    adapt = str
+
+                s.imports(tuple(map(adapt, arg)), element_type)
                 self._cs.bind_set(i, s)
             else:
                 arg = str(arg)
