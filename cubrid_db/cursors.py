@@ -42,7 +42,19 @@ INT_MIN = -2147483648
 INT_MAX = +2147483647
 
 
+def is_iterable(obj):
+    """Returns whether an object is iterable"""
+    if isinstance(obj, (bytes, str)):
+        return False
+    try:
+        iter(obj)
+        return True
+    except TypeError:
+        return False
+
+
 def bytes_to_binary_string(bytes_value):
+    """Converts from bytes to a binary string containing only 1 or 0"""
     binary_string = ''
     for byte in bytes_value:
         binary_string += bin(byte)[2:].zfill(8)
@@ -192,15 +204,6 @@ class BaseCursor:
 
         self.__check_state()
 
-        def is_iterable(obj):
-            if isinstance(obj, (bytes, str)):
-                return False
-            try:
-                iter(obj)
-                return True
-            except TypeError:
-                return False
-
         if not is_iterable(args):
             args = [args,]
 
@@ -220,19 +223,25 @@ class BaseCursor:
             elif isinstance(arg, bytes):
                 self._cs.bind_param(i, arg, field_type.VARBIT)
             elif is_iterable(arg):
-                element_type = get_set_element_type(arg)
-                s = self.con.connection.set()
-
-                if element_type == field_type.VARBIT:
-                    adapt = bytes_to_binary_string
-                else:
-                    adapt = str
-
-                s.imports(tuple(map(adapt, arg)), element_type)
-                self._cs.bind_set(i, s)
+                self._bind_set(i, arg)
             else:
                 arg = str(arg)
                 self._cs.bind_param(i, arg)
+
+    def _bind_set(self, i, set_arg):
+        """
+        Bind a set argument and perform the appropriate adaptations
+        for the set elements, to be accepted by _cubrid imports() and bind_set()
+        """
+        element_type = get_set_element_type(set_arg)
+        s = self.con.connection.set()
+
+        adapt = str
+        if element_type == field_type.VARBIT:
+            adapt = bytes_to_binary_string
+
+        s.imports(tuple(map(adapt, set_arg)), element_type)
+        self._cs.bind_set(i, s)
 
     def execute(self, query, args=None):
         """
