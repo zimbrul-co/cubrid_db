@@ -302,3 +302,48 @@ def exc_many_table(cubrid_db_cursor):
         "name VARCHAR(40),category VARCHAR(40)")
     yield table_name
     _drop_table(cubrid_db_cursor, table_name)
+
+
+@pytest.fixture
+def enum_table(cubrid_db_cursor):
+    table_name = _create_table(cubrid_db_cursor, 'enum01',
+        "i INT, working_days ENUM('Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'), "
+        "answers ENUM('Yes', 'No', 'Cancel')")
+
+    yield table_name
+
+    _drop_table(cubrid_db_cursor, table_name)
+
+
+@pytest.fixture
+def enum_01_table(cubrid_db_cursor, enum_table):
+    cur, _ = cubrid_db_cursor
+    cur.execute(f"insert into {enum_table} values"
+        "(1,1,1),(2,'Tuesday','No'), (3, 'Wednesday','Cancel')")
+    yield enum_table
+
+
+@pytest.fixture
+def enum_02_table(cubrid_db_cursor, enum_table):
+    cur, _ = cubrid_db_cursor
+    cur.execute(f"insert into {enum_table} values(1,1,1)")
+    yield enum_table
+
+
+@pytest.fixture
+def enum_03_table(cubrid_db_cursor, enum_table):
+    yield enum_table
+
+
+@pytest.fixture
+def enum_04_table(cubrid_db_cursor):
+    table_name = _create_table(cubrid_db_cursor, 'enum01',
+        "e1 enum('a', 'b'), e2 enum('Yes', 'No', 'Cancel')")
+
+    cur, _ = cubrid_db_cursor
+    cur.execute(f"insert into {table_name} values "
+        "(1, 1), (1, 2), (1, 3), (2, 1), (2, 2), (2, 3)")
+
+    yield table_name
+
+    _drop_table(cubrid_db_cursor, table_name)

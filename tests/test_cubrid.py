@@ -61,6 +61,9 @@ def _create_table(cursor, columns_sql, samples, bind_type = None):
     cursor.prepare(f"create table if not exists test_cubrid ({columns_sql})")
     cursor.execute()
 
+    if not samples:
+        return
+
     # Insert sample data
     placeholders = ','.join(['(?)'] * len(samples))
     insert_query = f"insert into test_cubrid values {placeholders}"
@@ -89,6 +92,33 @@ def db_sample_names_table(cubrid_cursor):
     ]
 
     _create_table(cursor, 'name varchar(20)', names)
+
+    yield cursor, connection
+
+    _cleanup_table(cursor)
+
+
+@pytest.fixture
+def db_collection_table(cubrid_cursor):
+    cursor, connection = cubrid_cursor
+
+    _create_table(cursor, 'a set of int, b multiset of int , c list of int', [])
+
+    yield cursor, connection
+
+    _cleanup_table(cursor)
+
+
+@pytest.fixture
+def db_int_table(cubrid_cursor):
+    cursor, connection = cubrid_cursor
+
+    _create_table(cursor, 'id integer auto_increment, val integer', [])
+
+    cursor.prepare('insert into test_cubrid (val) values (?)')
+    for i in range(0, 10):
+        cursor.bind_param(1, i)
+        cursor.execute()
 
     yield cursor, connection
 
@@ -159,12 +189,12 @@ def test_cursor(cubrid_cursor):
     pass
 
 
-def _fetchall(cursor):
+def _fetchall(cursor, fetch_type = 0):
     results = []
-    row = cursor.fetch_row()
+    row = cursor.fetch_row(fetch_type)
     while row:
         results.append(row)
-        row = cursor.fetch_row()
+        row = cursor.fetch_row(fetch_type)
     return results
 
 
@@ -512,6 +542,57 @@ def test_bind_binary(cubrid_cursor):
     assert inserted == samples_bytes
 
     inserted = _test_bind(cur, 'id BIT VARYING(256)', samples_bin, bt_char)
+
+
+def test_row_to_tuple(cubrid_cursor, db_int_table):
+    cur, _ = cubrid_cursor
+
+    cur.prepare("select * from test_cubrid")
+    cur.execute()
+
+    rows = _fetchall(cur)
+    assert rows == [(1, 0), (2, 1), (3, 2), (4, 3), (5, 4),
+                    (6, 5), (7, 6), (8, 7), (9, 8), (10, 9)]
+
+
+def test_row_to_dict(cubrid_cursor, db_int_table):
+    cur, _ = cubrid_cursor
+
+    cur.prepare("select * from test_cubrid")
+    cur.execute()
+
+    rows = _fetchall(cur, 1)
+    assert rows == [{'id': 1, 'val': 0}, {'id': 2, 'val': 1}, {'id': 3, 'val': 2},
+                    {'id': 4, 'val': 3}, {'id': 5, 'val': 4}, {'id': 6, 'val': 5},
+                    {'id': 7, 'val': 6}, {'id': 8, 'val': 7}, {'id': 9, 'val': 8},
+                    {'id': 10, 'val': 9}]
+
+
+def test_collection(cubrid_cursor, db_collection_table):
+    cur, _ = cubrid_cursor
+
+    cur.prepare("insert into test_cubrid "
+        "values( {},{},{}),(null,null,null),( {1,1},{1,1},{1,1}),"
+        "({1,2,3},{1,2,3},{1,2,3}),( {-1,-2,-3},{-1,-2,-3},{-1,-2,-3})")
+    cur.execute()
+    cur.prepare("select * from test_cubrid where a seteq {'1'} order by 1,2")
+    cur.execute()
+
+    rows = _fetchall(cur)
+    assert rows == [({'1'}, ['1', '1'], ['1', '1'])]
+
+
+def test_collection_2(cubrid_cursor, db_collection_table):
+    cur, _ = cubrid_cursor
+
+    cur.prepare("insert into test_cubrid "
+        "values({},{},{}),(null,null,null),( {1,1},{1,1},{1,1})")
+    cur.execute()
+    cur.prepare("select * from test_cubrid where a seteq {'1'} order by 1,2")
+    cur.execute()
+
+    rows = _fetchall(cur)
+    assert rows == [({'1'}, ['1', '1'], ['1', '1'])]
 
 
 def _are_files_identical(file1_path, file2_path, chunk_size=4096):

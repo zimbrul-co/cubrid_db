@@ -86,6 +86,29 @@ def test_db_api_exceptions_hierarchy():
             f"'{exc}' does not subclass 'DatabaseError'"
 
 
+def test_escape_string(cubrid_db_connection):
+    con = cubrid_db_connection
+
+    # Test for empty string
+    assert con.escape_string('') == ''
+
+    # Test for single quotes (which should be escaped)
+    assert con.escape_string("O'Reilly") == "O''Reilly"
+
+    # Test for escaping SQL percent sign and underscore
+    assert con.escape_string("100% sure") == "100% sure"
+    assert con.escape_string("an_underscore") == "an_underscore"
+
+    # Test for non-ASCII characters (Unicode)
+    assert con.escape_string("Unicode test: èéêëēėę") == "Unicode test: èéêëēėę"
+
+    # Test for numeric values (which should not be altered)
+    assert con.escape_string("123456") == "123456"
+
+    # Test for SQL keywords to ensure they're not altered
+    assert con.escape_string("SELECT * FROM users") == "SELECT * FROM users"
+
+
 def test_invalid_sql_insert_raises_dberror(cubrid_db_cursor):
     cur, _ = cubrid_db_cursor
     table_name = f'{TABLE_PREFIX}booze'
