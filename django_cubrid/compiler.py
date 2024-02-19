@@ -188,56 +188,6 @@ class SQLCompiler(BaseSQLCompiler):
       query compilation process and CUBRID's SQL syntax, particularly as it pertains
       to query limits and offsets.
     """
-    def as_sql(self, with_limits=True, with_col_aliases=False):
-        """
-        Creates and returns the SQL query string and its parameters for this query.
-
-        This method constructs the SQL query based on the current query context,
-        optionally including column aliases and limit/offset clauses. It first
-        calls the parent class's implementation of `as_sql` to generate the base
-        query string and parameters. Then, if 'with_limits' is True, it modifies
-        the query to include CUBRID-specific limit and offset clauses.
-
-        Parameters:
-        with_limits (bool): If True, includes limit/offset information in the query.
-                            If False, these clauses are omitted. Defaults to True.
-        with_col_aliases (bool): If True, includes column aliases in the query.
-                                Defaults to False.
-
-        Returns:
-        tuple: A tuple containing the SQL query string and a list of parameters.
-            The query string is adapted to include limit/offset clauses as per
-            CUBRID's syntax if 'with_limits' is True.
-
-        The limit/offset handling is specifically adapted for CUBRID's SQL syntax.
-        If 'high_mark' (upper limit) is set in the query, it calculates the number
-        of rows to fetch. If 'low_mark' (offset) is also set, it includes both
-        offset and limit in the SQL query. Otherwise, only the limit is included.
-
-        Example Usage:
-        # Example for internal usage within Django's ORM framework
-        compiler = SQLCompiler(...)
-        sql, params = compiler.as_sql(with_limits=True, with_col_aliases=False)
-        """
-        sql, params = super().as_sql(
-            with_limits=False,
-            with_col_aliases=with_col_aliases,
-        )
-
-        if with_limits:
-            if self.query.high_mark is not None:
-                row_count = self.query.high_mark - self.query.low_mark
-                if self.query.low_mark:
-                    sql = sql + f' LIMIT {self.query.low_mark},{row_count}'
-                else:
-                    sql = sql + f' LIMIT {row_count}'
-            else:
-                val = self.connection.ops.no_limit_value()
-                if val:
-                    if self.query.low_mark:
-                        sql = sql + f' LIMIT {self.query.low_mark},{val}'
-
-        return sql, params
 
 
 class SQLInsertCompiler(BaseSQLInsertCompiler, BaseSQLCompiler):

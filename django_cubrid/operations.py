@@ -194,6 +194,18 @@ class DatabaseOperations(BaseDatabaseOperations):
         # 2**63 - 1
         return 9223372036854775807
 
+    def limit_offset_sql(self, low_mark, high_mark):
+        if high_mark is None:
+            if low_mark:
+                row_count = self.no_limit_value()
+                return f'LIMIT {low_mark},{row_count}'
+            return ''
+
+        row_count = high_mark - low_mark
+        if low_mark:
+            return f'LIMIT {low_mark},{row_count}'
+        return f'LIMIT {row_count}'
+
     def last_executed_query(self, cursor, sql, params):
         """
         Return a string of the query last executed by the given cursor, with
