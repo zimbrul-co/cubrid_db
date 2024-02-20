@@ -166,6 +166,7 @@ setup(
     py_modules=[
         "cubrid_db.connections",
         "cubrid_db.cursors",
+        "cubrid_db.exceptions",
         "cubrid_db.field_type",
     ],
     author="Casian Andrei",
