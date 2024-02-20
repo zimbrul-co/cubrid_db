@@ -5,7 +5,7 @@ want to make your own subclasses.
 """
 from _cubrid import connect as cubrid_connect
 
-from cubrid_db.cursors import DictCursor, Cursor
+from .cursors import DictCursor, Cursor
 
 
 class Connection:

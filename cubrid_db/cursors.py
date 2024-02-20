@@ -34,8 +34,8 @@ refer to the official CUBRID documentation and Python API guidelines.
 from datetime import date, time, datetime
 from decimal import Decimal
 
-from cubrid_db import field_type
-from cubrid_db.exceptions import InterfaceError
+from . import field_type
+from .exceptions import InterfaceError
 
 
 INT_MIN = -2147483648

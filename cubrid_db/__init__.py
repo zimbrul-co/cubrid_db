@@ -9,9 +9,9 @@ connect() -- connects to server
 from datetime import date, datetime, time
 from time import localtime
 
-from cubrid_db import field_type
-from cubrid_db.connections import Connection
-from cubrid_db.exceptions import *
+from . import field_type
+from .connections import Connection
+from .exceptions import *
 
 # pylint: disable=invalid-name
 
