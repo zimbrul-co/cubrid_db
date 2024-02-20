@@ -152,22 +152,22 @@ with open('cubrid_ext/version.h.template', 'r', encoding='utf-8') as file:
 with open('cubrid_ext/version.h', 'w', encoding='utf-8') as file:
     file.write(template_content.replace('{{VERSION}}', version))
 
-
-# set py_modules
-py_modules = [
-    "cubrid_db.connections",
-    "cubrid_db.cursors",
-    "cubrid_db.field_type",
-]
+# Read the readme file
+with open('README.md', "r", encoding='utf-8') as readme_file:
+    readme = readme_file.read()
 
 
 setup(
     name="cubrid_db",
     version=version,
     description="Python interface to CUBRID",
-    long_description=open('README.md').read(),
+    long_description=readme,
     long_description_content_type='text/markdown',
-    py_modules=py_modules,
+    py_modules=[
+        "cubrid_db.connections",
+        "cubrid_db.cursors",
+        "cubrid_db.field_type",
+    ],
     author="Casian Andrei",
     author_email="casian@zco.ro",
     license="BSD",
