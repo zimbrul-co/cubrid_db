@@ -1,4 +1,5 @@
 #include "python_cubrid.h"
+#include "version.h"
 #include <fcntl.h>
 
 /* Loading dynamic library need this header. */
@@ -4319,7 +4320,6 @@ PyTypeObject _cubrid_CursorObject_type = {
   0,                                /* tp_free */
 };
 
-#define _CUBRID_VERSION_    "11.0.0.0001"
 static char _cubrid_doc[] =
 "The CUBRID Database Module for Python provides a native interface to the CUBRID database server. "
 "It facilitates direct execution of SQL queries, transaction management, and access to database "

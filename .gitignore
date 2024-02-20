@@ -1,5 +1,6 @@
 __pycache__
 build
+cubrid_ext/version.h
 _cubrid.cpython-*.so
 .coverage
 .kdev4/
