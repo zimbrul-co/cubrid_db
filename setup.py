@@ -147,9 +147,9 @@ with open('VERSION', 'r', encoding='utf-8') as version_file:
     version = version_file.read().strip()
 
 # Create the version.h file using the template
-with open('cubrid_ext/version.h.template', 'r') as file:
+with open('cubrid_ext/version.h.template', 'r', encoding='utf-8') as file:
     template_content = file.read()
-with open('cubrid_ext/version.h', 'w') as file:
+with open('cubrid_ext/version.h', 'w', encoding='utf-8') as file:
     file.write(template_content.replace('{{VERSION}}', version))
 
 
