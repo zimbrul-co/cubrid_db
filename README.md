@@ -50,7 +50,7 @@ Samples
 -------
   * See directory "samples".
 
-Notes
------
+Django CUBRID backend - django_cubrid
+-------------------------------------
  * django_cubrid is the Django backend for CUBRID Database.
- * Please refer to the django_cubrid README.md for more information.
+ * Moved to https://github.com/zimbrul-co/django_cubrid
