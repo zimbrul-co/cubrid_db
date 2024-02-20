@@ -1,5 +1,0 @@
-<PythonConfig>
-  <ip>localhost</ip>
-  <port>33000</port>
-  <dbname>demodb</dbname>
-</PythonConfig>
