@@ -96,7 +96,7 @@ if OS_TYPE == 'Windows':
                 libraries=["cas_cci", "libregex38a",
                            "ws2_32", "oleaut32", "advapi32"],
                 include_dirs=[inc_dir_base, inc_dir_cci],
-                sources=['python_cubrid.c'],
+                sources=['cubrid_ext/python_cubrid.c'],
             )
         ]
     else:
@@ -129,7 +129,7 @@ else:
             Extension(
                 name="_cubrid",
                 include_dirs=[inc_dir_base, inc_dir_cci],
-                sources=['python_cubrid.c'],
+                sources=['cubrid_ext/python_cubrid.c'],
                 libraries=["pthread", "stdc++"],
                 extra_objects=[
                     cci_static_lib,
