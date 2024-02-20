@@ -128,6 +128,7 @@ class DatabaseFeatures(BaseDatabaseFeatures):
         },
         "CUBRID does not allow foreign key to reference non-primary key": {
             "schema.tests.SchemaTests.test_rename_referenced_field",
+            "model_fields.test_foreignkey.ForeignKeyTests.test_non_local_to_field",
         },
         "CUBRID cannot change attributes used in foreign keys": {
             "schema.tests.SchemaTests.test_alter_pk_with_self_referential_field"
@@ -146,5 +147,15 @@ class DatabaseFeatures(BaseDatabaseFeatures):
             "db_functions.text.test_sha384.SHA384Tests.test_transform",
             "db_functions.text.test_sha512.SHA512Tests.test_basic",
             "db_functions.text.test_sha512.SHA512Tests.test_transform",
+        },
+        "CUBRID does not have implement positive number constraints": {
+            "model_fields.test_integerfield.PositiveIntegerFieldTests.test_negative_values",
+        },
+        "CUBRID does not support order by exists": {
+            "expressions.tests.BasicExpressionsTests.test_order_by_exists",
+        },
+        "CUBRID does not have a power operator": {
+            "expressions.tests.ExpressionOperatorTests.test_lefthand_power",
+            "expressions.tests.ExpressionOperatorTests.test_righthand_power",
         },
     }
