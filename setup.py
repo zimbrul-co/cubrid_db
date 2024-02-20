@@ -158,31 +158,19 @@ py_modules = [
     "cubrid_db.connections",
     "cubrid_db.cursors",
     "cubrid_db.field_type",
-    "django_cubrid.base",
-    "django_cubrid.client",
-    "django_cubrid.compiler",
-    "django_cubrid.creation",
-    "django_cubrid.features",
-    "django_cubrid.introspection",
-    "django_cubrid.operations",
-    "django_cubrid.schema",
-    "django_cubrid.validation",
 ]
 
 
-# Install CUBRID-Python driver.
 setup(
-    name="CUBRID-Python",
+    name="cubrid_db",
     version=version,
     description="Python interface to CUBRID",
-    long_description=\
-            "Python interface to CUBRID conforming to the python DB API 2.0 "
-            "specification.\n"
-            "See http://www.python.org/topics/database/DatabaseAPI-2.0.html.",
+    long_description=open('README.md').read(),
+    long_description_content_type='text/markdown',
     py_modules=py_modules,
     author="Casian Andrei",
     author_email="casian@zco.ro",
     license="BSD",
-    url="https://github.com/zimbrul-co/cubrid-python",
+    url="https://github.com/zimbrul-co/cubrid_db",
     ext_modules=ext_modules
 )
