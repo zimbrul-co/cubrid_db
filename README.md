@@ -90,6 +90,7 @@ $ source venv/bin/activate
 ```
 
 Start demodb from the CUBRID distribution:
+
 ```
 $ cubrid service start
 $ cubrid server start demodb
