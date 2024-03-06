@@ -21,10 +21,11 @@ Dependencies
     - Linux (64bit)
     - Other Unix and Unix-like os
     - Windows (x86 and x86_64) (not tested yet)
-  * Python: Python >=3.9
-  * Compiler:
+  * Python: Python >=3.6
+  * Build:
     - GNU Developer Toolset 6 or higher
     - CMake
+    - ncurses library
     - Bash
     - Visual Studio 2015 (for Windows)
 
