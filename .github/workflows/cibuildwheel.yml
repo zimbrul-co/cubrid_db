@@ -1,0 +1,40 @@
+name: Build
+
+on: [push, pull_request]
+
+jobs:
+  build_wheels:
+    name: Build wheels on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-20.04]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build wheels
+        uses: pypa/cibuildwheel@v2.16.5
+        env:
+          CIBW_PLATFORM: linux
+          CIBW_BEFORE_BUILD: |
+            if command -v apk > /dev/null 2>&1; then
+              apk add --update ncurses-dev
+            elif command -v yum > /dev/null 2>&1; then
+              yum install -y ncurses-devel
+            elif command -v apt-get > /dev/null 2>&1; then
+              apt-get update && apt-get install -y libncurses5-dev
+            else
+              echo "Unable to find any known package manager (apk/yum/apt-get)"
+              exit 1
+            fi
+          CIBW_SKIP: "*i686* s390x *musllinux*"
+        # with:
+        #   package-dir: .
+        #   output-dir: wheelhouse
+        #   config-file: "{package}/pyproject.toml"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cibw-wheels-${{ matrix.os }}-${{ strategy.job-index }}
+          path: ./wheelhouse/*.whl
